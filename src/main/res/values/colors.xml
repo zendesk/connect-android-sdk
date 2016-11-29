@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="outbound_admin_dialog_bg">#4a90e2</color>
+    <color name="outbound_admin_paring_failure_text">#fa0508</color>
+    <color name="outbound_admin_pin_box_bg">#fff</color>
+    <color name="outbound_admin_pin_box_txt">#000</color>
+    <color name="outbound_admin_pin_box_border">#cad2db</color>
+    <color name="outbound_admin_pairing_success_text">#7fd500</color>
+</resources>

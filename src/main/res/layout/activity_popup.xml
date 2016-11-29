@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/outbound_double_spacing">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/outbound_default_spacing"
+        android:text="@string/outbound_admin_pairing_title"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <io.outbound.sdk.view.ProgressRelativeLayout
+        android:id="@+id/progressViewController"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="@dimen/outbound_double_spacing">
+
+        <ProgressBar
+            android:id="@+id/indicator"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginEnd="@dimen/outbound_default_spacing"
+            android:layout_marginRight="@dimen/outbound_default_spacing"
+            android:indeterminateTint="@color/outbound_admin_pin_box_border"
+            tools:ignore="UnusedAttribute" />
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/indicator"
+            android:layout_toEndOf="@+id/indicator"
+            android:layout_toRightOf="@+id/indicator"
+            android:text="@string/outbound_admin_pairing_status" />
+    </io.outbound.sdk.view.ProgressRelativeLayout>
+
+    <io.outbound.sdk.view.PinLinearLayout
+        android:id="@+id/pinController"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/pin1"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/outbound_pin_box_spacing"
+            android:layout_marginRight="@dimen/outbound_pin_box_spacing"
+            android:imeOptions="actionNext"
+            android:nextFocusRight="@+id/pin2"
+            tools:text="1" />
+
+        <EditText
+            android:id="@+id/pin2"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/outbound_pin_box_spacing"
+            android:layout_marginRight="@dimen/outbound_pin_box_spacing"
+            android:imeOptions="actionNext"
+            android:nextFocusRight="@+id/pin3"
+
+            tools:text="2" />
+
+        <EditText
+            android:id="@+id/pin3"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/outbound_pin_box_spacing"
+            android:layout_marginRight="@dimen/outbound_pin_box_spacing"
+            android:imeOptions="actionNext"
+            android:nextFocusRight="@+id/pin4"
+            tools:text="3" />
+
+        <EditText
+            android:id="@+id/pin4"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionDone"
+            tools:text="4" />
+    </io.outbound.sdk.view.PinLinearLayout>
+</LinearLayout>

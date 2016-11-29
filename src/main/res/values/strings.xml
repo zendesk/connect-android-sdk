@@ -1,0 +1,9 @@
+<resources>
+    <string name="outbound_admin_activated">Outbound admin mode activated!</string>
+    <string name="outbound_admin_pairing_success">Success!</string>
+    <string name="outbound_admin_pairing_fail">Pairing failed!</string>
+    <string name="outbound_admin_pairing_status">Pairing…</string>
+    <string name="outbound_admin_pairing_prompt">Enter the 4-digit code:</string>
+    <string name="outbound_admin_pairing_title">Admin device pairing</string>
+    <string name="outbound_title_activity_notif">NotifActivity</string>
+</resources>

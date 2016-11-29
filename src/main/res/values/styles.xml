@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AdminActivity" parent="Theme.Outbound.Dialog">
+        <item name="android:background">@color/outbound_admin_dialog_bg</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="PinBox" parent="android:Widget.EditText">
+        <item name="android:background">@drawable/pin_box_bg</item>
+        <item name="android:textColor">@color/outbound_admin_pin_box_txt</item>
+        <item name="android:inputType">number</item>
+        <item name="android:gravity">center</item>
+        <item name="android:ems">2</item>
+        <item name="android:maxLength">1</item>
+        <item name="android:textAppearance">?android:textAppearanceLarge</item>
+    </style>
+
+    <style name="Theme.Outbound.Dialog" parent="android:Theme.Dialog" />
+
+</resources>
