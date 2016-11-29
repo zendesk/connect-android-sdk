@@ -8,8 +8,8 @@ configurations {
 
 group = "io.outbound.sdk"
 version = "0.2.3"
-def siteUrl = 'https://outboundio.github.io/android'
-def gitUrl = 'https://github.com/outboundio/android.git'
+def siteUrl = 'https://outboundio.github.io/android-sdk'
+def gitUrl = 'https://github.com/outboundio/android-sdk.git'
 
 
 android {
