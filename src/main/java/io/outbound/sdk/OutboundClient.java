@@ -15,7 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
 
-import com.google.android.gms.iid.InstanceID;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -225,12 +225,12 @@ class OutboundClient {
         }
 
         String token = null;
-        InstanceID iid = InstanceID.getInstance(app);
-        try {
-            token = iid.getToken(gcmSenderId, "GCM");
-        } catch (IOException e) {
-            Log.e(TAG, "Error getting GCM token", e);
+        FirebaseInstanceId iid = FirebaseInstanceId.getInstance();
+        token = iid.getToken();
+        if (token == "") {
+            Log.e(TAG, "Error getting Firebase token");
         }
+
         return token;
     }
 
@@ -321,15 +321,15 @@ class OutboundClient {
         return activeUser.getGcmToken();
     }
 
-    public void refreshGcmToken() {
+    public void refreshFCMToken() {
         if (!enabled) {
             return;
         }
 
-        refreshGcmToken(false);
+        refreshFCMToken(false);
     }
 
-    public void refreshGcmToken(boolean registerIfNew) {
+    public void refreshFCMToken(boolean registerIfNew) {
         if (!enabled) {
             return;
         }
@@ -416,7 +416,7 @@ class OutboundClient {
         }
 
         this.activeUser = user;
-        refreshGcmToken();
+        refreshFCMToken();
 
         persistUser();
 

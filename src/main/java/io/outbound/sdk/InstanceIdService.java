@@ -1,9 +1,8 @@
 package io.outbound.sdk;
 
-import com.google.android.gms.iid.InstanceIDListenerService;
-
-public class InstanceIdService extends InstanceIDListenerService{
+import com.google.firebase.iid.FirebaseInstanceIdService;
+public class InstanceIdService extends FirebaseInstanceIdService {
     public void onTokenRefresh() {
-        OutboundClient.getInstance().refreshGcmToken();
+        OutboundClient.getInstance().refreshFCMToken();
     }
 };
