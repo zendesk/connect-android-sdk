@@ -12,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.Window;
 
@@ -293,15 +294,19 @@ class OutboundClient {
         }
     }
 
-    public void trackNotification(String instanceId) {
+    public void trackNotification(Context ctx, String instanceId) {
         if (!enabled) {
             return;
         }
 
         try {
             JSONObject payload = new JSONObject();
+
+            NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(ctx);
+            boolean notificationsRevoked = !notificationManagerCompat.areNotificationsEnabled();
+
             payload.put("i", instanceId);
-            payload.put("revoked", false);
+            payload.put("revoked", notificationsRevoked);
 
             handler.queue(new OutboundRequest(OutboundRequest.Type.TRACKER, payload.toString()));
         } catch (JSONException e) {

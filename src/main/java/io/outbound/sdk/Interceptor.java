@@ -12,6 +12,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SearchEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.Window;
@@ -160,9 +161,20 @@ class Interceptor implements Window.Callback {
     }
 
     @Override
+    public boolean onSearchRequested(SearchEvent event) {
+        return proxy.onSearchRequested(event);
+    }
+
+    @Override
     public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
         return proxy.onWindowStartingActionMode(callback);
     }
+
+    @Override
+    public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int i) {
+        return proxy.onWindowStartingActionMode(callback, i);
+    }
+
 
     @Override
     public void onActionModeStarted(ActionMode mode) {

@@ -281,7 +281,8 @@ public class OutboundService extends IntentService {
             onDisplayNotification(notif);
         } else if (action.equals(trackAction)) {
             if (notif.getInstanceId() != null) {
-                OutboundClient.getInstance().trackNotification(notif.getInstanceId());
+                Context ctx = getApplicationContext();
+                OutboundClient.getInstance().trackNotification(ctx, notif.getInstanceId());
             }
         }
 
