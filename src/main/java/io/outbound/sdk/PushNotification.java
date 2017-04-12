@@ -95,8 +95,8 @@ public class PushNotification implements Parcelable {
         data.putString(LG_NOTIF_IMG_FIELD, lgNotifImage);
         data.putString(SM_NOTIF_FOLDER_FIELD, smNotifFolder);
         data.putString(SM_NOTIF_IMG_FIELD, smNotifImage);
-        data.putBoolean(SOUND_DEFAULT, soundDefault);
-        data.putBoolean(SOUND_SILENT, soundSilent);
+        data.putString(SOUND_DEFAULT, soundDefault ? "true" : "false");
+        data.putString(SOUND_SILENT, soundSilent ? "true" : "false");
         data.putString(SOUND_FILE_FIELD, soundFile);
         data.putString(SOUND_FOLDER_FIELD, soundFolder);
         if (payload != null) {
@@ -154,10 +154,10 @@ public class PushNotification implements Parcelable {
                     this.smNotifImage = data.getString(key);
                     break;
                 case SOUND_SILENT:
-                    this.soundSilent = data.getBoolean(key);
+                    this.soundSilent = data.containsKey(key) && data.getString(key).equals("true");
                     break;
                 case SOUND_DEFAULT:
-                    this.soundDefault = data.getBoolean(key);
+                    this.soundDefault = data.containsKey(key) && data.getString(key).equals("true");
                     break;
                 case SOUND_FILE_FIELD:
                     this.soundFile = data.getString(key);
