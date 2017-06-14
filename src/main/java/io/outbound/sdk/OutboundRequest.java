@@ -204,7 +204,9 @@ class OutboundRequest {
     public void onSuccess(Response response) throws IOException {
         switch (request) {
             case CONFIG:
-                OutboundClient.getInstance().setConfig(response.body().string());
+                String body = response.body().string();
+                response.body().close();
+                OutboundClient.getInstance().setConfig(body);
                 break;
         }
     }
