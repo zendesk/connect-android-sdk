@@ -196,6 +196,9 @@ class OutboundRequest {
     }
 
     public void onError(Response response) {
+        if (response.body() != null) {
+            response.body().close();
+        }
         if (request == Type.CONFIG) {
             OutboundClient.getInstance().loadConfig(attempts);
         }
