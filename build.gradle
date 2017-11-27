@@ -1,10 +1,30 @@
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
+    }
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+}
+
 configurations {
     deployAars
 }
+
 
 group = "io.outbound.sdk"
 version = "0.2.9"
@@ -12,12 +32,11 @@ def siteUrl = 'https://outboundio.github.io/android-sdk'
 def gitUrl = 'https://github.com/outboundio/android-sdk.git'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 27
 
     defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 24
+        minSdkVersion 19
+        targetSdkVersion 27
         versionCode 1
         versionName version
     }
@@ -36,11 +55,11 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:24.+'
-    compile 'com.android.support:support-annotations:24.+'
-    compile 'com.google.code.gson:gson:2.7'
-    compile 'com.squareup.okhttp3:okhttp:3.4.1'
-    compile "com.google.firebase:firebase-messaging:9.+"
+    compile 'com.android.support:appcompat-v7:27.0.1'
+    compile 'com.android.support:support-annotations:27.0.1'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.squareup.okhttp3:okhttp:3.9.0'
+    compile 'com.google.firebase:firebase-messaging:11.6.0'
 }
 
 install {
