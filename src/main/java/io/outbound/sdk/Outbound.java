@@ -19,7 +19,19 @@ public class Outbound {
      * @param gcmSenderId your Google Developer project ID
      */
     public static void init(Application app, String apiKey, String gcmSenderId) {
-        OutboundClient.init(app, apiKey, gcmSenderId);
+        init(app, apiKey, gcmSenderId);
+    }
+
+    /**
+     * Initialize the Outbound SDK.
+     *
+     * @param app instance of your Android {@link android.app.Application}
+     * @param apiKey your Outbound environment's private API key
+     * @param gcmSenderId your Google Developer project ID
+     * @param notificationChannelId the notification channel to deliver notifications to
+     */
+    public static void init(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
+        OutboundClient.init(app, apiKey, gcmSenderId, notificationChannelId);
         worker = new WorkerThread("outboundWorker");
         worker.start();
     }
