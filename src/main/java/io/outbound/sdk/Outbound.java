@@ -19,7 +19,7 @@ public class Outbound {
      * @param gcmSenderId your Google Developer project ID
      */
     public static void init(Application app, String apiKey, String gcmSenderId) {
-        init(app, apiKey, gcmSenderId);
+        init(app, apiKey, gcmSenderId, null);
     }
 
     /**
