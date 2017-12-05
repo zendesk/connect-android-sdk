@@ -14,12 +14,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * OutboundService handles tasks related to notifications that Outbound sends. OutboundService or a
@@ -193,13 +191,28 @@ public class OutboundService extends IntentService {
 
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            NotificationCompat.Builder builder =
-                    new NotificationCompat.Builder(getApplicationContext())
-                            .setAutoCancel(true)
-                            .setStyle(new NotificationCompat.BigTextStyle().bigText(notif.getBody() == null ? "" : notif.getBody()))
-                            .setContentText(notif.getBody() == null ? "" : notif.getBody())
-                            .setContentTitle(notif.getTitle() == null ? "" : notif.getTitle())
-                            .setSmallIcon(icon);
+
+
+            NotificationCompat.Builder builder;
+            String notificationChannelId = OutboundClient.getInstance().getNotificationChannelId();
+            if (notificationChannelId != null) {
+                builder = new NotificationCompat.Builder(getApplicationContext(), notificationChannelId);
+            } else {
+                builder = new NotificationCompat.Builder(getApplicationContext());
+            }
+
+            if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) && (notificationChannelId == null)) {
+                // Warning: Notifications may not be delivered for Android 8+ (Oreo+) clients
+                // Developers should provide a notification channel id () : https://developer.android.com/guide/topics/ui/notifiers/notifications.html
+                Log.w(TAG, "Did you forget to provide a notification channel id? Notifications may not be delivered on sdk26+");
+            }
+
+            builder
+                .setAutoCancel(true)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notif.getBody() == null ? "" : notif.getBody()))
+                .setContentText(notif.getBody() == null ? "" : notif.getBody())
+                .setContentTitle(notif.getTitle() == null ? "" : notif.getTitle())
+                .setSmallIcon(icon);
 
             try {
                 String image = notif.getSmNotifImage();

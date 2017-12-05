@@ -20,7 +20,6 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import okhttp3.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +27,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import io.outbound.sdk.activity.AdminActivity;
+import okhttp3.Response;
 
 class OutboundClient {
 
@@ -42,6 +42,7 @@ class OutboundClient {
     private Application app;
     private String apiKey;
     private String gcmSenderId;
+    private String notificationChannelId;
 
     private Gson gson;
     private SharedPreferences preferences;
@@ -60,14 +61,15 @@ class OutboundClient {
         return INSTANCE;
     }
 
-    public synchronized static void init(Application app, String apiKey, String gcmSenderId) {
-        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId);
+    public synchronized static void init(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
+        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId);
     }
 
-    private OutboundClient(Application app, String apiKey, String gcmSenderId) {
+    private OutboundClient(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
         this.app = app;
         this.apiKey = apiKey;
         this.gcmSenderId = gcmSenderId;
+        this.notificationChannelId = notificationChannelId;
 
         Monitor.add(app);
 
@@ -487,6 +489,10 @@ class OutboundClient {
         pm.setComponentEnabledSetting(new ComponentName(app, ConnectionReceiver.class),
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
+    }
+
+    public String getNotificationChannelId() {
+        return notificationChannelId;
     }
 
     /**
