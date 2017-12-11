@@ -23,27 +23,12 @@ class OutboundIntentHandler {
         }
 
         PushNotification notif = new PushNotification(extras);
-
-        if (!notif.isSilent()) {
-            if (!extras.containsKey("_onid")) {
-                Log.e(TAG, "Malformed Outbound notification. Ignoring.");
-                return -3;
-            }
-
-            Intent notifIntent = new Intent(context.getPackageName() + OutboundService.ACTION_DISPLAY_NOTIF);
-            notifIntent.setPackage(context.getApplicationContext().getPackageName());
-            notifIntent.putExtra(OutboundService.EXTRA_NOTIFICATION, notif);
-            WakefulBroadcastReceiver.startWakefulService(context, notifIntent);
-        }
-
         if (notif.isTracker()) {
             Intent utIntent = new Intent(context.getPackageName() + OutboundService.ACTION_TRACK_NOTIF);
             utIntent.setPackage(context.getApplicationContext().getPackageName());
             utIntent.putExtra(OutboundService.EXTRA_NOTIFICATION, notif);
             WakefulBroadcastReceiver.startWakefulService(context, utIntent);
-        }
-
-        if (!notif.isTracker()) {
+        } else {
             Intent recvIntent = new Intent(context.getPackageName() + OutboundService.ACTION_RECEIVED_NOTIF);
             recvIntent.setPackage(context.getApplicationContext().getPackageName());
             recvIntent.putExtra(OutboundService.EXTRA_NOTIFICATION, notif);
