@@ -1,15 +1,27 @@
 package io.outbound.sdk;
 
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Set;
-import java.util.StringTokenizer;
 
 /**
  * The PushNotification represents one notification send from Outbound to the device. A PushNotification
@@ -261,5 +273,114 @@ public class PushNotification implements Parcelable {
      */
     public boolean wasMainActivityLaunched() {
         return mainActivityLaunched;
+    }
+
+    /**
+     * Creates a {@link NotificationCompat.Builder} constructed with the customization provided by Outbound.
+     * @param context
+     * @return
+     */
+    public NotificationCompat.Builder createNotificationBuilder(Context context) {
+        Resources resources = context.getResources();
+        PackageManager pm = context.getPackageManager();
+        ApplicationInfo appInfo = null;
+        try {
+            appInfo = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+        } catch (PackageManager.NameNotFoundException e) {
+            // since we are using context.getPackageName() this should never happen.
+            Log.e(TAG, "Tried to access app that doesn't exist.");
+        }
+
+
+        int icon = appInfo.icon;
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+
+        NotificationCompat.Builder builder;
+        String notificationChannelId = OutboundClient.getInstance().getNotificationChannelId();
+        if (notificationChannelId != null) {
+            builder = new NotificationCompat.Builder(context, notificationChannelId);
+        } else {
+            builder = new NotificationCompat.Builder(context);
+        }
+
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) && (notificationChannelId == null)) {
+            // Warning: Notifications may not be delivered for Android 8+ (Oreo+) clients
+            // Developers should provide a notification channel id () : https://developer.android.com/guide/topics/ui/notifiers/notifications.html
+            Log.w(TAG, "Did you forget to provide a notification channel id? Notifications may not be delivered on sdk26+");
+        }
+
+        builder
+                .setAutoCancel(true)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(this.getBody() == null ? "" : this.getBody()))
+                .setContentText(this.getBody() == null ? "" : this.getBody())
+                .setContentTitle(this.getTitle() == null ? "" : this.getTitle())
+                .setSmallIcon(icon);
+
+        try {
+            String image = this.getSmNotifImage();
+            String folder = this.getSmNotifFolder();
+            if (folder != "" && image != "") {
+                int resId = resources.getIdentifier(image, folder, context.getPackageName());
+                if (resId != 0) {
+                    builder.setSmallIcon(resId);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Small icon doesn't exist");
+            builder.setSmallIcon(icon);
+        }
+
+        try {
+            String image = this.getLgNotifImage();
+            String folder = this.getLgNotifFolder();
+            Resources rs = pm.getResourcesForApplication(context.getPackageName());
+            if (folder != "" && image != "") {
+                int resId = resources.getIdentifier(image, folder, context.getPackageName());
+                if (resId != 0) {
+                    builder.setLargeIcon(BitmapFactory.decodeResource(rs, resId));
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Large icon doesn't exist");
+        }
+
+        try {
+            Uri media = null;
+            if (this.getSoundSilent().equals(true)){
+            } else if (this.getSoundDefault().equals(true)) {
+                media = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            } else {
+                int resId = resources.getIdentifier(this.getSoundFile(), this.getSoundFolder(), context.getPackageName());
+                if (resId != 0) {
+                    media = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
+                }
+            }
+
+            if (media != null) {
+                builder.setSound(media);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Music asset does not exist");
+        }
+
+        // we set local only since the server already sends to all device tokens registered.
+        // until we investigate how this works it is better safe than sorry.
+        builder.setLocalOnly(true);
+
+        Intent intentToOpen = new Intent(context.getPackageName() + OutboundService.ACTION_OPEN_NOTIF);
+        intentToOpen.setPackage(context.getPackageName());
+        intentToOpen.putExtra(OutboundService.EXTRA_NOTIFICATION, this);
+
+        PendingIntent pIntent = PendingIntent.getService(context, 0, intentToOpen, PendingIntent.FLAG_ONE_SHOT);
+        builder.setContentIntent(pIntent);
+
+        if (this.getCategory() != null) {
+            builder.setCategory(this.getCategory());
+        }
+
+        return builder;
     }
 }
