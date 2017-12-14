@@ -21,8 +21,6 @@ import android.support.annotation.Nullable;
  *   android:name="io.outbound.sdk.OutboundService"
  *   android:label="OutboundService" >
  *   <intent-filter>
- *      <action android:name="io.outbound.sdk.action.TRACK_NOTIF" />
- *      <action android:name="io.outbound.sdk.action.RECEIVED_NOTIF" />
  *      <action android:name="io.outbound.sdk.action.OPEN_NOTIF" />
  *   </intent-filter>
  * </service>}
@@ -32,10 +30,6 @@ import android.support.annotation.Nullable;
  * actions), you should subclass it and implement on of the public methods.</p>
  *
  * <ul>
- *     <li>{@link #onReceiveNotification(PushNotification)} is called after a notification is received. Important
- * to note the difference between display and receive. onDisplayNotification will only be called after
- * a notification is DISPLAYED. If you send silent notifications, this will not get called. onReceiveNotification
- * is called after every notification that is received whether it is displayed or not.</li>
  *     <li>{@link #onOpenNotification(PushNotification)} is called after a notification is clicked.</li>
  * </ul>
  *
@@ -65,8 +59,6 @@ public class OutboundService extends IntentService {
 
     // consumers package name should be prepended to each of these actions
     public static final String ACTION_OPEN_NOTIF = ".outbound.action.OPEN_NOTIF";
-    public static final String ACTION_RECEIVED_NOTIF = ".outbound.action.RECEIVED_NOTIF";
-    public static final String ACTION_TRACK_NOTIF = ".outbound.action.TRACK_NOTIF";
 
     public static final String EXTRA_NOTIFICATION = BuildConfig.APPLICATION_ID + ".extra.NOTIFICATION";
 
@@ -108,8 +100,6 @@ public class OutboundService extends IntentService {
         String pkgName = getPackageName();
         String action = intent.getAction();
         String openAction = pkgName + ACTION_OPEN_NOTIF;
-        String recvAction = pkgName + ACTION_RECEIVED_NOTIF;
-        String trackAction = pkgName + ACTION_TRACK_NOTIF;
         if (action.equals(openAction)) {
             if (!notif.isTestMessage()) {
                 if (notif.getInstanceId() != null) {
@@ -156,18 +146,6 @@ public class OutboundService extends IntentService {
 
             // TODO handle exceptions? thread?
             onOpenNotification(notif);
-        } else if (action.equals(recvAction)) {
-            if (!notif.isTestMessage() && notif.getInstanceId() != null) {
-                OutboundClient.getInstance().receiveNotification(notif.getInstanceId());
-            }
-
-            // TODO handle exceptions? thread?
-            onReceiveNotification(notif);
-        } else if (action.equals(trackAction)) {
-            if (notif.getInstanceId() != null) {
-                Context ctx = getApplicationContext();
-                OutboundClient.getInstance().trackNotification(ctx, notif.getInstanceId());
-            }
         }
 
         OutboundPushReceiver.completeWakefulIntent(intent);
@@ -181,13 +159,4 @@ public class OutboundService extends IntentService {
      * @param notif
      */
     public void onOpenNotification(PushNotification notif) {}
-
-    /**
-     * Called after an Outbound notification is received. Called for <b>ALL</b> notifications whether
-     * they display or not. This method is recommended for handling any custom payload properties
-     * sent in the notification.
-     *
-     * @param notif
-     */
-    public void onReceiveNotification(PushNotification notif) {}
 }

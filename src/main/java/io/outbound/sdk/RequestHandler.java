@@ -64,6 +64,22 @@ class RequestHandler extends WorkerThread {
         handler.postDelayed(buildRunnableRequest(request), delayMillis);
     }
 
+    public void processImmediately(OutboundRequest request) {
+        ensureInitialized();
+
+        if (canProcess()) {
+            Status immediateSendStatus = sendQueuedRequest(request);
+            if (immediateSendStatus != Status.SUCCESS) {
+                request.incAttempts();
+                queue(request);
+            } else {
+                storage.remove(request.getId());
+            }
+        } else {
+            queue(request);
+        }
+    }
+
     public void processNow(OutboundRequest request) {
         ensureInitialized();
         request.incAttempts();

@@ -48,14 +48,28 @@ public class DebugMessagingService extends OutboundMessagingService {
 ```
 
 ### OutboundService changes
-`OutboundService` no longer provides an override for `onDisplayNotification`.
+`OutboundService` no longer provides an override for `onDisplayNotification` or `onReceiveNotification`.
 This has been moved to `OutboundMessagingService` and been renamed to `onNotificationDisplayed`.
 
 ### AndroidManifest.xml changes
 
 The `OutboundService` service no longer needs an intent filter for displaying notifications.
 
-You need to remove `<action android:name="YOUR_PACKAGE_NAME.outbound.action.DISPLAY_NOTIF" />` from your `AndroidManifest.xml`.
+You need to remove the following actions from your `AndroidManifest.xml`:
+- `<action android:name="YOUR_PACKAGE_NAME.outbound.action.TRACK_NOTIF" />`
+- `<action android:name="YOUR_PACKAGE_NAME.outbound.action.DISPLAY_NOTIF" />`
+- `<action android:name="YOUR_PACKAGE_NAME.outbound.action.RECEIVED_NOTIF" />`
+
+And also add permissions for the firebase job dispatcher:
+```xml
+<service
+    android:exported="false"
+    android:name="io.outbound.sdk.OutboundJobService">
+    <intent-filter>
+        <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+    </intent-filter>
+</service>
+```
 
 #### Before:
 
@@ -76,12 +90,18 @@ You need to remove `<action android:name="YOUR_PACKAGE_NAME.outbound.action.DISP
 #### After:
 ```xml
 <service
+    android:exported="false"
+    android:name="io.outbound.sdk.OutboundJobService">
+    <intent-filter>
+        <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+    </intent-filter>
+</service>
+
+<service
   android:name="io.outbound.sdk.OutboundService"
   android:exported="false"
   android:label="OutboundService" >
   <intent-filter>
-    <action android:name="YOUR_PACKAGE_NAME.outbound.action.TRACK_NOTIF" />
-    <action android:name="YOUR_PACKAGE_NAME.outbound.action.RECEIVED_NOTIF" />
     <action android:name="YOUR_PACKAGE_NAME.outbound.action.OPEN_NOTIF" />
   </intent-filter>
 </service>
