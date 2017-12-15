@@ -88,9 +88,9 @@ public class OutboundMessagingService extends FirebaseMessagingService {
         }
 
         if (outboundNotification.isUninstallTracker()) {
-            new OutboundJobScheduler(this).scheduleUninstallTrack(outboundNotification);
+            OutboundClient.getInstance().trackNotification(this, outboundNotification.getInstanceId());
         } else {
-            new OutboundJobScheduler(this).scheduleNotificationReceived(outboundNotification);
+            OutboundClient.getInstance().receiveNotification(outboundNotification.getInstanceId());
         }
 
         onNotificationReceived(outboundNotification);

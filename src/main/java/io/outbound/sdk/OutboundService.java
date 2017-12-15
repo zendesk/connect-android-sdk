@@ -147,8 +147,6 @@ public class OutboundService extends IntentService {
             // TODO handle exceptions? thread?
             onOpenNotification(notif);
         }
-
-        OutboundPushReceiver.completeWakefulIntent(intent);
     }
 
     /**

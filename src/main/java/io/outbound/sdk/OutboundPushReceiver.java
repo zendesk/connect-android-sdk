@@ -63,15 +63,7 @@ public class OutboundPushReceiver extends WakefulBroadcastReceiver {
      * @param intent
      */
     public void onReceiveIntent(@NonNull Context context, @NonNull Intent intent) {}
-
-    /**
-     * Called when an unhandled non-Outbound notification is received. This method is recommended
-     * for custom handling of your own notifications.
-     *
-     * @param message
-     */
-    public void onReceivedMessage(RemoteMessage message) { }
-
+    
     /**
      * Called after an Outbound notification is received. Called for <b>ALL</b> notifications whether
      * they display or not. This method is recommended for handling any custom payload properties
@@ -117,13 +109,14 @@ public class OutboundPushReceiver extends WakefulBroadcastReceiver {
         }
 
         if (outboundNotification.isUninstallTracker()) {
-            new OutboundJobScheduler(context).scheduleUninstallTrack(outboundNotification);
+            OutboundClient.getInstance().trackNotification(context, outboundNotification.getInstanceId());
         } else {
-            new OutboundJobScheduler(context).scheduleNotificationReceived(outboundNotification);
+            OutboundClient.getInstance().receiveNotification(outboundNotification.getInstanceId());
         }
 
         onNotificationReceived(outboundNotification);
 
         setResultCode(Activity.RESULT_OK);
+        completeWakefulIntent(intent);
     }
 }

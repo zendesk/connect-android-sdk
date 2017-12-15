@@ -60,17 +60,6 @@ You need to remove the following actions from your `AndroidManifest.xml`:
 - `<action android:name="YOUR_PACKAGE_NAME.outbound.action.DISPLAY_NOTIF" />`
 - `<action android:name="YOUR_PACKAGE_NAME.outbound.action.RECEIVED_NOTIF" />`
 
-And also add permissions for the firebase job dispatcher:
-```xml
-<service
-    android:exported="false"
-    android:name="io.outbound.sdk.OutboundJobService">
-    <intent-filter>
-        <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
-    </intent-filter>
-</service>
-```
-
 #### Before:
 
 ```xml
@@ -89,14 +78,6 @@ And also add permissions for the firebase job dispatcher:
 
 #### After:
 ```xml
-<service
-    android:exported="false"
-    android:name="io.outbound.sdk.OutboundJobService">
-    <intent-filter>
-        <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
-    </intent-filter>
-</service>
-
 <service
   android:name="io.outbound.sdk.OutboundService"
   android:exported="false"

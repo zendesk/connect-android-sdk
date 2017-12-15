@@ -274,7 +274,7 @@ class OutboundClient {
             JSONObject payload = new JSONObject();
             payload.put("_oid", instanceId);
 
-            handler.processImmediately(new OutboundRequest(OutboundRequest.Type.RECEIVE, payload.toString()));
+            handler.queue(new OutboundRequest(OutboundRequest.Type.RECEIVE, payload.toString()));
         } catch (JSONException e) {
             Log.e(TAG, "Couldn't create basic JSON object for received notification payload.", e);
         }
@@ -310,7 +310,7 @@ class OutboundClient {
             payload.put("i", instanceId);
             payload.put("revoked", notificationsRevoked);
 
-            handler.processImmediately(new OutboundRequest(OutboundRequest.Type.TRACKER, payload.toString()));
+            handler.queue(new OutboundRequest(OutboundRequest.Type.TRACKER, payload.toString()));
         } catch (JSONException e) {
             Log.e(TAG, "Couldn't create basic JSON object for tracker callback payload.", e);
         }
