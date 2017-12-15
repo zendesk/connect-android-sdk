@@ -1,6 +1,5 @@
 package io.outbound.sdk;
 
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -32,7 +31,7 @@ public class PushNotification implements Parcelable {
     private final static String TAG = BuildConfig.APPLICATION_ID;
 
     private final static String SILENT_FIELD = "_oq";
-    private final static String TRACKER_FIELD = "_ogp";
+    private final static String UNINSTALL_TRACKER_FIELD = "_ogp";
     private final static String TEST_FIELD = "_otm";
     private final static String ID_FIELD = "_onid";
     private final static String INSTANCE_ID_FIELD = "_oid";
@@ -51,7 +50,7 @@ public class PushNotification implements Parcelable {
     private final static String SM_NOTIF_IMG_FIELD = "_sni";
     private final static String SM_NOTIF_FOLDER_FIELD = "_snf";
 
-    private boolean tracker;
+    private boolean uninstallTracker;
     private boolean test;
     private boolean silent;
 
@@ -95,7 +94,7 @@ public class PushNotification implements Parcelable {
         Bundle data = new Bundle();
 
         data.putString(SILENT_FIELD, silent ? "true" : "false");
-        data.putString(TRACKER_FIELD, tracker ? "true" : "false");
+        data.putString(UNINSTALL_TRACKER_FIELD, uninstallTracker ? "true" : "false");
         data.putString(TEST_FIELD, test ? "true" : "false");
         data.putString(ID_FIELD, id + "");
         data.putString(INSTANCE_ID_FIELD, instanceId);
@@ -138,8 +137,8 @@ public class PushNotification implements Parcelable {
                 case ID_FIELD:
                     this.id = Integer.parseInt(data.getString(key));
                     break;
-                case TRACKER_FIELD:
-                    this.tracker = data.containsKey(key) && data.getString(key).equals("true");
+                case UNINSTALL_TRACKER_FIELD:
+                    this.uninstallTracker = data.containsKey(key) && data.getString(key).equals("true");
                     break;
                 case TEST_FIELD:
                     this.test = data.containsKey(key) && data.getString(key).equals("true");
@@ -192,8 +191,8 @@ public class PushNotification implements Parcelable {
         return silent;
     }
 
-    public boolean isTracker() {
-        return tracker;
+    public boolean isUninstallTracker() {
+        return uninstallTracker;
     }
 
     public boolean isTestMessage() {

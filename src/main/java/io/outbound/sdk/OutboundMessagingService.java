@@ -3,7 +3,6 @@ package io.outbound.sdk;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -12,7 +11,9 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Map;
 
-
+/**
+ * OutboundMessagingService handles incoming push notifications from Firebase.
+ */
 public class OutboundMessagingService extends FirebaseMessagingService {
     public final static String TAG = BuildConfig.APPLICATION_ID;
 
@@ -83,13 +84,15 @@ public class OutboundMessagingService extends FirebaseMessagingService {
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(outboundNotification.getId(), notification);
 
-            // TODO handle exceptions? thread?
             onNotificationDisplayed(outboundNotification);
         }
 
-        Intent intent = new Intent();
-        intent.putExtras(bundle);
-        new OutboundIntentHandler().handleIntent(this, intent);
+        OutboundClient outboundClient = OutboundClient.getInstance();
+        if (outboundNotification.isUninstallTracker()) {
+            outboundClient.trackNotification(this, outboundNotification.getInstanceId());
+        } else {
+            outboundClient.receiveNotification(outboundNotification.getInstanceId());
+        }
 
         onNotificationReceived(outboundNotification);
     }
