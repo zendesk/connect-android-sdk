@@ -87,10 +87,11 @@ public class OutboundMessagingService extends FirebaseMessagingService {
             onNotificationDisplayed(outboundNotification);
         }
 
+        OutboundClient outboundClient = OutboundClient.getInstance();
         if (outboundNotification.isUninstallTracker()) {
-            OutboundClient.getInstance().trackNotification(this, outboundNotification.getInstanceId());
+            outboundClient.trackNotification(this, outboundNotification.getInstanceId());
         } else {
-            OutboundClient.getInstance().receiveNotification(outboundNotification.getInstanceId());
+            outboundClient.receiveNotification(outboundNotification.getInstanceId());
         }
 
         onNotificationReceived(outboundNotification);

@@ -108,10 +108,11 @@ public class OutboundPushReceiver extends WakefulBroadcastReceiver {
             onNotificationDisplayed(outboundNotification);
         }
 
+        OutboundClient outboundClient = OutboundClient.getInstance();
         if (outboundNotification.isUninstallTracker()) {
-            OutboundClient.getInstance().trackNotification(context, outboundNotification.getInstanceId());
+            outboundClient.trackNotification(context, outboundNotification.getInstanceId());
         } else {
-            OutboundClient.getInstance().receiveNotification(outboundNotification.getInstanceId());
+            outboundClient.receiveNotification(outboundNotification.getInstanceId());
         }
 
         onNotificationReceived(outboundNotification);
