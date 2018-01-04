@@ -55,14 +55,11 @@ import android.support.annotation.Nullable;
  * methods on the PushNotification object passed in.</p>
  */
 public class OutboundService extends IntentService {
-    private static final String TAG = BuildConfig.APPLICATION_ID;
 
     // consumers package name should be prepended to each of these actions
     public static final String ACTION_OPEN_NOTIF = ".outbound.action.OPEN_NOTIF";
 
     public static final String EXTRA_NOTIFICATION = BuildConfig.APPLICATION_ID + ".extra.NOTIFICATION";
-
-    private NotificationManager notificationManager;
 
     protected boolean openMainActivityByDefault = true;
     protected boolean handleDeeplinks = true;

@@ -18,13 +18,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class RequestHandler extends WorkerThread {
     private enum Status {
-        RETRY, DONE, SUCCESS;
+        RETRY, DONE, SUCCESS
     }
 
     private static String TAG = BuildConfig.APPLICATION_ID;
 
     private String apiKey;
-    private Application app;
+
     private OkHttpClient httpClient;
     private RequestStorage storage;
     private boolean ready = false;
@@ -38,7 +38,6 @@ class RequestHandler extends WorkerThread {
 
         this.apiKey = apiKey;
         this.httpClient = new OkHttpClient();
-        this.app = app;
         this.storage = new RequestStorage(app);
     }
 

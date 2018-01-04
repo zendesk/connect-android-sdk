@@ -3,15 +3,12 @@ package io.outbound.sdk.activity;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.util.Log;
-import android.widget.TextView;
 
-import org.json.JSONObject;
+import java.util.concurrent.TimeUnit;
 
 import io.outbound.sdk.Outbound;
 import io.outbound.sdk.R;
@@ -20,11 +17,13 @@ import io.outbound.sdk.view.ProgressController;
 
 public class AdminActivity extends Activity implements AdminController {
 
-    Vibrator vibrator;
+    public static final long SUCCESS_DELAY_MILLIS = TimeUnit.SECONDS.toMillis(1);
+    public static final long ERROR_DELAY_MILLIS = TimeUnit.SECONDS.toMillis(5);
+    public static final long VIBRATE_MILLIS = 500;
+    private Vibrator vibrator;
 
-    TextView title;
-    PinController pinController;
-    ProgressController progressController;
+    private PinController pinController;
+    private ProgressController progressController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,10 +32,8 @@ public class AdminActivity extends Activity implements AdminController {
 
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        title = (TextView) findViewById(R.id.title);
-
-        pinController = (PinController) findViewById(R.id.pinController);
-        progressController = (ProgressController) findViewById(R.id.progressViewController);
+        pinController = findViewById(R.id.pinController);
+        progressController = findViewById(R.id.progressViewController);
 
         progressController.showIndicator(false);
         progressController.setText(R.string.outbound_admin_pairing_prompt);
@@ -69,20 +66,21 @@ public class AdminActivity extends Activity implements AdminController {
                         @Override public void run() {
                             finish(); // Finishes activity going back to host app
                         }
-                    }, 1000);
+                    }, SUCCESS_DELAY_MILLIS);
+
                 } else {
                     pinController.reset();
                     progressController.setTextColor(R.color.outbound_admin_paring_failure_text);
                     progressController.setText(R.string.outbound_admin_pairing_fail);
 
-                    vibrator.vibrate(500);
+                    vibrator.vibrate(VIBRATE_MILLIS);
 
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             progressController.show(false);
                         }
-                    }, 5 * 1000);
+                    }, ERROR_DELAY_MILLIS);
                 }
             }
         }.execute(pin);
