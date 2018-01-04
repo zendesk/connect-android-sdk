@@ -41,7 +41,7 @@ class OutboundClient {
 
     private Application app;
     private String apiKey;
-    private String gcmSenderId;
+
     private String notificationChannelId;
 
     private Gson gson;
@@ -61,14 +61,13 @@ class OutboundClient {
         return INSTANCE;
     }
 
-    public synchronized static void init(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
-        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId);
+    public synchronized static void init(Application app, String apiKey, String notificationChannelId) {
+        INSTANCE = new OutboundClient(app, apiKey,notificationChannelId);
     }
 
-    private OutboundClient(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
+    private OutboundClient(Application app, String apiKey, String notificationChannelId) {
         this.app = app;
         this.apiKey = apiKey;
-        this.gcmSenderId = gcmSenderId;
         this.notificationChannelId = notificationChannelId;
 
         Monitor.add(app);
