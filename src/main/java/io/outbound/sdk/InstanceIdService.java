@@ -5,4 +5,4 @@ public class InstanceIdService extends FirebaseInstanceIdService {
     public void onTokenRefresh() {
         OutboundClient.getInstance().refreshFCMToken();
     }
-};
+}
