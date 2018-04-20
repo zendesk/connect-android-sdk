@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class RequestHandler extends WorkerThread {
     private enum Status {
-        RETRY, DONE, SUCCESS;
+        RETRY, DONE, SUCCESS
     }
 
     private static String TAG = BuildConfig.APPLICATION_ID;

@@ -2,14 +2,16 @@ package io.outbound.sdk;
 
 import android.content.ContentValues;
 import android.support.annotation.Nullable;
+import android.util.Log;
+
+import java.io.IOException;
+import java.util.Locale;
+import java.util.UUID;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-import java.io.IOException;
-import java.util.UUID;
 
 class OutboundRequest {
     public static final String HEADER_API_KEY = "X-Outbound-Key";
@@ -31,6 +33,7 @@ class OutboundRequest {
     private static final String ENDPOINT_OPENED = "/i/android/opened";
     private static final String ENDPOINT_TRACKER = "/i/android/uninstall_tracker";
     private static final String ENDPOINT_PAIR = "/i/testsend/push/pair/android";
+    private static final String TAG = "OutboundRequest";
 
     private Type request;
     private String payload;
@@ -43,28 +46,7 @@ class OutboundRequest {
         RECEIVE, TRACKER, OPEN;
 
         public String toString() {
-            switch (this) {
-                case IDENTIFY:
-                    return "identify";
-                case TRACK:
-                    return "track";
-                case REGISTER:
-                    return "register";
-                case DISABLE:
-                    return "disable";
-                case CONFIG:
-                    return "config";
-                case PAIR:
-                    return "pair";
-                case RECEIVE:
-                    return "receive";
-                case TRACKER:
-                    return "tracker";
-                case OPEN:
-                    return "open";
-            }
-            // i don't even think it is possibel for this to happen but we have to do something.
-            throw new IllegalStateException("Attempting to get string for an unknown request type: " + this.name());
+            return name().toLowerCase(Locale.US);
         }
 
         public static Type fromString(String label) {
@@ -88,6 +70,7 @@ class OutboundRequest {
                 case "open":
                     return OPEN;
             }
+
             throw new IllegalStateException("Attempting to cast an unknown request type: " + label);
         }
 
@@ -196,9 +179,12 @@ class OutboundRequest {
     }
 
     public void onError(Response response) {
-        if (response.body() != null) {
+        if (response != null && response.body() != null) {
             response.body().close();
+        } else {
+            Log.e(TAG, "response or response body was null.");
         }
+
         if (request == Type.CONFIG) {
             OutboundClient.getInstance().loadConfig(attempts);
         }
@@ -207,9 +193,15 @@ class OutboundRequest {
     public void onSuccess(Response response) throws IOException {
         switch (request) {
             case CONFIG:
-                String body = response.body().string();
-                response.body().close();
-                OutboundClient.getInstance().setConfig(body);
+
+                if (response != null && response.body() != null) {
+                    String body = response.body().string();
+                    response.body().close();
+                    OutboundClient.getInstance().setConfig(body);
+                } else {
+                    Log.e(TAG, "response or response body was null.");
+                }
+
                 break;
         }
     }

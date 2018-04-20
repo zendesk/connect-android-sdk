@@ -41,8 +41,8 @@ public class ProgressRelativeLayout extends RelativeLayout implements ProgressCo
     @Override protected void onFinishInflate() {
         super.onFinishInflate();
 
-        indicator = (ProgressBar) findViewById(R.id.indicator);
-        text = (TextView) findViewById(R.id.text);
+        indicator = findViewById(R.id.indicator);
+        text = findViewById(R.id.text);
     }
 
     @Override public void setText(@StringRes int textRes) {
