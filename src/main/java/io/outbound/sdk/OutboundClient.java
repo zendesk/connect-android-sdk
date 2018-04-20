@@ -11,7 +11,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Window;
 
@@ -49,7 +51,7 @@ class OutboundClient {
 
     private User activeUser;
 
-    private boolean configLoaded = false;
+    private boolean configLoaded;
     private boolean offline = false;
     private boolean enabled = true;
 
@@ -83,8 +85,10 @@ class OutboundClient {
         this.preferences = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         if (preferences.contains(PREFS_USER)) {
             String userData = preferences.getString(PREFS_USER, "");
-            if (userData != null) {
+            if (!TextUtils.isEmpty(userData)) {
                 this.activeUser = gson.fromJson(userData, User.class);
+            } else {
+                Log.w(TAG, "There is no stored user data, or there was a problem getting the user data.");
             }
         }
         this.configLoaded = preferences.contains(PREFS_CONFIG);
@@ -221,15 +225,19 @@ class OutboundClient {
     }
 
 
-    private String getGcmToken() {
+    /**
+     * Gets the GCM token
+     *
+     * @return the GCM token, or null if we could not find it.
+     */
+    @Nullable private String getGcmToken() {
         if (!enabled) {
             return null;
         }
 
-        String token = null;
         FirebaseInstanceId iid = FirebaseInstanceId.getInstance();
-        token = iid.getToken();
-        if (token == "") {
+        String token = iid.getToken();
+        if (TextUtils.isEmpty(token)) {
             Log.e(TAG, "Error getting Firebase token");
         }
 
@@ -400,11 +408,6 @@ class OutboundClient {
         }
     }
 
-    /** Set the active user object and DO NOT identify. */
-    private void setUser(User user) {
-        setUser(user, false);
-    }
-
     /**
      * Set the active user object.
      *
@@ -435,7 +438,7 @@ class OutboundClient {
         if (activeUser != null) {
             preferences.edit().putString(PREFS_USER, gson.toJson(activeUser)).apply();
         } else {
-            preferences.edit().remove(PREFS_USER);
+            preferences.edit().remove(PREFS_USER).apply();
         }
     }
 
@@ -465,15 +468,20 @@ class OutboundClient {
 
     private boolean isConnected() {
         ConnectivityManager cm = (ConnectivityManager) app.getSystemService(Context.CONNECTIVITY_SERVICE);
-        try {
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-        } catch(SecurityException e) {
-            // This happens when the user manages
-            // to revoke the permission to the network access
-            // So we assume the network exists
-            return true;
+
+        if (cm != null) {
+            try {
+                NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+            } catch(SecurityException e) {
+                // This happens when the user manages
+                // to revoke the permission to the network access
+                // So we assume the network exists
+                return true;
+            }
         }
+
+        return false;
     }
 
     private synchronized void monitorConnection() {
