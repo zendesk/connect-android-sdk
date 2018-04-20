@@ -3,15 +3,11 @@ package io.outbound.sdk.activity;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.util.Log;
 import android.widget.TextView;
-
-import org.json.JSONObject;
 
 import io.outbound.sdk.Outbound;
 import io.outbound.sdk.R;

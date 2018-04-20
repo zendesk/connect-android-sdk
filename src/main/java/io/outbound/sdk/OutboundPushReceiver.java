@@ -10,8 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
-import com.google.firebase.messaging.RemoteMessage;
-
 /**
  * OutboundPushReceiver handle incoming push notifications. OutboundPushReceiver should be registered
  * as a service in your AndroidManifest.xml file.
