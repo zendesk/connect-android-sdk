@@ -29,10 +29,10 @@ public class AdminActivity extends Activity implements AdminController {
 
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        title = (TextView) findViewById(R.id.title);
+        title = findViewById(R.id.title);
 
-        pinController = (PinController) findViewById(R.id.pinController);
-        progressController = (ProgressController) findViewById(R.id.progressViewController);
+        pinController = findViewById(R.id.pinController);
+        progressController = findViewById(R.id.progressViewController);
 
         progressController.showIndicator(false);
         progressController.setText(R.string.outbound_admin_pairing_prompt);

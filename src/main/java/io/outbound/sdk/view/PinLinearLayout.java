@@ -44,10 +44,10 @@ public class PinLinearLayout extends LinearLayout implements PinController {
     @Override protected void onFinishInflate() {
         super.onFinishInflate();
 
-        pin1 = (EditText) findViewById(R.id.pin1);
-        pin2 = (EditText) findViewById(R.id.pin2);
-        pin3 = (EditText) findViewById(R.id.pin3);
-        pin4 = (EditText) findViewById(R.id.pin4);
+        pin1 = findViewById(R.id.pin1);
+        pin2 = findViewById(R.id.pin2);
+        pin3 = findViewById(R.id.pin3);
+        pin4 = findViewById(R.id.pin4);
 
         Watcher watcher = new Watcher(pin1, pin2, pin3, pin4);
         pin1.addTextChangedListener(watcher);
