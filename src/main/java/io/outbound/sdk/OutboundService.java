@@ -100,7 +100,7 @@ public class OutboundService extends IntentService {
         String pkgName = getPackageName();
         String action = intent.getAction();
         String openAction = pkgName + ACTION_OPEN_NOTIF;
-        if (action.equals(openAction)) {
+        if (action != null && action.equals(openAction)) {
             if (!notif.isTestMessage()) {
                 if (notif.getInstanceId() != null) {
                     OutboundClient.getInstance().openNotification(notif.getInstanceId());
