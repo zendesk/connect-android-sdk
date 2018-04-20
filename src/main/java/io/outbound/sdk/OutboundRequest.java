@@ -2,6 +2,7 @@ package io.outbound.sdk;
 
 import android.content.ContentValues;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -31,6 +32,7 @@ class OutboundRequest {
     private static final String ENDPOINT_OPENED = "/i/android/opened";
     private static final String ENDPOINT_TRACKER = "/i/android/uninstall_tracker";
     private static final String ENDPOINT_PAIR = "/i/testsend/push/pair/android";
+    private static final String TAG = "OutboundRequest";
 
     private Type request;
     private String payload;
@@ -196,9 +198,12 @@ class OutboundRequest {
     }
 
     public void onError(Response response) {
-        if (response.body() != null) {
+        if (response != null && response.body() != null) {
             response.body().close();
+        } else {
+            Log.e(TAG, "response or response body was null.");
         }
+        
         if (request == Type.CONFIG) {
             OutboundClient.getInstance().loadConfig(attempts);
         }
@@ -207,9 +212,15 @@ class OutboundRequest {
     public void onSuccess(Response response) throws IOException {
         switch (request) {
             case CONFIG:
-                String body = response.body().string();
-                response.body().close();
-                OutboundClient.getInstance().setConfig(body);
+
+                if (response != null && response.body() != null) {
+                    String body = response.body().string();
+                    response.body().close();
+                    OutboundClient.getInstance().setConfig(body);
+                } else {
+                    Log.e(TAG, "response or response body was null.");
+                }
+
                 break;
         }
     }
