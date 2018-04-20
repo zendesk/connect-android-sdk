@@ -33,7 +33,7 @@ public class User {
                  @Nullable String timezone,
                  @Nullable Map<String, Object> attributes,
                  @Nullable String groupId, @Nullable Map<String, Object> groupAttributes,
-                 @Nullable boolean anonymous) {
+                 boolean anonymous) {
 
         if (userId != null && userId.isEmpty()) {
             throw new IllegalArgumentException("The passed id is null or empty.  User's must have an id.");
@@ -256,7 +256,7 @@ public class User {
         }
 
         public Builder setGroupAttributes(Map<String, Object> groupAttributes) {
-            this.groupAttributes = this.groupAttributes;
+            this.groupAttributes = groupAttributes;
             return this;
         }
 
