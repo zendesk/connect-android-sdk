@@ -1,6 +1,5 @@
 package io.outbound.sdk;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.ComponentName;
@@ -499,7 +498,6 @@ class OutboundClient {
      * Responsible for intercepting touch events on the window to activate Outbound admin mode.
      * This only works on API >= 14 (Ice Cream Sandwich).
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     static class Monitor implements Application.ActivityLifecycleCallbacks, Interceptor.OnInterceptionListener {
         private final Application application;
         private Activity foregroundActivity;
@@ -509,10 +507,10 @@ class OutboundClient {
         }
 
         static void add(Application application) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                Monitor monitor = new Monitor(application);
-                application.registerActivityLifecycleCallbacks(monitor);
-            }
+
+            Monitor monitor = new Monitor(application);
+            application.registerActivityLifecycleCallbacks(monitor);
+
 
             // No admin panel for users pre ICS :(.  There just isn't any way else to do it
             // that wouldn't require much more implementation.  Fortunately, ICS is 90%
@@ -520,10 +518,10 @@ class OutboundClient {
         }
 
         static void remove(Application application) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                Monitor monitor = new Monitor(application);
-                application.unregisterActivityLifecycleCallbacks(monitor);
-            }
+
+            Monitor monitor = new Monitor(application);
+            application.unregisterActivityLifecycleCallbacks(monitor);
+
         }
 
         @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
