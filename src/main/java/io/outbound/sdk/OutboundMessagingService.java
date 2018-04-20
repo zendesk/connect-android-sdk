@@ -82,9 +82,15 @@ public class OutboundMessagingService extends FirebaseMessagingService {
             // Display notification
             Notification notification = buildNotification(outboundNotification);
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(outboundNotification.getId(), notification);
 
-            onNotificationDisplayed(outboundNotification);
+
+            if (notificationManager != null) {
+                notificationManager.notify(outboundNotification.getId(), notification);
+                onNotificationDisplayed(outboundNotification);
+            } else {
+                Log.e(TAG, "The notification manager is null. Failed to send notification");
+
+            }
         }
 
         OutboundClient outboundClient = OutboundClient.getInstance();

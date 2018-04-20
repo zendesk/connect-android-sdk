@@ -91,6 +91,12 @@ public class OutboundPushReceiver extends WakefulBroadcastReceiver {
 
     private void handleOutboundIntent(@NonNull Context context, @NonNull Intent intent) {
         Bundle bundle = intent.getExtras();
+
+        if (bundle != null) {
+            Log.e(TAG, "Bundle is null, cannot handle intent");
+            return;
+        }
+
         PushNotification outboundNotification = new PushNotification(bundle);
         if (!outboundNotification.isSilent()) {
             if (!bundle.containsKey("_onid")) {
@@ -101,9 +107,13 @@ public class OutboundPushReceiver extends WakefulBroadcastReceiver {
             // Display notification
             Notification notification = buildNotification(context, outboundNotification);
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(outboundNotification.getId(), notification);
 
-            onNotificationDisplayed(outboundNotification);
+            if (notificationManager != null) {
+                notificationManager.notify(outboundNotification.getId(), notification);
+                onNotificationDisplayed(outboundNotification);
+            } else {
+                Log.e(TAG, "The notification manager is null. Failed to send notification");
+            }
         }
 
         OutboundClient outboundClient = OutboundClient.getInstance();
