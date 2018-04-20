@@ -56,7 +56,7 @@ public class PushNotification implements Parcelable {
     private boolean silent;
 
     private boolean linkHandled = false;
-    private  boolean mainActivityLaunched = false;
+    private boolean mainActivityLaunched = false;
 
     private int id;
     private String instanceId;
@@ -68,8 +68,8 @@ public class PushNotification implements Parcelable {
     private String lgNotifImage;
     private String smNotifFolder;
     private String smNotifImage;
-    private Boolean soundSilent = false;
-    private Boolean soundDefault = false;
+    private Boolean soundSilent = Boolean.FALSE;
+    private Boolean soundDefault = Boolean.FALSE;
     private String soundFile;
     private String soundFolder;
     private JSONObject payload;
@@ -351,8 +351,9 @@ public class PushNotification implements Parcelable {
 
         try {
             Uri media = null;
-            if (!this.getSoundSilent().equals(true)) {
-                if (this.getSoundDefault().equals(true)) {
+            if (!this.getSoundSilent()) {
+
+                if (this.getSoundDefault()) {
                     media = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                 } else {
                     int resId = resources.getIdentifier(this.getSoundFile(), this.getSoundFolder(), context.getPackageName());
@@ -361,6 +362,7 @@ public class PushNotification implements Parcelable {
                     }
                 }
             }
+
 
             if (media != null) {
                 builder.setSound(media);
