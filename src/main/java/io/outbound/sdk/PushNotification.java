@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -123,13 +124,14 @@ public class PushNotification implements Parcelable {
 
     public PushNotification(Bundle data) {
         Set<String> keys = data.keySet();
+
         for(String key : keys) {
             switch (key) {
                 case INSTANCE_ID_FIELD:
                     this.instanceId = data.getString(key);
                     break;
                 case SILENT_FIELD:
-                    this.silent = data.containsKey(key) && data.getString(key).equals("true");
+                    this.silent = keyIsTrue(data, key);
                     break;
                 case LINK_FIELD:
                     this.link = data.getString(key);
@@ -138,10 +140,10 @@ public class PushNotification implements Parcelable {
                     this.id = Integer.parseInt(data.getString(key));
                     break;
                 case UNINSTALL_TRACKER_FIELD:
-                    this.uninstallTracker = data.containsKey(key) && data.getString(key).equals("true");
+                    this.uninstallTracker = keyIsTrue(data, key);
                     break;
                 case TEST_FIELD:
-                    this.test = data.containsKey(key) && data.getString(key).equals("true");
+                    this.test = keyIsTrue(data, key);
                     break;
                 case TITLE_FIELD:
                     this.title = data.getString(key);
@@ -165,10 +167,10 @@ public class PushNotification implements Parcelable {
                     this.smNotifImage = data.getString(key);
                     break;
                 case SOUND_SILENT:
-                    this.soundSilent = data.containsKey(key) && data.getString(key).equals("true");
+                    this.soundSilent = keyIsTrue(data, key);
                     break;
                 case SOUND_DEFAULT:
-                    this.soundDefault = data.containsKey(key) && data.getString(key).equals("true");
+                    this.soundDefault = keyIsTrue(data, key);
                     break;
                 case SOUND_FILE_FIELD:
                     this.soundFile = data.getString(key);
@@ -186,6 +188,8 @@ public class PushNotification implements Parcelable {
             }
         }
     }
+
+
 
     public boolean isSilent() {
         return silent;
@@ -290,9 +294,6 @@ public class PushNotification implements Parcelable {
             Log.e(TAG, "Tried to access app that doesn't exist.");
         }
 
-
-        int icon = appInfo.icon;
-
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
@@ -315,13 +316,12 @@ public class PushNotification implements Parcelable {
                 .setAutoCancel(true)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(this.getBody() == null ? "" : this.getBody()))
                 .setContentText(this.getBody() == null ? "" : this.getBody())
-                .setContentTitle(this.getTitle() == null ? "" : this.getTitle())
-                .setSmallIcon(icon);
+                .setContentTitle(this.getTitle() == null ? "" : this.getTitle());
 
         try {
             String image = this.getSmNotifImage();
             String folder = this.getSmNotifFolder();
-            if (folder != "" && image != "") {
+            if (!TextUtils.isEmpty(image) && !TextUtils.isEmpty(folder)) {
                 int resId = resources.getIdentifier(image, folder, context.getPackageName());
                 if (resId != 0) {
                     builder.setSmallIcon(resId);
@@ -329,14 +329,17 @@ public class PushNotification implements Parcelable {
             }
         } catch (Exception e) {
             Log.e(TAG, "Small icon doesn't exist");
-            builder.setSmallIcon(icon);
+
+            if (appInfo != null) {
+                builder.setSmallIcon(appInfo.icon);
+            }
         }
 
         try {
             String image = this.getLgNotifImage();
             String folder = this.getLgNotifFolder();
             Resources rs = pm.getResourcesForApplication(context.getPackageName());
-            if (folder != "" && image != "") {
+            if (!TextUtils.isEmpty(image) && !TextUtils.isEmpty(folder)) {
                 int resId = resources.getIdentifier(image, folder, context.getPackageName());
                 if (resId != 0) {
                     builder.setLargeIcon(BitmapFactory.decodeResource(rs, resId));
@@ -348,13 +351,14 @@ public class PushNotification implements Parcelable {
 
         try {
             Uri media = null;
-            if (this.getSoundSilent().equals(true)){
-            } else if (this.getSoundDefault().equals(true)) {
-                media = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            } else {
-                int resId = resources.getIdentifier(this.getSoundFile(), this.getSoundFolder(), context.getPackageName());
-                if (resId != 0) {
-                    media = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
+            if (!this.getSoundSilent().equals(true)) {
+                if (this.getSoundDefault().equals(true)) {
+                    media = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                } else {
+                    int resId = resources.getIdentifier(this.getSoundFile(), this.getSoundFolder(), context.getPackageName());
+                    if (resId != 0) {
+                        media = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
+                    }
                 }
             }
 
@@ -381,5 +385,16 @@ public class PushNotification implements Parcelable {
         }
 
         return builder;
+    }
+
+    private boolean keyIsTrue(Bundle data, String key) {
+
+        if (data.containsKey(key)) {
+            String dataValue = data.getString(key);
+
+            return dataValue != null && dataValue.equals("true");
+        }
+
+        return false;
     }
 }
