@@ -4,13 +4,14 @@ import android.content.ContentValues;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.io.IOException;
+import java.util.Locale;
+import java.util.UUID;
+
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-import java.io.IOException;
-import java.util.UUID;
 
 class OutboundRequest {
     public static final String HEADER_API_KEY = "X-Outbound-Key";
@@ -45,28 +46,7 @@ class OutboundRequest {
         RECEIVE, TRACKER, OPEN;
 
         public String toString() {
-            switch (this) {
-                case IDENTIFY:
-                    return "identify";
-                case TRACK:
-                    return "track";
-                case REGISTER:
-                    return "register";
-                case DISABLE:
-                    return "disable";
-                case CONFIG:
-                    return "config";
-                case PAIR:
-                    return "pair";
-                case RECEIVE:
-                    return "receive";
-                case TRACKER:
-                    return "tracker";
-                case OPEN:
-                    return "open";
-            }
-            // i don't even think it is possibel for this to happen but we have to do something.
-            throw new IllegalStateException("Attempting to get string for an unknown request type: " + this.name());
+            return name().toLowerCase(Locale.US);
         }
 
         public static Type fromString(String label) {
@@ -90,6 +70,7 @@ class OutboundRequest {
                 case "open":
                     return OPEN;
             }
+
             throw new IllegalStateException("Attempting to cast an unknown request type: " + label);
         }
 
@@ -203,7 +184,7 @@ class OutboundRequest {
         } else {
             Log.e(TAG, "response or response body was null.");
         }
-        
+
         if (request == Type.CONFIG) {
             OutboundClient.getInstance().loadConfig(attempts);
         }
