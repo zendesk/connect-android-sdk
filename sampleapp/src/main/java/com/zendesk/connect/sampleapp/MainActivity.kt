@@ -1,8 +1,5 @@
 package com.zendesk.connect.sampleapp
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -11,14 +8,7 @@ import io.outbound.sdk.Outbound
 import io.outbound.sdk.User
 import kotlinx.android.synthetic.main.activity_main.*
 
-const val LOG_TAG = "SampleMainActivity"
-
-const val NOTIFICATION_CHANNEL_ID = "outbound_sample_app_notifications"
-const val NOTIFICATION_CHANNEL_NAME = "Outbound Sample App Notifications"
-
-// Place your configuration keys in ~/.gradle/gradle.properties
-const val CONNECT_API_KEY: String = BuildConfig.CONNECT_API_KEY
-const val GOOGLE_PROJECT_ID: String = BuildConfig.GOOGLE_PROJECT_ID
+private const val LOG_TAG = "SampleMainActivity"
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,21 +25,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID,
-                    NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
-            notificationChannel.enableVibration(true)
-
-            val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(notificationChannel)
-
-            Outbound.init(this.application, CONNECT_API_KEY,
-                    GOOGLE_PROJECT_ID, NOTIFICATION_CHANNEL_ID)
-        } else {
-            Outbound.init(this.application, CONNECT_API_KEY, GOOGLE_PROJECT_ID)
-        }
 
         identify_user_button.setOnClickListener {
             identifyUser(sampleUser)
