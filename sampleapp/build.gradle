@@ -1,0 +1,50 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion rootProject.ext.targetSdkVersion
+
+    defaultConfig {
+        applicationId "com.zendesk.sampleapp"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+    maven {
+        url  "http://dl.bintray.com/outbound/maven"
+    }
+}
+
+dependencies {
+    ext.shouldUseLocalDependency = true
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.androidSupportLibraryVersion}"
+    implementation "com.google.firebase:firebase-messaging:${rootProject.ext.firebaseVersion}"
+
+    if (ext.shouldUseLocalDependency) {
+        implementation project(":sdk")
+    } else {
+        implementation 'io.outbound.sdk:android-sdk:0.4.0'
+    }
+}
+
+apply plugin: "com.google.gms.google-services"
