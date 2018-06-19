@@ -34,15 +34,64 @@ class MainActivity : AppCompatActivity() {
             trackEvent(sampleEvent)
         }
 
+        register_button.setOnClickListener {
+            registerForPush()
+        }
+
+        disable_button.setOnClickListener {
+            disablePushNotifications()
+        }
+
+        logout_button.setOnClickListener {
+            logout()
+        }
+
     }
 
+    /**
+     * Identifies a user within Outbound. Should be used when a user logs in or their
+     * identifying information is updated.
+     *
+     * @param user: The user to be identified
+     */
     private fun identifyUser(user: User) {
         Log.d(LOG_TAG, "Identifying User")
         Outbound.identify(user)
     }
 
+    /**
+     * Tracks the given event
+     *
+     * @param event: The event to be tracked
+     */
     private fun trackEvent(event: Event) {
         Log.d(LOG_TAG, "Tracking event")
         Outbound.track(event)
+    }
+
+    /**
+     * Registers the identified user for push notifications. The user should be
+     * automatically registered for push when they are identified.
+     */
+    private fun registerForPush() {
+        Log.d(LOG_TAG, "Registering user for push")
+        Outbound.register()
+    }
+
+    /**
+     * Disables push notifications for the identified user
+     */
+    private fun disablePushNotifications() {
+        Log.d(LOG_TAG, "Disabling push notifications for user")
+        Outbound.disable()
+    }
+
+    /**
+     * Logs the currently identified user out of Outbound by disabling the FCM
+     * token and clearing information from storage.
+     */
+    private fun logout() {
+        Log.d(LOG_TAG, "Logging out user")
+        Outbound.logout()
     }
 }

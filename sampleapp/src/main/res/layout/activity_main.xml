@@ -8,21 +8,32 @@
 
     <Button
         android:id="@+id/identify_user_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="120dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
+        style="@style/ButtonStyle"
+        android:layout_marginTop="100dp"
         android:text="@string/identify_user"/>
 
     <Button
         android:id="@+id/track_event_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
+        style="@style/ButtonStyle"
         android:layout_below="@id/identify_user_button"
         android:text="@string/track_event"/>
+
+    <Button
+        android:id="@+id/register_button"
+        style="@style/ButtonStyle"
+        android:layout_below="@id/track_event_button"
+        android:text="@string/register"/>
+
+    <Button
+        android:id="@+id/disable_button"
+        style="@style/ButtonStyle"
+        android:layout_below="@id/register_button"
+        android:text="@string/disable"/>
+
+    <Button
+        android:id="@+id/logout_button"
+        style="@style/ButtonStyle"
+        android:layout_below="@id/disable_button"
+        android:text="@string/logout"/>
 
 </RelativeLayout>
