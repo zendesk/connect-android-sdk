@@ -6,12 +6,14 @@ android {
     compileSdkVersion rootProject.ext.targetSdkVersion
 
     defaultConfig {
-        applicationId "com.zendesk.sampleapp"
+        applicationId "com.zendesk.connect.sampleapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
 
+        buildConfigField "String", "CONNECT_API_KEY", "\"${getConfigurationParameter("CONNECT_API_KEY")}\""
+        buildConfigField "String", "GOOGLE_PROJECT_ID", "\"${getConfigurationParameter("GOOGLE_PROJECT_ID")}\""
     }
 
     buildTypes {
@@ -26,21 +28,18 @@ android {
 repositories {
     google()
     jcenter()
-    mavenCentral()
     maven {
         url  "http://dl.bintray.com/outbound/maven"
     }
 }
 
 dependencies {
-    ext.shouldUseLocalDependency = true
 
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:${rootProject.ext.androidSupportLibraryVersion}"
     implementation "com.google.firebase:firebase-messaging:${rootProject.ext.firebaseVersion}"
 
-    if (ext.shouldUseLocalDependency) {
+    if (useLocalDependency()) {
         implementation project(":sdk")
     } else {
         implementation 'io.outbound.sdk:android-sdk:0.4.0'

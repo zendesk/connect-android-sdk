@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.zendesk.sampleapp">
+    package="com.zendesk.connect.sampleapp">
 
     <application
         android:allowBackup="true"
@@ -28,7 +28,7 @@
             android:exported="false"
             android:label="OutboundService" >
             <intent-filter>
-                <action android:name="com.zendesk.sampleapp.outbound.action.OPEN_NOTIF" />
+                <action android:name="com.zendesk.connect.sampleapp.outbound.action.OPEN_NOTIF" />
             </intent-filter>
         </service>
     </application>

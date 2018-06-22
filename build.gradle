@@ -3,18 +3,58 @@ ext {
     targetSdkVersion = 27
     androidSupportLibraryVersion = "27.0.1"
     firebaseVersion = "11.6.0"
+    sdkVersion = "0.4.0"
+
+    buildSettings = [
+            localBuild : true,
+            sdkVersion : sdkVersion
+    ]
 }
 
 buildscript {
     ext {
         kotlin_version = "1.2.30"
+
+        /**
+         * Looks for the specified configuration key in this order:
+         *
+         * <ol>
+         *     <li>system environment</li>
+         *     <li>project properties</li>
+         * </ol>
+         *
+         * If it isn't found, then the empty string is returned. This stops the gradlew from failing until
+         * it actually needs those values.
+         *
+         * @param keyName The key to look for
+         * @return The value or the empty string if not found
+         */
+        getConfigurationParameter = { keyName ->
+            return System.getenv(keyName) ?: rootProject.hasProperty(keyName) ? rootProject.properties[keyName] : ''
+        }
+
+        /**
+         * Checks if we should use the local modules  as dependency
+         * <p>
+         *     Test mode is based on the existence of an environmental variable called LOCAL_BUILD
+         * <p>
+         *
+         * @return if local dependencies should be used true, otherwise false
+         */
+        useLocalDependency = {
+            if("$System.env.LOCAL_BUILD" != "null") {
+                return System.env.LOCAL_BUILD.toBoolean()
+            }
+
+            return rootProject.ext.buildSettings.localBuild
+        }
     }
 
     repositories {
         google()
         jcenter()
-        mavenCentral()
     }
+
     dependencies {
         classpath "com.android.tools.build:gradle:3.1.3"
         classpath "com.github.dcendents:android-maven-gradle-plugin:2.0"

@@ -1,4 +1,4 @@
-package com.zendesk.sampleapp
+package com.zendesk.connect.sampleapp
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,11 +16,9 @@ const val LOG_TAG = "SampleMainActivity"
 const val NOTIFICATION_CHANNEL_ID = "outbound_sample_app_notifications"
 const val NOTIFICATION_CHANNEL_NAME = "Outbound Sample App Notifications"
 
-//TODO: Replace with your Connect private api key
-const val CONNECT_API_KEY: String = "xxx"
-
-//TODO: Replace with your Firebase Google Project ID
-const val GOOGLE_PROJECT_ID: String = "xxx"
+// Place your configuration keys in ~/.gradle/gradle.properties
+const val CONNECT_API_KEY: String = BuildConfig.CONNECT_API_KEY
+const val GOOGLE_PROJECT_ID: String = BuildConfig.GOOGLE_PROJECT_ID
 
 class MainActivity : AppCompatActivity() {
 
