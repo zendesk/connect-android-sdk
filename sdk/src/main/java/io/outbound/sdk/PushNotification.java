@@ -107,8 +107,8 @@ public class PushNotification implements Parcelable {
         data.putString(LG_NOTIF_IMG_FIELD, lgNotifImage);
         data.putString(SM_NOTIF_FOLDER_FIELD, smNotifFolder);
         data.putString(SM_NOTIF_IMG_FIELD, smNotifImage);
-        data.putString(SOUND_DEFAULT, soundDefault ? "true" : "false");
-        data.putString(SOUND_SILENT, soundSilent ? "true" : "false");
+        data.putString(SOUND_DEFAULT, isSoundDefault() ? "true" : "false");
+        data.putString(SOUND_SILENT, isSoundSilent() ? "true" : "false");
         data.putString(SOUND_FILE_FIELD, soundFile);
         data.putString(SOUND_FOLDER_FIELD, soundFolder);
         if (payload != null) {
@@ -244,9 +244,26 @@ public class PushNotification implements Parcelable {
 
     public String getSmNotifImage() { return smNotifImage; }
 
-    public Boolean getSoundSilent() { return soundSilent; }
 
-    public Boolean getSoundDefault() { return soundDefault; }
+    // TODO: Change Boolean to boolean
+    // soundSilent and soundDefault should probably be primitive boolean rather than
+    // object Boolean but that change may have far reaching impact on the SDK. For now
+    // I'm handling the null condition in their getters as a temporary solution to
+    // prevent Null Pointer Exceptions elsewhere.
+
+    public Boolean isSoundSilent() {
+        if (soundSilent == null) {
+            return Boolean.FALSE;
+        }
+        return soundSilent;
+    }
+
+    public Boolean isSoundDefault() {
+        if (soundDefault == null) {
+            return Boolean.FALSE;
+        }
+        return soundDefault;
+    }
 
     public String getSoundFile() { return soundFile; }
 
@@ -312,60 +329,48 @@ public class PushNotification implements Parcelable {
             Log.w(TAG, "Did you forget to provide a notification channel id? Notifications may not be delivered on sdk26+");
         }
 
-        builder
-                .setAutoCancel(true)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(this.getBody() == null ? "" : this.getBody()))
-                .setContentText(this.getBody() == null ? "" : this.getBody())
-                .setContentTitle(this.getTitle() == null ? "" : this.getTitle());
+        builder.setAutoCancel(true)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body == null ? "" : body))
+                .setContentText(body == null ? "" : body)
+                .setContentTitle(title == null ? "" : title);
 
-        try {
-            String image = this.getSmNotifImage();
-            String folder = this.getSmNotifFolder();
-            if (!TextUtils.isEmpty(image) && !TextUtils.isEmpty(folder)) {
-                int resId = resources.getIdentifier(image, folder, context.getPackageName());
-                if (resId != 0) {
-                    builder.setSmallIcon(resId);
-                }
+        if (!TextUtils.isEmpty(smNotifImage) && !TextUtils.isEmpty(smNotifFolder)) {
+            int resId = resources.getIdentifier(smNotifImage, smNotifFolder, context.getPackageName());
+            if (resId != 0) {
+                builder.setSmallIcon(resId);
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Small icon doesn't exist");
-
+        } else {
+            Log.d(TAG, "Small icon doesn't exist");
             if (appInfo != null) {
                 builder.setSmallIcon(appInfo.icon);
             }
         }
 
-        try {
-            String image = this.getLgNotifImage();
-            String folder = this.getLgNotifFolder();
-            Resources rs = pm.getResourcesForApplication(context.getPackageName());
-            if (!TextUtils.isEmpty(image) && !TextUtils.isEmpty(folder)) {
-                int resId = resources.getIdentifier(image, folder, context.getPackageName());
-                if (resId != 0) {
-                    builder.setLargeIcon(BitmapFactory.decodeResource(rs, resId));
-                }
+        if (!TextUtils.isEmpty(lgNotifImage) && !TextUtils.isEmpty(lgNotifFolder)) {
+            int resId = resources.getIdentifier(lgNotifImage, lgNotifFolder, context.getPackageName());
+            if (resId != 0) {
+                builder.setLargeIcon(BitmapFactory.decodeResource(resources, resId));
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Large icon doesn't exist");
+        } else {
+            Log.d(TAG, "Large icon doesn't exist");
         }
 
         try {
-            Uri media = null;
-            if (!this.getSoundSilent()) {
+            if (!isSoundSilent()) {
+                Uri media = null;
 
-                if (this.getSoundDefault()) {
+                if (isSoundDefault()) {
                     media = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                 } else {
-                    int resId = resources.getIdentifier(this.getSoundFile(), this.getSoundFolder(), context.getPackageName());
+                    int resId = resources.getIdentifier(soundFile, soundFolder, context.getPackageName());
                     if (resId != 0) {
                         media = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
                     }
                 }
-            }
 
-
-            if (media != null) {
-                builder.setSound(media);
+                if (media != null) {
+                    builder.setSound(media);
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Music asset does not exist");
@@ -382,8 +387,8 @@ public class PushNotification implements Parcelable {
         PendingIntent pIntent = PendingIntent.getService(context, 0, intentToOpen, PendingIntent.FLAG_ONE_SHOT);
         builder.setContentIntent(pIntent);
 
-        if (this.getCategory() != null) {
-            builder.setCategory(this.getCategory());
+        if (category != null) {
+            builder.setCategory(category);
         }
 
         return builder;

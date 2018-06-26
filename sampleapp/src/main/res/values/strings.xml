@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ConnectSampleApp</string>
+    <string name="identify_user">Identify User</string>
+    <string name="track_event">Track Event</string>
+</resources>
