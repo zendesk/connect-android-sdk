@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ConnectTestApp</string>
+    <string name="init">Init</string>
+    <string name="identify">Identify</string>
+    <string name="track">Track</string>
+    <string name="register">Register</string>
+    <string name="disable">Disable</string>
+    <string name="logout">Logout</string>
+    <string name="fetch_token">Fetch Token</string>
+</resources>

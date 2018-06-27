@@ -1,6 +1,7 @@
 ext {
     minSdkVersion = 19
     targetSdkVersion = 27
+
     androidSupportLibraryVersion = "27.0.1"
     firebaseVersion = "11.6.0"
     sdkVersion = "0.4.0"
@@ -9,6 +10,13 @@ ext {
             localBuild : true,
             sdkVersion : sdkVersion
     ]
+
+    mockitoVersion = "2.13.0"
+    gsonVersion = "2.8.0"
+    googleTruthVersion = "0.36"
+    junitVersion = "4.12"
+    okhttpVersion = "3.9.0"
+    kotlinVersion = "1.2.30"
 }
 
 buildscript {
@@ -56,10 +64,10 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:3.1.3"
-        classpath "com.github.dcendents:android-maven-gradle-plugin:2.0"
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.google.gms:google-services:4.0.0"
+        classpath group: "com.android.tools.build", name: "gradle", version: "3.1.3"
+        classpath group: "com.github.dcendents", name: "android-maven-gradle-plugin", version: "2.0"
+        classpath group: "com.jfrog.bintray.gradle", name: "gradle-bintray-plugin", version: "1.8.0"
+        classpath group: "org.jetbrains.kotlin", name: "kotlin-gradle-plugin", version: kotlin_version
+        classpath group: "com.google.gms", name: "google-services", version: "4.0.0"
     }
 }

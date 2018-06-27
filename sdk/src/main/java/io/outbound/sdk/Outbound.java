@@ -36,6 +36,13 @@ public class Outbound {
         worker.start();
     }
 
+    public static void initForTesting(Application app, String apiKey, String gcmSenderId,
+                                      String notificationChannelId, String testUrl) {
+        OutboundClient.initForTesting(app, apiKey, gcmSenderId, notificationChannelId, testUrl);
+        worker = new WorkerThread("outboundWorker");
+        worker.start();
+    }
+
     /**
      * Get the Active User's Token.
      * If there is no active user, then the value returned will be null.
