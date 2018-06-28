@@ -2,10 +2,10 @@ package com.zendesk.connect.testapp
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import io.outbound.sdk.Event
 import io.outbound.sdk.Outbound
 import io.outbound.sdk.User
+import io.outbound.sdk.initSdkForTesting
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         init_sdk_button.setOnClickListener {
-            Outbound.initForTesting(this.application, "rick", "morty", null, testUrl)
+            initSdkForTesting(this.application, "rick", "morty", null, testUrl)
         }
 
         identify_user_button.setOnClickListener {

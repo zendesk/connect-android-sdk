@@ -7,7 +7,6 @@ import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.outbound.sdk.Event
 import io.outbound.sdk.Outbound
 import io.outbound.sdk.User
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

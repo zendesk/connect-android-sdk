@@ -36,7 +36,7 @@ public class Outbound {
         worker.start();
     }
 
-    public static void initForTesting(Application app, String apiKey, String gcmSenderId,
+    static void initForTesting(Application app, String apiKey, String gcmSenderId,
                                       String notificationChannelId, String testUrl) {
         OutboundClient.initForTesting(app, apiKey, gcmSenderId, notificationChannelId, testUrl);
         worker = new WorkerThread("outboundWorker");
