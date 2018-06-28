@@ -18,9 +18,7 @@ class MainActivity : AppCompatActivity() {
             .setLastName("Reynolds")
             .build()
 
-    private val sampleEvent = Event("Sample Event").apply {
-        setUserId(sampleUser.userId)
-    }
+    private val sampleEvent = Event("Sample Event")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,8 +68,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Registers the identified user for push notifications. The user should be
-     * automatically registered for push when they are identified.
+     * Registers the identified user for push notifications. If a user hasn't been identified yet,
+     * then an anonymous user will be identified and registered for push.
      */
     private fun registerForPush() {
         Log.d(LOG_TAG, "Registering user for push")
