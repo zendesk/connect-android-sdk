@@ -68,7 +68,7 @@ class OutboundClient {
         INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId, null);
     }
 
-    public synchronized static void initForTesting(Application app, String apiKey, String gcmSenderId,
+    synchronized static void initForTesting(Application app, String apiKey, String gcmSenderId,
                                                    String notificationChannelId, String testUrl) {
         INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId, testUrl);
         INSTANCE.testMode = true;
