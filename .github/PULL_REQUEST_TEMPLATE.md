@@ -7,3 +7,10 @@
 ### Risks
 * None | Low | High
 * Affected areas:
+
+### To QA
+1.
+2.
+3.
+
+Expected Result:
