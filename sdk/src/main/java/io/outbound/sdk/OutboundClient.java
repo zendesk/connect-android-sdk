@@ -55,6 +55,8 @@ class OutboundClient {
     private boolean offline = false;
     private boolean enabled = true;
 
+    private boolean testMode = false;
+
     public synchronized static OutboundClient getInstance() {
         if (INSTANCE == null) {
             throw new IllegalStateException("Outbound has not been initialized.");
@@ -63,10 +65,17 @@ class OutboundClient {
     }
 
     public synchronized static void init(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
-        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId);
+        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId, null);
     }
 
-    private OutboundClient(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
+    synchronized static void initForTesting(Application app, String apiKey, String gcmSenderId,
+                                                   String notificationChannelId, String testUrl) {
+        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId, testUrl);
+        INSTANCE.testMode = true;
+    }
+
+    private OutboundClient(Application app, String apiKey, String gcmSenderId,
+                           String notificationChannelId, String testUrl) {
         this.app = app;
         this.apiKey = apiKey;
         this.gcmSenderId = gcmSenderId;
@@ -74,7 +83,11 @@ class OutboundClient {
 
         Monitor.add(app);
 
-        this.handler = new RequestHandler("outboundRequestWorker", app, apiKey);
+        if (TextUtils.isEmpty(testUrl)) {
+            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey);
+        } else {
+            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey, testUrl);
+        }
         handler.start();
 
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -228,11 +241,17 @@ class OutboundClient {
     /**
      * Gets the GCM token
      *
+     * If the SDK was initialised using initForTesting then a dummy token is returned
+     *
      * @return the GCM token, or null if we could not find it.
      */
     @Nullable private String getGcmToken() {
         if (!enabled) {
             return null;
+        }
+
+        if (testMode) {
+            return "test_token";
         }
 
         FirebaseInstanceId iid = FirebaseInstanceId.getInstance();

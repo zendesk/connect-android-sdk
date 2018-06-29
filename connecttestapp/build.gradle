@@ -1,0 +1,59 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+android {
+    compileSdkVersion rootProject.ext.targetSdkVersion
+
+
+
+    defaultConfig {
+        applicationId "com.zendesk.connect.testapp"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner 'io.appflate.restmock.android.RESTMockTestRunner'
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+repositories {
+    google()
+    jcenter()
+    maven {
+        url "https://jitpack.io"
+    }
+}
+
+dependencies {
+    implementation project(":sdk")
+    implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre7", version: kotlin_version
+    implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
+    implementation group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion
+
+    androidTestImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
+    androidTestImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
+    androidTestImplementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
+    androidTestImplementation group: "com.google.truth", name: "truth", version: rootProject.ext.googleTruthVersion
+
+    androidTestImplementation ('com.android.support.test:runner:1.0.2') {
+        exclude group: "com.android.support", module: "support-annotations"
+    }
+    androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.0.2'){
+        exclude group: "com.android.support", module: "support-annotations"
+    }
+    androidTestImplementation ('com.github.andrzejchm.RESTMock:android:0.3.1') {
+        exclude group: "com.android.support", module: "support-annotations"
+    }
+
+}
+
+apply plugin: "com.google.gms.google-services"

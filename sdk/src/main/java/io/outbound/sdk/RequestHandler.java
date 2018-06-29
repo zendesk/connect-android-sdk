@@ -42,6 +42,20 @@ class RequestHandler extends WorkerThread {
         this.storage = new RequestStorage(app);
     }
 
+    /**
+     * If the SDK was initialised using initForTesting then this constructor will be used to add
+     * an interceptor allowing us to redirect requests to a mock web server url.
+     *
+     * @param name name for the handler
+     * @param app the host application
+     * @param apiKey Connect private api key
+     * @param testUrl the url for the interceptor redirect
+     */
+    RequestHandler(String name, Application app, String apiKey, String testUrl) {
+        this(name, app, apiKey);
+        this.httpClient = this.httpClient.newBuilder().addInterceptor(new TestInterceptor(testUrl)).build();
+    }
+
     public synchronized void setReadyState(boolean ready) {
         boolean wasReady = this.ready;
         this.ready = ready;
