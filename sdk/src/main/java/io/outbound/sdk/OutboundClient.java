@@ -343,7 +343,7 @@ class OutboundClient {
     // it is currently using, all methods MUST persists through
     // In this case, since it is called after IDENTIFY
     // It will wait for the FCM token to be put on the active user.
-    public synchronized String fetchCurrentFCMToken() {
+    public synchronized String fetchCurrentFcmToken() {
         if (activeUser == null) {
             return "";
         }
@@ -351,15 +351,15 @@ class OutboundClient {
         return activeUser.getFcmToken();
     }
 
-    public void refreshFCMToken() {
+    public void refreshFcmToken() {
         if (!enabled) {
             return;
         }
 
-        refreshFCMToken(false);
+        refreshFcmToken(false);
     }
 
-    public void refreshFCMToken(boolean registerIfNew) {
+    public void refreshFcmToken(boolean registerIfNew) {
         if (!enabled) {
             return;
         }
@@ -441,7 +441,7 @@ class OutboundClient {
         }
 
         this.activeUser = user;
-        refreshFCMToken();
+        refreshFcmToken();
 
         persistUser();
 

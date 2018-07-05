@@ -45,7 +45,7 @@ public class Outbound {
      * If there is no active user, then the value returned will be null.
      */
     public static String getActiveToken() {
-        return OutboundClient.getInstance().fetchCurrentFCMToken();
+        return OutboundClient.getInstance().fetchCurrentFcmToken();
     }
 
     /**
@@ -74,7 +74,7 @@ public class Outbound {
      * <p>If you have not called {@link #identify(User)}, an anonymous user will be created and identified.
      * If/when you are able to identify the user, they will be aliased to the anonymous user automatically.</p>
      *
-     * @param event the event to br tracked
+     * @param event the event to be tracked
      */
     public static void track(final Event event) {
         worker.post(new Runnable() {
