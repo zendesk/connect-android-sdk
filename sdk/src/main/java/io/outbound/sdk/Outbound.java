@@ -16,10 +16,9 @@ public class Outbound {
      *
      * @param app instance of your Android {@link android.app.Application}
      * @param apiKey your Outbound environment's private API key
-     * @param gcmSenderId your Google Developer project ID
      */
-    public static void init(Application app, String apiKey, String gcmSenderId) {
-        init(app, apiKey, gcmSenderId, null);
+    public static void init(Application app, String apiKey) {
+        init(app, apiKey, null);
     }
 
     /**
@@ -27,18 +26,16 @@ public class Outbound {
      *
      * @param app instance of your Android {@link android.app.Application}
      * @param apiKey your Outbound environment's private API key
-     * @param gcmSenderId your Google Developer project ID
      * @param notificationChannelId the notification channel to deliver notifications to
      */
-    public static void init(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
-        OutboundClient.init(app, apiKey, gcmSenderId, notificationChannelId);
+    public static void init(Application app, String apiKey, String notificationChannelId) {
+        OutboundClient.init(app, apiKey, notificationChannelId);
         worker = new WorkerThread("outboundWorker");
         worker.start();
     }
 
-    static void initForTesting(Application app, String apiKey, String gcmSenderId,
-                                      String notificationChannelId, String testUrl) {
-        OutboundClient.initForTesting(app, apiKey, gcmSenderId, notificationChannelId, testUrl);
+    static void initForTesting(Application app, String apiKey, String notificationChannelId, String testUrl) {
+        OutboundClient.initForTesting(app, apiKey, notificationChannelId, testUrl);
         worker = new WorkerThread("outboundWorker");
         worker.start();
     }
@@ -48,7 +45,7 @@ public class Outbound {
      * If there is no active user, then the value returned will be null.
      */
     public static String getActiveToken() {
-        return OutboundClient.getInstance().fetchCurrentGCMToken();
+        return OutboundClient.getInstance().fetchCurrentFcmToken();
     }
 
     /**
@@ -58,7 +55,7 @@ public class Outbound {
      * <p>Identify should be called whenever your user logs in or any time information about the user
      * changes (for example, when they edit their profile).</p>
      *
-     * @param user
+     * @param user the user to be identified
      */
     public static void identify(final User user) {
         worker.post(new Runnable() {
@@ -77,7 +74,7 @@ public class Outbound {
      * <p>If you have not called {@link #identify(User)}, an anonymous user will be created and identified.
      * If/when you are able to identify the user, they will be aliased to the anonymous user automatically.</p>
      *
-     * @param event
+     * @param event the event to be tracked
      */
     public static void track(final Event event) {
         worker.post(new Runnable() {
@@ -89,13 +86,13 @@ public class Outbound {
     }
 
     /**
-     * Register the current user's GCM token with Outbound allowing Outbound to send the user push
+     * Register the current user's FCM token with Outbound allowing Outbound to send the user push
      * notifications. As with {@link #track(Event)}, if the user has not been identified, an anonymous
      * user will be created.
      *
      * <p>Ideally you should never have to manually register a user. The device token is automatically
      * added to all {@link #identify(User)} calls and if you track an event before identifying, an
-     * anonymous user is created (with a GCM token).</p>
+     * anonymous user is created (with a FCM token).</p>
      */
     public static void register() {
         worker.post(new Runnable() {
@@ -128,7 +125,7 @@ public class Outbound {
 
     /**
      * If an anonymous user has been created <b>OR</b> a user was identified, logout will 1) disable
-     * their GCM device token with Outbound and 2) clear the user from memory. The SDK then goes back
+     * their FCM device token with Outbound and 2) clear the user from memory. The SDK then goes back
      * to an empty state. So if you call {@link #track(Event)} after calling logout, a new, anonymous
      * user will be created.
      */

@@ -22,7 +22,7 @@ class SampleMessagingService: OutboundMessagingService() {
     override fun buildNotification(notification: PushNotification): Notification {
         val notificationBuilder = notification.createNotificationBuilder(this)
 
-        if (notification.payload.has("notificationColour")) {
+        if (notification.payload != null && notification.payload.has("notificationColour")) {
             when (notification.payload.getString("notificationColour").toLowerCase()) {
                 "red" -> notificationBuilder.color = Color.RED
                 "green" -> notificationBuilder.color = Color.GREEN

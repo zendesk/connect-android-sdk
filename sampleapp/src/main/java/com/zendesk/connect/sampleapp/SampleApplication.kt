@@ -32,10 +32,9 @@ class SampleApplication: Application() {
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(notificationChannel)
 
-            Outbound.init(this, CONNECT_API_KEY,
-                    GOOGLE_PROJECT_ID, NOTIFICATION_CHANNEL_ID)
+            Outbound.init(this, CONNECT_API_KEY, NOTIFICATION_CHANNEL_ID)
         } else {
-            Outbound.init(this, CONNECT_API_KEY, GOOGLE_PROJECT_ID)
+            Outbound.init(this, CONNECT_API_KEY)
         }
     }
 }
