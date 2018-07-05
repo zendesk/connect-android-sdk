@@ -42,7 +42,6 @@ class OutboundClient {
 
     private Application app;
     private String apiKey;
-    private String gcmSenderId;
     private String notificationChannelId;
 
     private Gson gson;
@@ -64,21 +63,19 @@ class OutboundClient {
         return INSTANCE;
     }
 
-    public synchronized static void init(Application app, String apiKey, String gcmSenderId, String notificationChannelId) {
-        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId, null);
+    public synchronized static void init(Application app, String apiKey, String notificationChannelId) {
+        INSTANCE = new OutboundClient(app, apiKey, notificationChannelId, null);
     }
 
-    synchronized static void initForTesting(Application app, String apiKey, String gcmSenderId,
-                                                   String notificationChannelId, String testUrl) {
-        INSTANCE = new OutboundClient(app, apiKey, gcmSenderId, notificationChannelId, testUrl);
+    synchronized static void initForTesting(Application app, String apiKey,
+                                            String notificationChannelId, String testUrl) {
+        INSTANCE = new OutboundClient(app, apiKey, notificationChannelId, testUrl);
         INSTANCE.testMode = true;
     }
 
-    private OutboundClient(Application app, String apiKey, String gcmSenderId,
-                           String notificationChannelId, String testUrl) {
+    private OutboundClient(Application app, String apiKey, String notificationChannelId, String testUrl) {
         this.app = app;
         this.apiKey = apiKey;
-        this.gcmSenderId = gcmSenderId;
         this.notificationChannelId = notificationChannelId;
 
         Monitor.add(app);
@@ -146,7 +143,7 @@ class OutboundClient {
 
         // can't register a user if they don't have a token.
         // ensureUser called above would have loaded the token
-        if (!activeUser.hasGcmToken()) {
+        if (!activeUser.hasFcmToken()) {
             Log.d(TAG, "could not register user with no token");
             return;
         }
@@ -155,7 +152,7 @@ class OutboundClient {
             JSONObject payload;
             payload = new JSONObject();
             payload.put("user_id", activeUser.getUserId());
-            payload.put("token", activeUser.getGcmToken());
+            payload.put("token", activeUser.getFcmToken());
 
             if (tokenToReplace != null) {
                 payload.put("replace", tokenToReplace);
@@ -179,7 +176,7 @@ class OutboundClient {
             return;
         }
 
-        if (!activeUser.hasGcmToken()) {
+        if (!activeUser.hasFcmToken()) {
             Log.d(TAG, "can not disable user with no token");
             return;
         }
@@ -188,7 +185,7 @@ class OutboundClient {
             JSONObject payload;
             payload = new JSONObject();
             payload.put("user_id", activeUser.getUserId());
-            payload.put("token", activeUser.getGcmToken());
+            payload.put("token", activeUser.getFcmToken());
 
             handler.queue(new OutboundRequest(OutboundRequest.Type.DISABLE, payload.toString()));
         } catch (JSONException e) {
@@ -219,7 +216,7 @@ class OutboundClient {
             JSONObject payload;
             payload = new JSONObject();
             payload.put("code", Integer.parseInt(pin));
-            payload.put("deviceToken", getGcmToken());
+            payload.put("deviceToken", getFcmToken());
             payload.put("deviceName", Build.MANUFACTURER + " " + Build.MODEL);
 
             OutboundRequest request = new OutboundRequest(OutboundRequest.Type.PAIR, payload.toString());
@@ -239,13 +236,13 @@ class OutboundClient {
 
 
     /**
-     * Gets the GCM token
+     * Gets the FCM token
      *
      * If the SDK was initialised using initForTesting then a dummy token is returned
      *
-     * @return the GCM token, or null if we could not find it.
+     * @return the FCM token, or null if we could not find it.
      */
-    @Nullable private String getGcmToken() {
+    @Nullable private String getFcmToken() {
         if (!enabled) {
             return null;
         }
@@ -345,13 +342,13 @@ class OutboundClient {
     // Synchronized method means that if the object that
     // it is currently using, all methods MUST persists through
     // In this case, since it is called after IDENTIFY
-    // It will wait for the GCM token to be put on the active user.
-    public synchronized String fetchCurrentGCMToken() {
+    // It will wait for the FCM token to be put on the active user.
+    public synchronized String fetchCurrentFCMToken() {
         if (activeUser == null) {
             return "";
         }
 
-        return activeUser.getGcmToken();
+        return activeUser.getFcmToken();
     }
 
     public void refreshFCMToken() {
@@ -371,10 +368,10 @@ class OutboundClient {
             return;
         }
 
-        String newToken = getGcmToken();
-        if (newToken != null && (!activeUser.hasGcmToken() || !activeUser.getGcmToken().equals(newToken))) {
-            String currentToken = activeUser.getGcmToken();
-            activeUser.setGcmToken(newToken);
+        String newToken = getFcmToken();
+        if (newToken != null && (!activeUser.hasFcmToken() || !activeUser.getFcmToken().equals(newToken))) {
+            String currentToken = activeUser.getFcmToken();
+            activeUser.setFcmToken(newToken);
 
             if (registerIfNew) {
                 register(currentToken);

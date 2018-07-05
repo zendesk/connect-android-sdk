@@ -20,7 +20,7 @@ public class User {
     @Expose private final String phoneNumber;
     @Expose private final Map<String, Object> attributes;
     @Expose private final Map<String, Object> groupAttributes;
-    @Expose private String[] gcm;
+    @Expose private String[] fcm;
     @Expose private String groupId;
     @Expose private String previousId;
     @Expose private String timezone;
@@ -59,7 +59,8 @@ public class User {
 
     /**
      * Determine if the user is anonymous or explicitly identified.
-     * @return
+     *
+     * @return true if the user is anonymous, false otherwise
      */
     public boolean isAnonymous() {
         return anonymous;
@@ -68,7 +69,7 @@ public class User {
     /**
      * Get the user's ID.
      *
-     * @return
+     * @return the user ID
      */
     public String getUserId() {
         if (isAnonymous()) {
@@ -80,7 +81,7 @@ public class User {
     /**
      * Get the user's first name if set. Could return null.
      *
-     * @return
+     * @return the user's first name
      */
     public String getFirstName() {
         return firstName;
@@ -89,7 +90,7 @@ public class User {
     /**
      * Get the user's last name if set. Could return null.
      *
-     * @return
+     * @return the user's last name
      */
     public String getLastName() {
         return lastName;
@@ -97,46 +98,47 @@ public class User {
 
     /**
      * Get the user's email address if set. Could return null.
-     * @return
+     *
+     * @return the user's email
      */
     public String getEmail() {
         return email;
     }
 
     /**
-     * Get the user's GCM token if set. Could return null.
+     * Get the user's FCM token if set. Could return null.
      *
-     * <p>GCM token is only added to the user after they have been identified. This is not a shortcut
-     * for retrieving the token from GCM.</p>
+     * <p>FCM token is only added to the user after they have been identified. This is not a shortcut
+     * for retrieving the token from FCM.</p>
      *
-     * @return
+     * @return the user's FCM token if set, null otherwise
      */
-    public String getGcmToken() {
-        if (gcm == null) {
+    public String getFcmToken() {
+        if (fcm == null) {
             return null;
         }
-        return gcm[0];
+        return fcm[0];
     }
 
     /**
-     * Set the user's GCM token.
+     * Set the user's FCM token.
      *
-     * @param gcm
+     * @param fcm the new FCM token
      */
-    public void setGcmToken(String gcm) {
-        if (this.gcm == null) {
-            this.gcm = new String[1];
+    public void setFcmToken(String fcm) {
+        if (this.fcm == null) {
+            this.fcm = new String[1];
         }
-        this.gcm[0] = gcm;
+        this.fcm[0] = fcm;
     }
 
     /**
-     * Check if the user has a GCM token set.
+     * Check if the user has a FCM token set.
      *
-     * @return
+     * @return true if token is set, false otherwise
      */
-    public boolean hasGcmToken() {
-        return gcm != null && gcm.length > 0 && gcm[0] != null;
+    public boolean hasFcmToken() {
+        return fcm != null && fcm.length > 0 && fcm[0] != null;
     }
 
     /**
@@ -145,7 +147,7 @@ public class User {
      * <p>This method does <b>NOT</b> get the device's phone number. A phone number must be set
      * when creating a user.</p>
      *
-     * @return
+     * @return the user's phone number
      */
     public String getPhoneNumber() {
         return phoneNumber;
@@ -155,9 +157,9 @@ public class User {
      * Get the user's attributes. Could possibly return null or an empty Map.
      *
      * <p>Attributes do not include any top level attributes such as email, phone number, first and
-     * last name or GCM token.</p>
+     * last name or FCM token.</p>
      *
-     * @return
+     * @return the user attributes
      */
     public Map<String, Object> getAttributes() {
         return attributes;
@@ -166,7 +168,7 @@ public class User {
     /**
      * Get the user's group number if they belong to a group. Could return null.
      *
-     * @return
+     * @return the user's group ID
      */
     public String getGroupId() {
         return groupId;
@@ -176,7 +178,7 @@ public class User {
      * Get any group attributes associated with the user if any are set. Could return null or an empty
      * Map.
      *
-     * @return
+     * @return the users's group attributes
      */
     public Map<String, Object> getGroupAttributes() {
         return groupAttributes;
@@ -187,7 +189,7 @@ public class User {
      * users. by setting the previous id of a user to that of the anonymous user the 2 users become
      * the same user.
      *
-     * @param prevId
+     * @param prevId the user's previous ID
      */
     public void setPrevioudId(String prevId) {
         this.anonymous = false;
@@ -197,7 +199,7 @@ public class User {
     /**
      * Get the user's previous id if they were aliased. Could return null.
      *
-     * @return
+     * @return the user's previous ID
      */
     public String getPreviousId() {
         return previousId;
