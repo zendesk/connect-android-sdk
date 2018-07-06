@@ -37,7 +37,9 @@ dependencies {
     implementation project(":sdk")
     implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre7", version: kotlin_version
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
-    implementation group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion
+    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion) {
+        exclude group: "com.android.support", module: "*"
+    }
 
     androidTestImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
     androidTestImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
