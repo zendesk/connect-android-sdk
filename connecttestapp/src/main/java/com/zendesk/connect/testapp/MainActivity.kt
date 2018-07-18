@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         init_sdk_button.setOnClickListener {
-            initSdkForTesting(this.application, "rick", "morty", null, testUrl)
+            initSdkForTesting(this.application, "rick", null, testUrl)
         }
 
         identify_user_button.setOnClickListener {

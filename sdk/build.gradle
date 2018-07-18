@@ -47,7 +47,9 @@ dependencies {
     implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
     implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
     implementation group: "com.squareup.okhttp3", name: "okhttp", version: rootProject.ext.okhttpVersion
-    implementation group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion
+    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion) {
+        exclude group: "com.android.support", module: "*"
+    }
 
     testImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
     testImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
@@ -83,21 +85,21 @@ install {
     }
 }
 
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
-    configurations = ['archives']
-    pkg {
-        repo = "maven"
-        name = "outbound-android-sdk"
-        userOrg = "outbound"
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        licenses = ["MIT"]
-        publish = false
-    }
-}
+//Properties properties = new Properties()
+//properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//
+//bintray {
+//    user = properties.getProperty("bintray.user")
+//    key = properties.getProperty("bintray.apikey")
+//
+//    configurations = ['archives']
+//    pkg {
+//        repo = "maven"
+//        name = "outbound-android-sdk"
+//        userOrg = "outbound"
+//        websiteUrl = siteUrl
+//        vcsUrl = gitUrl
+//        licenses = ["MIT"]
+//        publish = false
+//    }
+//}
