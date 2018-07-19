@@ -4,17 +4,13 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
 
-
-
     defaultConfig {
         applicationId "com.zendesk.connect.testapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner 'io.appflate.restmock.android.RESTMockTestRunner'
-
     }
 
     buildTypes {
@@ -23,8 +19,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
+
 repositories {
     google()
     jcenter()
@@ -37,7 +33,12 @@ dependencies {
     implementation project(":sdk")
     implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre7", version: kotlin_version
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
-    implementation group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion
+    implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
+        exclude group: "com.android.support", module: "*"
+    }
+    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
+        exclude group: "com.android.support", module: "*"
+    }
 
     androidTestImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
     androidTestImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion

@@ -1,6 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
 
 repositories {
     google()
@@ -8,26 +6,13 @@ repositories {
     maven { url "https://jitpack.io" }
 }
 
-configurations {
-    deployAars
-}
-
-
-group = "io.outbound.sdk"
-version = "0.3.0"
-def siteUrl = 'https://outboundio.github.io/android-sdk'
-def gitUrl = 'https://github.com/outboundio/android-sdk.git'
-
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
         versionName rootProject.ext.sdkVersion
-
-        testInstrumentationRunner 'io.appflate.restmock.android.RESTMockTestRunner'
     }
 
     buildTypes {
@@ -47,57 +32,10 @@ dependencies {
     implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
     implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
     implementation group: "com.squareup.okhttp3", name: "okhttp", version: rootProject.ext.okhttpVersion
-    implementation group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseVersion
-
-    testImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
-    testImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
-}
-
-install {
-    repositories.mavenInstaller {
-        pom {
-            project {
-                name name
-                url siteUrl
-                licenses {
-                    license {
-                        name 'MIT License'
-                        url 'http://www.opensource.org/licenses/mit-license.php'
-                    }
-                }
-                developers {
-                    developer {
-                        id 'tang8330'
-                        name 'Robin Tang'
-                        email 'robin@outbound.io'
-                    }
-                }
-                scm {
-                    connection gitUrl
-                    developerConnection gitUrl
-                    url siteUrl
-
-                }
-            }
-        }
+    implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
+        exclude group: "com.android.support", module: "*"
     }
-}
-
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
-    configurations = ['archives']
-    pkg {
-        repo = "maven"
-        name = "outbound-android-sdk"
-        userOrg = "outbound"
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        licenses = ["MIT"]
-        publish = false
+    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
+        exclude group: "com.android.support", module: "*"
     }
 }
