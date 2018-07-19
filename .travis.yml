@@ -1,0 +1,22 @@
+sudo: required
+dist: trusty
+language: android
+jdk: oraclejdk8
+before_cache:
+- rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+android:
+  components:
+    - tools
+    - platform-tools
+    - android-27
+    - build-tools-27.0.3
+    - extra-android-m2repository
+branches:
+  only:
+    - master
+before_script: "./scripts/travis.sh before"
+script: "./scripts/travis.sh"
