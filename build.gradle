@@ -2,8 +2,9 @@ ext {
     minSdkVersion = 19
     targetSdkVersion = 27
 
-    androidSupportLibraryVersion = "27.0.1"
-    firebaseVersion = "11.6.0"
+    androidSupportLibraryVersion = "27.1.1"
+    firebaseCoreVersion = "16.0.1"
+    firebaseMessagingVersion = "17.1.0"
     sdkVersion = "0.4.0"
 
     buildSettings = [
