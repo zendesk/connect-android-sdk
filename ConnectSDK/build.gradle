@@ -1,11 +1,5 @@
 apply plugin: 'com.android.library'
 
-repositories {
-    google()
-    jcenter()
-    maven { url "https://jitpack.io" }
-}
-
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
 
@@ -22,20 +16,17 @@ android {
         }
     }
 
-    lintOptions {
-        abortOnError false
-    }
+}
+
+repositories {
+    google()
+    jcenter()
 }
 
 dependencies {
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
     implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
-    implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
-    implementation group: "com.squareup.okhttp3", name: "okhttp", version: rootProject.ext.okhttpVersion
-    implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
-    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }

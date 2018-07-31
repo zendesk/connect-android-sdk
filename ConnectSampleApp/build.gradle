@@ -43,7 +43,7 @@ dependencies {
     }
 
     if (useLocalDependency()) {
-        implementation project(":sdk")
+        implementation project(":OutboundSDK")
     } else {
         implementation 'io.outbound.sdk:android-sdk:0.4.0'
     }
