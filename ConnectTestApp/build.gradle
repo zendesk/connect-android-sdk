@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    implementation project(":sdk")
+    implementation project(":OutboundSDK")
     implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre7", version: kotlin_version
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
     implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
