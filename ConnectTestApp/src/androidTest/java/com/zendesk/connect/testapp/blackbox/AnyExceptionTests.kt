@@ -12,13 +12,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
 
-const val configPath = "/i/config/sdk/android"
-const val identifyPath = "/v2/identify"
-const val trackPath = "/v2/track"
-const val registerPath = "/v2/gcm/register"
-const val disablePath = "/v2/gcm/disable"
-const val pairPath = "/i/testsend/push/pair/android"
-
 /**
  * Tests any exceptions expected by using the SDK non-init methods before initialisation.
  *

@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import io.outbound.sdk.activity.AdminActivity;
+import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 class OutboundClient {
@@ -68,22 +69,23 @@ class OutboundClient {
     }
 
     synchronized static void initForTesting(Application app, String apiKey,
-                                            String notificationChannelId, String testUrl) {
-        INSTANCE = new OutboundClient(app, apiKey, notificationChannelId, testUrl);
+                                            String notificationChannelId, OkHttpClient testClient) {
+        INSTANCE = new OutboundClient(app, apiKey, notificationChannelId, testClient);
         INSTANCE.testMode = true;
     }
 
-    private OutboundClient(Application app, String apiKey, String notificationChannelId, String testUrl) {
+    private OutboundClient(Application app, String apiKey,
+                           String notificationChannelId, OkHttpClient testClient) {
         this.app = app;
         this.apiKey = apiKey;
         this.notificationChannelId = notificationChannelId;
 
         Monitor.add(app);
 
-        if (TextUtils.isEmpty(testUrl)) {
+        if (testClient == null) {
             this.handler = new RequestHandler("outboundRequestWorker", app, apiKey);
         } else {
-            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey, testUrl);
+            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey, testClient);
         }
         handler.start();
 

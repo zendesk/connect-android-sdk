@@ -1,20 +1,20 @@
 package com.zendesk.connect.testapp.blackbox
 
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.matcher.ViewMatchers.withId
+import android.support.test.espresso.IdlingRegistry
 import android.support.test.rule.ActivityTestRule
 import com.google.common.truth.Truth.assertThat
 import com.zendesk.connect.testapp.MainActivity
-import com.zendesk.connect.testapp.R
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
 import io.appflate.restmock.RequestsVerifier
 import io.appflate.restmock.utils.RequestMatchers.pathContains
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
+import io.outbound.sdk.initSdkForTesting
 import io.outbound.sdk.Outbound
 import org.junit.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -44,6 +44,8 @@ class ConfigEnabledTests {
     @get:Rule
     private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
 
+    private lateinit var latch: CountDownLatch
+
     @Before
     fun setup() {
         RESTMockServer.reset()
@@ -52,22 +54,36 @@ class ConfigEnabledTests {
 
         testRule.launchActivity(null)
 
-        testRule.activity.testUrl = RESTMockServer.getUrl()
+        latch = CountDownLatch(3) // init, identify, some other action
+
+        IdlingRegistry.getInstance().register(idlingClient)
+
+        idlingClient.registerIdleTransitionCallback { latch.countDown() }
 
         RESTMockServer.whenGET(pathContains(configPath))
                 .thenReturnFile(200, "config_enabled_response.json")
 
-        onView(withId(R.id.init_sdk_button)).perform(click())
+        RESTMockServer.whenPOST(pathEndsWith(identifyPath))
+                .thenReturnEmpty(200)
+
+        initSdkForTesting(testRule.activity.application, "Whatever",
+                "Whatevs", testClient)
+    }
+
+    @After
+    fun tearDown() {
+        IdlingRegistry.getInstance().unregister(idlingClient)
     }
 
     @Test
     fun callingIdentifyUserShouldMakeAnIdentifyRequestToTheApi() {
-        RESTMockServer.whenPOST(pathEndsWith(identifyPath))
-                .thenReturnEmpty(200)
+        Outbound.identify(testUser)
 
-        onView(withId(R.id.identify_user_button)).perform(click())
+        latch = CountDownLatch(2) // init, identify
 
-        RequestsVerifier.verifyRequest(pathEndsWith(identifyPath)).invoked()
+        latch.await(2, TimeUnit.SECONDS)
+
+        RequestsVerifier.verifyRequest(pathEndsWith(identifyPath)).exactly(1)
     }
 
     @Test
@@ -75,7 +91,10 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(trackPath))
                 .thenReturnEmpty(200)
 
-        onView(withId(R.id.track_event_button)).perform(click())
+        Outbound.identify(testUser)
+        Outbound.track(testEvent)
+
+        latch.await(2, TimeUnit.SECONDS)
 
         RequestsVerifier.verifyRequest(pathEndsWith(trackPath)).invoked()
     }
@@ -85,7 +104,10 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(registerPath))
                 .thenReturnEmpty(200)
 
-        onView(withId(R.id.register_button)).perform(click())
+        Outbound.identify(testUser)
+        Outbound.register()
+
+        latch.await(2, TimeUnit.SECONDS)
 
         RequestsVerifier.verifyRequest(pathEndsWith(registerPath)).invoked()
     }
@@ -95,23 +117,28 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(disablePath))
                 .thenReturnEmpty(200)
 
-        //Need to identify the user first
-        onView(withId(R.id.identify_user_button)).perform(click())
-        onView(withId(R.id.disable_button)).perform(click())
+        Outbound.identify(testUser)
+        Outbound.disable()
+
+        latch.await(2, TimeUnit.SECONDS)
 
         RequestsVerifier.verifyRequest(pathEndsWith(disablePath)).invoked()
     }
 
     @Test
     fun callingDisablePushNotificationsWithNoUserIdentifiedShouldMakeNoRequestToTheApi() {
-        onView(withId(R.id.disable_button)).perform(click())
+        Outbound.disable()
 
         RequestsVerifier.verifyRequest(pathEndsWith(disablePath)).never()
     }
 
     @Test
     fun callingGetActiveTokenShouldReturnANonEmptyStringIfAUserIsIdentified() {
-        onView(withId(R.id.identify_user_button)).perform(click())
+        latch = CountDownLatch(2)
+
+        Outbound.identify(testUser)
+
+        latch.await(2, TimeUnit.SECONDS)
 
         assertThat(Outbound.getActiveToken()).isNotEmpty()
     }
