@@ -1,9 +1,7 @@
 package com.zendesk.connect.testapp.blackbox
 
 import android.support.test.espresso.IdlingRegistry
-import android.support.test.rule.ActivityTestRule
 import com.google.common.truth.Truth.assertThat
-import com.zendesk.connect.testapp.MainActivity
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
@@ -41,9 +39,6 @@ import java.util.concurrent.TimeUnit
  */
 class ConfigEnabledTests {
 
-    @get:Rule
-    private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
-
     private lateinit var latch: CountDownLatch
 
     @Before
@@ -51,8 +46,6 @@ class ConfigEnabledTests {
         RESTMockServer.reset()
         clearDatabase()
         clearSharedPrefs()
-
-        testRule.launchActivity(null)
 
         latch = CountDownLatch(3) // init, identify, some other action
 
@@ -66,7 +59,7 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(identifyPath))
                 .thenReturnEmpty(200)
 
-        initSdkForTesting(testRule.activity.application, "Whatever",
+        initSdkForTesting(testApplication, "Whatever",
                 "Whatevs", testClient)
     }
 

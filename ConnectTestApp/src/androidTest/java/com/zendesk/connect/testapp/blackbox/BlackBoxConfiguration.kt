@@ -1,6 +1,9 @@
 package com.zendesk.connect.testapp.blackbox
 
+import android.app.Application
+import android.support.test.rule.ActivityTestRule
 import com.jakewharton.espresso.OkHttp3IdlingResource
+import com.zendesk.connect.testapp.MainActivity
 import com.zendesk.connect.testapp.helpers.TestInterceptor
 import io.appflate.restmock.RESTMockServer
 import io.outbound.sdk.Event
@@ -15,8 +18,8 @@ const val disablePath = "/v2/gcm/disable"
 const val pairPath = "/i/testsend/push/pair/android"
 
 val testClient: OkHttpClient = OkHttpClient.Builder()
-    .addInterceptor(TestInterceptor(RESTMockServer.getUrl()))
-    .build()
+        .addInterceptor(TestInterceptor(RESTMockServer.getUrl()))
+        .build()
 
 val idlingClient: OkHttp3IdlingResource = OkHttp3IdlingResource
         .create("idlingClient", testClient)
@@ -24,3 +27,8 @@ val idlingClient: OkHttp3IdlingResource = OkHttp3IdlingResource
 val testUser: User = User.newAnonymousUser()
 
 val testEvent: Event = Event("Test Event")
+
+val testApplication: Application =
+    ActivityTestRule(MainActivity::class.java, true, true).apply {
+        launchActivity(null)
+    }.activity.application

@@ -1,9 +1,7 @@
 package com.zendesk.connect.testapp.blackbox
 
 import android.support.test.espresso.IdlingRegistry
-import android.support.test.rule.ActivityTestRule
 import com.google.common.truth.Truth.assertThat
-import com.zendesk.connect.testapp.MainActivity
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
@@ -13,7 +11,6 @@ import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
 import io.outbound.sdk.initSdkForTesting
 import io.outbound.sdk.Outbound
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -24,9 +21,6 @@ import java.util.concurrent.TimeUnit
  */
 class ConfigDisabledTests {
 
-    @get:Rule
-    private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
-
     private lateinit var latch: CountDownLatch
 
     @Before
@@ -34,8 +28,6 @@ class ConfigDisabledTests {
         RESTMockServer.reset()
         clearSharedPrefs()
         clearDatabase()
-
-        testRule.launchActivity(null)
 
         latch = CountDownLatch(1) // init
 
@@ -46,7 +38,7 @@ class ConfigDisabledTests {
         RESTMockServer.whenGET(RequestMatchers.pathContains(configPath))
                 .thenReturnFile(200, "config_disabled_response.json")
 
-        initSdkForTesting(testRule.activity.application, "Whatever",
+        initSdkForTesting(testApplication, "Whatever",
         "Whatevs", testClient)
 
         // Need to wait for the config request to return the disabled config

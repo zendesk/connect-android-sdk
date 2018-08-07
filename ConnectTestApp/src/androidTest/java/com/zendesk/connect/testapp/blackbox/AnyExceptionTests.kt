@@ -1,14 +1,11 @@
 package com.zendesk.connect.testapp.blackbox
 
-import android.support.test.rule.ActivityTestRule
-import com.zendesk.connect.testapp.MainActivity
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.outbound.sdk.Event
 import io.outbound.sdk.Outbound
 import io.outbound.sdk.User
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
 
@@ -26,15 +23,10 @@ import org.mockito.ArgumentMatchers.anyString
  */
 class AnyExceptionTests {
 
-    @get:Rule
-    private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
-
     @Before
     fun setUp() {
         clearSharedPrefs()
         clearDatabase()
-
-        testRule.launchActivity(null)
     }
 
     @Test(expected = NullPointerException::class)
