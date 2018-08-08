@@ -66,6 +66,10 @@ class ConfigEnabledTests {
 
         initSdkForTesting(testApplication, "Whatever",
                 "Whatevs", testClient)
+
+        // I don't like this but after the config request, we need a small bit of extra time to
+        // store the config in SharedPrefs so that the config is applied correctly.
+        Thread.sleep(200)
     }
 
     @After
