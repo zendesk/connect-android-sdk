@@ -77,7 +77,7 @@ class ConfigEnabledTests {
     fun callingIdentifyUserShouldMakeAnIdentifyRequestToTheApi() {
         Outbound.identify(testUser)
 
-        shortLatch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(identifyPath)).invoked()
     }
@@ -89,11 +89,11 @@ class ConfigEnabledTests {
 
         Outbound.identify(testUser)
 
-        shortLatch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(5, TimeUnit.SECONDS)
 
         Outbound.track(testEvent)
 
-        longLatch.await(2, TimeUnit.SECONDS)
+        longLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(trackPath)).invoked()
     }
@@ -105,11 +105,11 @@ class ConfigEnabledTests {
 
         Outbound.identify(testUser)
 
-        shortLatch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(5, TimeUnit.SECONDS)
 
         Outbound.register()
 
-        longLatch.await(2, TimeUnit.SECONDS)
+        longLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(registerPath)).invoked()
     }
@@ -121,11 +121,11 @@ class ConfigEnabledTests {
 
         Outbound.identify(testUser)
 
-        shortLatch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(5, TimeUnit.SECONDS)
 
         Outbound.disable()
 
-        longLatch.await(2, TimeUnit.SECONDS)
+        longLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(disablePath)).invoked()
     }
@@ -143,7 +143,7 @@ class ConfigEnabledTests {
     fun callingGetActiveTokenShouldReturnANonEmptyStringIfAUserIsIdentified() {
         Outbound.identify(testUser)
 
-        shortLatch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(identifyPath)).invoked()
 
