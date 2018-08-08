@@ -42,7 +42,7 @@ class InitialisationTests {
 
         latch.await(2, TimeUnit.SECONDS)
 
-        verifyRequest(pathContains(configPath)).exactly(1)
+        verifyRequest(pathContains(configPath)).invoked()
     }
 
     @Test
@@ -56,6 +56,6 @@ class InitialisationTests {
         initSdkForTesting(testApplication, "Whatever",
                 "Whatevs", testClient)
 
-        verifyRequest(pathContains(configPath)).exactly(1)
+        verifyRequest(pathContains(configPath)).invoked()
     }
 }

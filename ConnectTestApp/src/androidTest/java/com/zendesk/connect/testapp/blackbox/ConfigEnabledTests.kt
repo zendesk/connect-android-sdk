@@ -5,7 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
-import io.appflate.restmock.RequestsVerifier
+import io.appflate.restmock.RequestsVerifier.verifyRequest
 import io.appflate.restmock.utils.RequestMatchers.pathContains
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
 import io.outbound.sdk.initSdkForTesting
@@ -39,7 +39,8 @@ import java.util.concurrent.TimeUnit
  */
 class ConfigEnabledTests {
 
-    private lateinit var latch: CountDownLatch
+    private lateinit var longLatch: CountDownLatch
+    private lateinit var shortLatch: CountDownLatch
 
     @Before
     fun setup() {
@@ -47,11 +48,15 @@ class ConfigEnabledTests {
         clearDatabase()
         clearSharedPrefs()
 
-        latch = CountDownLatch(3) // init, identify, some other action
+        longLatch = CountDownLatch(3) // init, identify, some other action
+        shortLatch = CountDownLatch(2) // init, identify (for postponing third action)
 
         IdlingRegistry.getInstance().register(idlingClient)
 
-        idlingClient.registerIdleTransitionCallback { latch.countDown() }
+        idlingClient.registerIdleTransitionCallback {
+            longLatch.countDown()
+            shortLatch.countDown()
+        }
 
         RESTMockServer.whenGET(pathContains(configPath))
                 .thenReturnFile(200, "config_enabled_response.json")
@@ -72,11 +77,9 @@ class ConfigEnabledTests {
     fun callingIdentifyUserShouldMakeAnIdentifyRequestToTheApi() {
         Outbound.identify(testUser)
 
-        latch = CountDownLatch(2) // init, identify
+        shortLatch.await(2, TimeUnit.SECONDS)
 
-        latch.await(2, TimeUnit.SECONDS)
-
-        RequestsVerifier.verifyRequest(pathEndsWith(identifyPath)).exactly(1)
+        verifyRequest(pathEndsWith(identifyPath)).invoked()
     }
 
     @Test
@@ -85,11 +88,14 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(200)
 
         Outbound.identify(testUser)
+
+        shortLatch.await(2, TimeUnit.SECONDS)
+
         Outbound.track(testEvent)
 
-        latch.await(2, TimeUnit.SECONDS)
+        longLatch.await(2, TimeUnit.SECONDS)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(trackPath)).invoked()
+        verifyRequest(pathEndsWith(trackPath)).invoked()
     }
 
     @Test
@@ -98,11 +104,14 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(200)
 
         Outbound.identify(testUser)
+
+        shortLatch.await(2, TimeUnit.SECONDS)
+
         Outbound.register()
 
-        latch.await(2, TimeUnit.SECONDS)
+        longLatch.await(2, TimeUnit.SECONDS)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(registerPath)).invoked()
+        verifyRequest(pathEndsWith(registerPath)).invoked()
     }
 
     @Test
@@ -111,27 +120,32 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(200)
 
         Outbound.identify(testUser)
+
+        shortLatch.await(2, TimeUnit.SECONDS)
+
         Outbound.disable()
 
-        latch.await(2, TimeUnit.SECONDS)
+        longLatch.await(2, TimeUnit.SECONDS)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(disablePath)).invoked()
+        verifyRequest(pathEndsWith(disablePath)).invoked()
     }
 
     @Test
     fun callingDisablePushNotificationsWithNoUserIdentifiedShouldMakeNoRequestToTheApi() {
         Outbound.disable()
 
-        RequestsVerifier.verifyRequest(pathEndsWith(disablePath)).never()
+        shortLatch.await(500, TimeUnit.MILLISECONDS)
+
+        verifyRequest(pathEndsWith(disablePath)).never()
     }
 
     @Test
     fun callingGetActiveTokenShouldReturnANonEmptyStringIfAUserIsIdentified() {
-        latch = CountDownLatch(2)
-
         Outbound.identify(testUser)
 
-        latch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(2, TimeUnit.SECONDS)
+
+        verifyRequest(pathEndsWith(identifyPath)).invoked()
 
         assertThat(Outbound.getActiveToken()).isNotEmpty()
     }
@@ -147,6 +161,8 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(200)
 
         assertThat(Outbound.pairDevice("9999")).isTrue()
+
+        verifyRequest(pathEndsWith(pairPath)).invoked()
     }
 
     @Test
@@ -155,6 +171,8 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(401)
 
         assertThat(Outbound.pairDevice("9999")).isFalse()
+
+        verifyRequest(pathEndsWith(pairPath)).invoked()
     }
 
 }

@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit
  */
 class ConfigDisabledTests {
 
-    private lateinit var latch: CountDownLatch
+    private lateinit var longLatch: CountDownLatch
+    private lateinit var shortLatch: CountDownLatch
 
     @Before
     fun setUp() {
@@ -29,11 +30,15 @@ class ConfigDisabledTests {
         clearSharedPrefs()
         clearDatabase()
 
-        latch = CountDownLatch(1) // init
+        longLatch = CountDownLatch(2) // init, and some other action
+        shortLatch = CountDownLatch(1) // init
 
         IdlingRegistry.getInstance().register(idlingClient)
 
-        idlingClient.registerIdleTransitionCallback { latch.countDown() }
+        idlingClient.registerIdleTransitionCallback {
+            longLatch.countDown()
+            shortLatch.countDown()
+        }
 
         RESTMockServer.whenGET(RequestMatchers.pathContains(configPath))
                 .thenReturnFile(200, "config_disabled_response.json")
@@ -42,12 +47,18 @@ class ConfigDisabledTests {
         "Whatevs", testClient)
 
         // Need to wait for the config request to return the disabled config
-        latch.await(2, TimeUnit.SECONDS)
+        shortLatch.await(2, TimeUnit.SECONDS)
+
+        // I don't like this but after the config request, we need a small bit of extra time to
+        // store the config in SharedPrefs so that the config is applied correctly.
+        Thread.sleep(200)
     }
 
     @Test
     fun callingIdentifyUserWithADisabledConfigShouldMakeNoRequestToTheApi() {
         Outbound.identify(testUser)
+
+        longLatch.await(500, TimeUnit.MILLISECONDS)
 
         verifyRequest(pathEndsWith(identifyPath)).never()
     }
@@ -56,12 +67,16 @@ class ConfigDisabledTests {
     fun callingTrackEventWithADisabledConfigShouldMakeNoRequestToTheApi() {
         Outbound.track(testEvent)
 
+        longLatch.await(500, TimeUnit.MILLISECONDS)
+
         verifyRequest(pathEndsWith(trackPath)).never()
     }
 
     @Test
     fun callingRegisterForPushWithADisabledConfigShouldMakeNoRequestToTheApi() {
         Outbound.register()
+
+        longLatch.await(500, TimeUnit.MILLISECONDS)
 
         verifyRequest(pathEndsWith(registerPath)).never()
     }
@@ -70,12 +85,16 @@ class ConfigDisabledTests {
     fun callingDisablePushNotificationsWithADisabledConfigShouldMakeNoRequestToTheApi() {
         Outbound.disable()
 
+        longLatch.await(500, TimeUnit.MILLISECONDS)
+
         verifyRequest(pathEndsWith(disablePath)).never()
     }
 
     @Test
-    fun pairDeviceShouldReturnFalseIfConfigIsDisabled() {
+    fun pairDeviceShouldReturnFalseAndMakeNoRequestToTheApiIfConfigIsDisabled() {
         assertThat(Outbound.pairDevice("0000")).isFalse()
+
+        verifyRequest(pathEndsWith(pairPath)).never()
     }
 
 }
