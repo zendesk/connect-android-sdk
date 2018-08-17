@@ -1,6 +1,7 @@
 package io.outbound.sdk;
 
 import android.app.Application;
+import android.support.annotation.VisibleForTesting;
 
 import okhttp3.OkHttpClient;
 
@@ -36,6 +37,7 @@ public class Outbound {
         worker.start();
     }
 
+    @VisibleForTesting
     static void initForTesting(Application app, String apiKey,
                                String notificationChannelId, OkHttpClient testClient) {
         OutboundClient.initForTesting(app, apiKey, notificationChannelId, testClient);

@@ -12,6 +12,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -68,6 +69,7 @@ class OutboundClient {
         INSTANCE = new OutboundClient(app, apiKey, notificationChannelId, null);
     }
 
+    @VisibleForTesting
     synchronized static void initForTesting(Application app, String apiKey,
                                             String notificationChannelId, OkHttpClient testClient) {
         INSTANCE = new OutboundClient(app, apiKey, notificationChannelId, testClient);
