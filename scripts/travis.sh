@@ -32,7 +32,7 @@ runConnectInstrumentedTests() {
     echo "Waiting for emulator..."
     android-wait-for-emulator
 
-    ./gradlew clean --settings-file settings_instrumented_tests.gradle connectedCheck
+    ./gradlew clean --settings-file settings_instrumented_tests.gradle connectedCheck --stacktrace
     exitOnFailedBuild "ConnectTestApp instrumentation tests"
 
     adb -s emulator-5554 emu kill || true

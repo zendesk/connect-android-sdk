@@ -1,6 +1,9 @@
 package io.outbound.sdk;
 
 import android.app.Application;
+import android.support.annotation.VisibleForTesting;
+
+import okhttp3.OkHttpClient;
 
 /**
  * Public interface for Outbound.
@@ -34,8 +37,10 @@ public class Outbound {
         worker.start();
     }
 
-    static void initForTesting(Application app, String apiKey, String notificationChannelId, String testUrl) {
-        OutboundClient.initForTesting(app, apiKey, notificationChannelId, testUrl);
+    @VisibleForTesting
+    static void initForTesting(Application app, String apiKey,
+                               String notificationChannelId, OkHttpClient testClient) {
+        OutboundClient.initForTesting(app, apiKey, notificationChannelId, testClient);
         worker = new WorkerThread("outboundWorker");
         worker.start();
     }

@@ -1,20 +1,18 @@
 package com.zendesk.connect.testapp.blackbox
 
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.rule.ActivityTestRule
+import android.support.test.espresso.IdlingRegistry
 import com.google.common.truth.Truth.assertThat
-import com.zendesk.connect.testapp.MainActivity
-import com.zendesk.connect.testapp.R
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
-import io.appflate.restmock.RequestsVerifier
+import io.appflate.restmock.RequestsVerifier.verifyRequest
 import io.appflate.restmock.utils.RequestMatchers.pathContains
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
+import io.outbound.sdk.initSdkForTesting
 import io.outbound.sdk.Outbound
 import org.junit.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -41,8 +39,8 @@ import org.junit.*
  */
 class ConfigEnabledTests {
 
-    @get:Rule
-    private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
+    private lateinit var longLatch: CountDownLatch
+    private lateinit var shortLatch: CountDownLatch
 
     @Before
     fun setup() {
@@ -50,24 +48,42 @@ class ConfigEnabledTests {
         clearDatabase()
         clearSharedPrefs()
 
-        testRule.launchActivity(null)
+        longLatch = CountDownLatch(3) // init, identify, some other action
+        shortLatch = CountDownLatch(2) // init, identify (for postponing third action)
 
-        testRule.activity.testUrl = RESTMockServer.getUrl()
+        IdlingRegistry.getInstance().register(idlingClient)
+
+        idlingClient.registerIdleTransitionCallback {
+            longLatch.countDown()
+            shortLatch.countDown()
+        }
 
         RESTMockServer.whenGET(pathContains(configPath))
                 .thenReturnFile(200, "config_enabled_response.json")
 
-        onView(withId(R.id.init_sdk_button)).perform(click())
+        RESTMockServer.whenPOST(pathEndsWith(identifyPath))
+                .thenReturnEmpty(200)
+
+        initSdkForTesting(testApplication, "Whatever",
+                "Whatevs", testClient)
+
+        // I don't like this but after the config request, we need a small bit of extra time to
+        // store the config in SharedPrefs so that the config is applied correctly.
+        Thread.sleep(200)
+    }
+
+    @After
+    fun tearDown() {
+        IdlingRegistry.getInstance().unregister(idlingClient)
     }
 
     @Test
     fun callingIdentifyUserShouldMakeAnIdentifyRequestToTheApi() {
-        RESTMockServer.whenPOST(pathEndsWith(identifyPath))
-                .thenReturnEmpty(200)
+        Outbound.identify(testUser)
 
-        onView(withId(R.id.identify_user_button)).perform(click())
+        shortLatch.await(5, TimeUnit.SECONDS)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(identifyPath)).invoked()
+        verifyRequest(pathEndsWith(identifyPath)).invoked()
     }
 
     @Test
@@ -75,9 +91,15 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(trackPath))
                 .thenReturnEmpty(200)
 
-        onView(withId(R.id.track_event_button)).perform(click())
+        Outbound.identify(testUser)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(trackPath)).invoked()
+        shortLatch.await(5, TimeUnit.SECONDS)
+
+        Outbound.track(testEvent)
+
+        longLatch.await(5, TimeUnit.SECONDS)
+
+        verifyRequest(pathEndsWith(trackPath)).invoked()
     }
 
     @Test
@@ -85,9 +107,15 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(registerPath))
                 .thenReturnEmpty(200)
 
-        onView(withId(R.id.register_button)).perform(click())
+        Outbound.identify(testUser)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(registerPath)).invoked()
+        shortLatch.await(5, TimeUnit.SECONDS)
+
+        Outbound.register()
+
+        longLatch.await(5, TimeUnit.SECONDS)
+
+        verifyRequest(pathEndsWith(registerPath)).invoked()
     }
 
     @Test
@@ -95,23 +123,33 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(disablePath))
                 .thenReturnEmpty(200)
 
-        //Need to identify the user first
-        onView(withId(R.id.identify_user_button)).perform(click())
-        onView(withId(R.id.disable_button)).perform(click())
+        Outbound.identify(testUser)
 
-        RequestsVerifier.verifyRequest(pathEndsWith(disablePath)).invoked()
+        shortLatch.await(5, TimeUnit.SECONDS)
+
+        Outbound.disable()
+
+        longLatch.await(5, TimeUnit.SECONDS)
+
+        verifyRequest(pathEndsWith(disablePath)).invoked()
     }
 
     @Test
     fun callingDisablePushNotificationsWithNoUserIdentifiedShouldMakeNoRequestToTheApi() {
-        onView(withId(R.id.disable_button)).perform(click())
+        Outbound.disable()
 
-        RequestsVerifier.verifyRequest(pathEndsWith(disablePath)).never()
+        shortLatch.await(500, TimeUnit.MILLISECONDS)
+
+        verifyRequest(pathEndsWith(disablePath)).never()
     }
 
     @Test
     fun callingGetActiveTokenShouldReturnANonEmptyStringIfAUserIsIdentified() {
-        onView(withId(R.id.identify_user_button)).perform(click())
+        Outbound.identify(testUser)
+
+        shortLatch.await(5, TimeUnit.SECONDS)
+
+        verifyRequest(pathEndsWith(identifyPath)).invoked()
 
         assertThat(Outbound.getActiveToken()).isNotEmpty()
     }
@@ -127,6 +165,8 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(200)
 
         assertThat(Outbound.pairDevice("9999")).isTrue()
+
+        verifyRequest(pathEndsWith(pairPath)).invoked()
     }
 
     @Test
@@ -135,6 +175,8 @@ class ConfigEnabledTests {
                 .thenReturnEmpty(401)
 
         assertThat(Outbound.pairDevice("9999")).isFalse()
+
+        verifyRequest(pathEndsWith(pairPath)).invoked()
     }
 
 }

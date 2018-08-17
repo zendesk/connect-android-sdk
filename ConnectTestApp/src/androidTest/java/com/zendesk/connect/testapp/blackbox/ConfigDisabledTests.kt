@@ -1,23 +1,19 @@
 package com.zendesk.connect.testapp.blackbox
 
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.rule.ActivityTestRule
+import android.support.test.espresso.IdlingRegistry
 import com.google.common.truth.Truth.assertThat
-import com.zendesk.connect.testapp.MainActivity
-import com.zendesk.connect.testapp.R
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
 import io.appflate.restmock.RequestsVerifier.verifyRequest
 import io.appflate.restmock.utils.RequestMatchers
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
+import io.outbound.sdk.initSdkForTesting
 import io.outbound.sdk.Outbound
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyString
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * Black box tests for SDK behaviour when the SDK if initialised and config is disabled,
@@ -25,8 +21,8 @@ import org.mockito.ArgumentMatchers.anyString
  */
 class ConfigDisabledTests {
 
-    @get:Rule
-    private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
+    private lateinit var longLatch: CountDownLatch
+    private lateinit var shortLatch: CountDownLatch
 
     @Before
     fun setUp() {
@@ -34,47 +30,71 @@ class ConfigDisabledTests {
         clearSharedPrefs()
         clearDatabase()
 
-        testRule.launchActivity(null)
+        longLatch = CountDownLatch(2) // init, and some other action
+        shortLatch = CountDownLatch(1) // init
 
-        testRule.activity.testUrl = RESTMockServer.getUrl()
+        IdlingRegistry.getInstance().register(idlingClient)
+
+        idlingClient.registerIdleTransitionCallback {
+            longLatch.countDown()
+            shortLatch.countDown()
+        }
 
         RESTMockServer.whenGET(RequestMatchers.pathContains(configPath))
                 .thenReturnFile(200, "config_disabled_response.json")
 
-        onView(withId(R.id.init_sdk_button)).perform(click())
+        initSdkForTesting(testApplication, "Whatever",
+        "Whatevs", testClient)
+
+        // Need to wait for the config request to return the disabled config
+        shortLatch.await(2, TimeUnit.SECONDS)
+
+        // I don't like this but after the config request, we need a small bit of extra time to
+        // store the config in SharedPrefs so that the config is applied correctly.
+        Thread.sleep(200)
     }
 
     @Test
     fun callingIdentifyUserWithADisabledConfigShouldMakeNoRequestToTheApi() {
-        onView(withId(R.id.identify_user_button)).perform(click())
+        Outbound.identify(testUser)
+
+        longLatch.await(500, TimeUnit.MILLISECONDS)
 
         verifyRequest(pathEndsWith(identifyPath)).never()
     }
 
     @Test
     fun callingTrackEventWithADisabledConfigShouldMakeNoRequestToTheApi() {
-        onView(withId(R.id.track_event_button)).perform(click())
+        Outbound.track(testEvent)
+
+        longLatch.await(500, TimeUnit.MILLISECONDS)
 
         verifyRequest(pathEndsWith(trackPath)).never()
     }
 
     @Test
     fun callingRegisterForPushWithADisabledConfigShouldMakeNoRequestToTheApi() {
-        onView(withId(R.id.register_button)).perform(click())
+        Outbound.register()
+
+        longLatch.await(500, TimeUnit.MILLISECONDS)
 
         verifyRequest(pathEndsWith(registerPath)).never()
     }
 
     @Test
     fun callingDisablePushNotificationsWithADisabledConfigShouldMakeNoRequestToTheApi() {
-        onView(withId(R.id.disable_button)).perform(click())
+        Outbound.disable()
+
+        longLatch.await(500, TimeUnit.MILLISECONDS)
 
         verifyRequest(pathEndsWith(disablePath)).never()
     }
 
     @Test
-    fun pairDeviceShouldReturnFalseIfConfigIsDisabled() {
-        assertThat(Outbound.pairDevice(anyString())).isFalse()
+    fun pairDeviceShouldReturnFalseAndMakeNoRequestToTheApiIfConfigIsDisabled() {
+        assertThat(Outbound.pairDevice("0000")).isFalse()
+
+        verifyRequest(pathEndsWith(pairPath)).never()
     }
 
 }

@@ -1,23 +1,13 @@
 package com.zendesk.connect.testapp.blackbox
 
-import android.support.test.rule.ActivityTestRule
-import com.zendesk.connect.testapp.MainActivity
 import com.zendesk.connect.testapp.helpers.clearDatabase
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.outbound.sdk.Event
 import io.outbound.sdk.Outbound
 import io.outbound.sdk.User
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
-
-const val configPath = "/i/config/sdk/android"
-const val identifyPath = "/v2/identify"
-const val trackPath = "/v2/track"
-const val registerPath = "/v2/gcm/register"
-const val disablePath = "/v2/gcm/disable"
-const val pairPath = "/i/testsend/push/pair/android"
 
 /**
  * Tests any exceptions expected by using the SDK non-init methods before initialisation.
@@ -33,15 +23,10 @@ const val pairPath = "/i/testsend/push/pair/android"
  */
 class AnyExceptionTests {
 
-    @get:Rule
-    private val testRule = ActivityTestRule(MainActivity::class.java, true, false)
-
     @Before
     fun setUp() {
         clearSharedPrefs()
         clearDatabase()
-
-        testRule.launchActivity(null)
     }
 
     @Test(expected = NullPointerException::class)

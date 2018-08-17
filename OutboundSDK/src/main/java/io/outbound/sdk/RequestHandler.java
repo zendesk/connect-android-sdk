@@ -2,6 +2,7 @@ package io.outbound.sdk;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteException;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import okhttp3.OkHttpClient;
@@ -49,11 +50,12 @@ class RequestHandler extends WorkerThread {
      * @param name name for the handler
      * @param app the host application
      * @param apiKey Connect private api key
-     * @param testUrl the url for the interceptor redirect
+     * @param testClient OkHttpClient for testing
      */
-    RequestHandler(String name, Application app, String apiKey, String testUrl) {
+    @VisibleForTesting
+    RequestHandler(String name, Application app, String apiKey, OkHttpClient testClient) {
         this(name, app, apiKey);
-        this.httpClient = this.httpClient.newBuilder().addInterceptor(new TestInterceptor(testUrl)).build();
+        this.httpClient = testClient;
     }
 
     public synchronized void setReadyState(boolean ready) {
