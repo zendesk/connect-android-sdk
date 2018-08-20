@@ -29,7 +29,12 @@ repositories {
 dependencies {
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
     implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
+    implementation group: "com.google.dagger", name: "dagger", version: rootProject.ext.daggerVersion
+
+    annotationProcessor group: 'com.google.dagger', name: 'dagger-compiler', version: rootProject.ext.daggerVersion
+
     testImplementation 'junit:junit:4.12'
+
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }

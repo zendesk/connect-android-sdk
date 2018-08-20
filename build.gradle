@@ -18,6 +18,7 @@ ext {
     junitVersion = "4.12"
     okhttpVersion = "3.9.0"
     kotlinVersion = "1.2.30"
+    daggerVersion = "2.12"
 }
 
 buildscript {
