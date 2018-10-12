@@ -1,0 +1,60 @@
+apply plugin: 'maven'
+apply from: '../scripts/gradle/connect-commons.gradle'
+
+ext {
+    sdkGroupId = project.groupId
+    sdkArtifactId = project.ext.artifactId
+    sdkVersionName = rootProject.ext.sdkVersion
+
+    repoUsername = getConfigurationParameter("zendeskRepoUsername")
+    repoPassword = getConfigurationParameter("zendeskRepoPassword")
+}
+
+artifacts {
+    archives file: file("$buildDir/outputs/aar/${project.getName()}-release.aar"), classifier: "source"
+}
+
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+
+                snapshotRepository(url: "https://zendesk.jfrog.io/zendesk/simple/oss-snapshots-local") {
+                    authentication(userName: repoUsername, password: repoPassword)
+                }
+
+                repository(url: "https://zendesk.jfrog.io/zendesk/simple/oss-releases-local") {
+                    authentication(userName: repoUsername, password: repoPassword)
+                }
+
+                pom.project {
+                    groupId sdkGroupId
+                    artifactId sdkArtifactId
+                    packaging 'aar'
+                    version sdkVersionName
+
+                    licenses {
+                        license {
+                            name 'Zendesk Master Subscription Agreement'
+                            url 'https://www.zendesk.com/company/customers-partners/master-subscription-agreement'
+                            distribution 'repo'
+                            comments 'By downloading or using the Zendesk Mobile SDK, You agree to the Zendesk Master Subscription Agreement https://www.zendesk.com/company/customers-partners/#master-subscription-agreement and Application Developer and API License Agreement https://www.zendesk.com/company/customers-partners/#application-developer-api-license-agreement and acknowledge that such terms govern Your use of and access to the Mobile SDK.'
+                        }
+
+                        license {
+                            name 'Application Developer and API License Agreement'
+                            url 'https://www.zendesk.com/company/application-developer-and-api-license-agreement'
+                            distribution 'repo'
+                            comments 'By downloading or using the Zendesk Mobile SDK, You agree to the Zendesk Master Subscription Agreement https://www.zendesk.com/company/customers-partners/#master-subscription-agreement and Application Developer and API License Agreement https://www.zendesk.com/company/customers-partners/#application-developer-api-license-agreement and acknowledge that such terms govern Your use of and access to the Mobile SDK.'
+                        }
+
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

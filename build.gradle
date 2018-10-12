@@ -1,74 +1,53 @@
 ext {
     minSdkVersion = 19
     targetSdkVersion = 27
-
-    androidSupportLibraryVersion = "27.1.1"
-    firebaseCoreVersion = "16.0.1"
-    firebaseMessagingVersion = "17.1.0"
-    sdkVersion = "0.4.0"
+    sdkVersion = "1.0.0"
 
     buildSettings = [
-            localBuild : true,
-            sdkVersion : sdkVersion
+        localBuild : true,
+        sdkVersion : sdkVersion
     ]
 
-    mockitoVersion = "2.13.0"
-    gsonVersion = "2.8.0"
-    googleTruthVersion = "0.36"
-    junitVersion = "4.12"
+    androidSupportLibraryVersion = "27.1.1"
+    firebaseMessagingVersion = "17.1.0"
+    javaCommon = "1.14"
+    gsonVersion = "2.8.2"
     okhttpVersion = "3.9.0"
-    kotlinVersion = "1.2.30"
+    retrofitVersion = "2.4.0"
+    kotlinVersion = "1.2.51"
+    daggerVersion = "2.12"
+    tapeVersion = "2.0.0-beta1"
+
+    // Test dependency versions
+    junitVersion = "4.12"
+    mockitoVersion = "2.13.0"
+    googleTruthVersion = "0.39"
+    javaCommonTestVersion = "0.3"
+    restMockVersion = "0.3.1"
 }
+
+apply from: 'scripts/gradle/connect-commons.gradle'
 
 buildscript {
     ext {
-        kotlin_version = "1.2.30"
-
-        /**
-         * Looks for the specified configuration key in this order:
-         *
-         * <ol>
-         *     <li>system environment</li>
-         *     <li>project properties</li>
-         * </ol>
-         *
-         * If it isn't found, then the empty string is returned. This stops the gradlew from failing until
-         * it actually needs those values.
-         *
-         * @param keyName The key to look for
-         * @return The value or the empty string if not found
-         */
-        getConfigurationParameter = { keyName ->
-            return System.getenv(keyName) ?: rootProject.hasProperty(keyName) ? rootProject.properties[keyName] : ''
-        }
-
-        /**
-         * Checks if we should use the local modules  as dependency
-         * <p>
-         *     Test mode is based on the existence of an environmental variable called LOCAL_BUILD
-         * <p>
-         *
-         * @return if local dependencies should be used true, otherwise false
-         */
-        useLocalDependency = {
-            if("$System.env.LOCAL_BUILD" != "null") {
-                return System.env.LOCAL_BUILD.toBoolean()
-            }
-
-            return rootProject.ext.buildSettings.localBuild
-        }
+        kotlin_version = "1.2.51"
     }
 
     repositories {
         google()
+
         jcenter()
+
+        maven {
+            url 'https://zendesk.jfrog.io/zendesk/repo'
+        }
     }
 
     dependencies {
-        classpath group: "com.android.tools.build", name: "gradle", version: "3.1.3"
+        classpath group: "com.android.tools.build", name: "gradle", version: "3.2.0"
         classpath group: "com.github.dcendents", name: "android-maven-gradle-plugin", version: "2.0"
         classpath group: "com.jfrog.bintray.gradle", name: "gradle-bintray-plugin", version: "1.8.0"
         classpath group: "org.jetbrains.kotlin", name: "kotlin-gradle-plugin", version: kotlin_version
-        classpath group: "com.google.gms", name: "google-services", version: "4.0.0"
+        classpath group: "com.google.gms", name: "google-services", version: "4.0.1"
     }
 }

@@ -14,7 +14,6 @@ private const val NOTIFICATION_CHANNEL_NAME = "Outbound Sample App Notifications
 
 // Place your configuration keys in ~/.gradle/gradle.properties
 private const val CONNECT_API_KEY: String = BuildConfig.CONNECT_API_KEY
-private const val GOOGLE_PROJECT_ID: String = BuildConfig.GOOGLE_PROJECT_ID
 
 class SampleApplication: Application() {
 

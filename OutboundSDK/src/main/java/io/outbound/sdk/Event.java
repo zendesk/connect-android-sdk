@@ -92,4 +92,13 @@ public class Event {
     public String getName() {
         return name;
     }
+
+    /**
+     * Get the event properties
+     *
+     * @return the properties of this event
+     */
+    Map<String, Object> getProperties() {
+        return this.properties;
+    }
 }

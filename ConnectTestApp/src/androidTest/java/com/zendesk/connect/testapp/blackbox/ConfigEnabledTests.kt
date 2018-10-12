@@ -1,18 +1,18 @@
 package com.zendesk.connect.testapp.blackbox
 
-import android.support.test.espresso.IdlingRegistry
 import com.google.common.truth.Truth.assertThat
-import com.zendesk.connect.testapp.helpers.clearDatabase
+import com.zendesk.connect.resetConnect
+import com.zendesk.connect.testInitConnect
+import com.zendesk.connect.testapp.helpers.clearFiles
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
 import io.appflate.restmock.RequestsVerifier.verifyRequest
 import io.appflate.restmock.utils.RequestMatchers.pathContains
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
-import io.outbound.sdk.initSdkForTesting
 import io.outbound.sdk.Outbound
-import org.junit.*
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import io.outbound.sdk.testInitOutbound
+import org.junit.Before
+import org.junit.Test
 
 /**
  *
@@ -39,24 +39,12 @@ import java.util.concurrent.TimeUnit
  */
 class ConfigEnabledTests {
 
-    private lateinit var longLatch: CountDownLatch
-    private lateinit var shortLatch: CountDownLatch
-
     @Before
     fun setup() {
+        resetConnect()
         RESTMockServer.reset()
-        clearDatabase()
         clearSharedPrefs()
-
-        longLatch = CountDownLatch(3) // init, identify, some other action
-        shortLatch = CountDownLatch(2) // init, identify (for postponing third action)
-
-        IdlingRegistry.getInstance().register(idlingClient)
-
-        idlingClient.registerIdleTransitionCallback {
-            longLatch.countDown()
-            shortLatch.countDown()
-        }
+        clearFiles()
 
         RESTMockServer.whenGET(pathContains(configPath))
                 .thenReturnFile(200, "config_enabled_response.json")
@@ -64,24 +52,13 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(identifyPath))
                 .thenReturnEmpty(200)
 
-        initSdkForTesting(testApplication, "Whatever",
-                "Whatevs", testClient)
-
-        // I don't like this but after the config request, we need a small bit of extra time to
-        // store the config in SharedPrefs so that the config is applied correctly.
-        Thread.sleep(200)
-    }
-
-    @After
-    fun tearDown() {
-        IdlingRegistry.getInstance().unregister(idlingClient)
+        testInitConnect(testClient) // This is done internally by Outbound
+        testInitOutbound(testApplication, "Whatever", "Whatevs", testClient)
     }
 
     @Test
     fun callingIdentifyUserShouldMakeAnIdentifyRequestToTheApi() {
         Outbound.identify(testUser)
-
-        shortLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(identifyPath)).invoked()
     }
@@ -93,11 +70,7 @@ class ConfigEnabledTests {
 
         Outbound.identify(testUser)
 
-        shortLatch.await(5, TimeUnit.SECONDS)
-
         Outbound.track(testEvent)
-
-        longLatch.await(5, TimeUnit.SECONDS)
 
         verifyRequest(pathEndsWith(trackPath)).invoked()
     }
@@ -109,11 +82,9 @@ class ConfigEnabledTests {
 
         Outbound.identify(testUser)
 
-        shortLatch.await(5, TimeUnit.SECONDS)
-
         Outbound.register()
 
-        longLatch.await(5, TimeUnit.SECONDS)
+        Thread.sleep(50) // tiny delay just to let async ops catch up
 
         verifyRequest(pathEndsWith(registerPath)).invoked()
     }
@@ -125,38 +96,20 @@ class ConfigEnabledTests {
 
         Outbound.identify(testUser)
 
-        shortLatch.await(5, TimeUnit.SECONDS)
-
         Outbound.disable()
 
-        longLatch.await(5, TimeUnit.SECONDS)
+        Thread.sleep(50) // tiny delay just to let async ops catch up
 
         verifyRequest(pathEndsWith(disablePath)).invoked()
-    }
-
-    @Test
-    fun callingDisablePushNotificationsWithNoUserIdentifiedShouldMakeNoRequestToTheApi() {
-        Outbound.disable()
-
-        shortLatch.await(500, TimeUnit.MILLISECONDS)
-
-        verifyRequest(pathEndsWith(disablePath)).never()
     }
 
     @Test
     fun callingGetActiveTokenShouldReturnANonEmptyStringIfAUserIsIdentified() {
         Outbound.identify(testUser)
 
-        shortLatch.await(5, TimeUnit.SECONDS)
-
         verifyRequest(pathEndsWith(identifyPath)).invoked()
 
         assertThat(Outbound.getActiveToken()).isNotEmpty()
-    }
-
-    @Test
-    fun callingGetActiveTokenShouldReturnAnEmptyStringIfNoUserIsIdentified() {
-        assertThat(Outbound.getActiveToken()).isEmpty()
     }
 
     @Test

@@ -3,6 +3,7 @@ package io.outbound.sdk;
 import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.Map;
 import java.util.TimeZone;
@@ -20,10 +21,14 @@ public class User {
     @Expose private final String phoneNumber;
     @Expose private final Map<String, Object> attributes;
     @Expose private final Map<String, Object> groupAttributes;
-    @Expose private String[] fcm;
     @Expose private String groupId;
     @Expose private String previousId;
     @Expose private String timezone;
+
+    // The backend is expecting "gcm" as the key for the push token but the SDK is using
+    // Firebase so "fcm" is more appropriate for our variables. Should be updated once the
+    // backend can handle "fcm" as the key.
+    @SerializedName("gcm") @Expose private String[] fcm;
 
     private boolean anonymous;
 
@@ -114,10 +119,7 @@ public class User {
      * @return the user's FCM token if set, null otherwise
      */
     public String getFcmToken() {
-        if (fcm == null) {
-            return null;
-        }
-        return fcm[0];
+        return fcm != null && fcm.length > 0 ? fcm[0] : "";
     }
 
     /**

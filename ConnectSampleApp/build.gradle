@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+apply from: '../scripts/gradle/connect-repos.gradle'
+
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
 
@@ -12,7 +14,6 @@ android {
         versionName "1.0"
 
         buildConfigField "String", "CONNECT_API_KEY", "\"${getConfigurationParameter("CONNECT_API_KEY")}\""
-        buildConfigField "String", "GOOGLE_PROJECT_ID", "\"${getConfigurationParameter("GOOGLE_PROJECT_ID")}\""
     }
 
     buildTypes {
@@ -20,24 +21,18 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
 
-}
-
-repositories {
-    google()
-    jcenter()
-    maven {
-        url  "http://dl.bintray.com/outbound/maven"
-    }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    implementation "com.android.support:appcompat-v7:${rootProject.ext.androidSupportLibraryVersion}"
-    implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
+    implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk7", version: kotlin_version
+    implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
     implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
         exclude group: "com.android.support", module: "*"
     }
@@ -45,7 +40,7 @@ dependencies {
     if (useLocalDependency()) {
         implementation project(":OutboundSDK")
     } else {
-        implementation 'io.outbound.sdk:android-sdk:0.4.0'
+        implementation group: "io.outbound.sdk", name: "android-sdk", version: rootProject.ext.sdkVersion
     }
 }
 

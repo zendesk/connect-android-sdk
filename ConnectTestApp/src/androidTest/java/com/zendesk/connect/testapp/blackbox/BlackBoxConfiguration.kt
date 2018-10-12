@@ -2,7 +2,6 @@ package com.zendesk.connect.testapp.blackbox
 
 import android.app.Application
 import android.support.test.rule.ActivityTestRule
-import com.jakewharton.espresso.OkHttp3IdlingResource
 import com.zendesk.connect.testapp.MainActivity
 import com.zendesk.connect.testapp.helpers.TestInterceptor
 import io.appflate.restmock.RESTMockServer
@@ -20,9 +19,6 @@ const val pairPath = "/i/testsend/push/pair/android"
 val testClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(TestInterceptor(RESTMockServer.getUrl()))
         .build()
-
-val idlingClient: OkHttp3IdlingResource = OkHttp3IdlingResource
-        .create("idlingClient", testClient)
 
 val testUser: User = User.newAnonymousUser()
 
