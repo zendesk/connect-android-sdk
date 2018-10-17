@@ -5,7 +5,6 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -14,19 +13,19 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Window;
 
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.zendesk.connect.Connect;
+import com.zendesk.connect.EventFactory;
+import com.zendesk.connect.UserBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.TimeZone;
 
 import io.outbound.sdk.activity.AdminActivity;
 import okhttp3.OkHttpClient;
@@ -38,23 +37,12 @@ class OutboundClient {
 
     private static final String TAG = BuildConfig.APPLICATION_ID;
 
-    private static final String PREFS_NAME = BuildConfig.APPLICATION_ID + ".prefs";
-    private static final String PREFS_CONFIG = BuildConfig.APPLICATION_ID + "prefs.config";
-    private static final String PREFS_USER = BuildConfig.APPLICATION_ID + "prefs.user";
-
     private Application app;
-    private String apiKey;
     private String notificationChannelId;
 
-    private Gson gson;
-    private SharedPreferences preferences;
     private RequestHandler handler;
 
-    private User activeUser;
-
-    private boolean configLoaded;
     private boolean offline = false;
-    private boolean enabled = true;
 
     private boolean testMode = false;
 
@@ -78,149 +66,92 @@ class OutboundClient {
 
     private OutboundClient(Application app, String apiKey,
                            String notificationChannelId, OkHttpClient testClient) {
+
         this.app = app;
-        this.apiKey = apiKey;
         this.notificationChannelId = notificationChannelId;
 
         Monitor.add(app);
 
+        Gson gson = new Gson();
+
         if (testClient == null) {
-            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey);
+            Connect.INSTANCE.init(app.getApplicationContext(), apiKey);
+            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey, gson);
         } else {
-            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey, testClient);
+            this.handler = new RequestHandler("outboundRequestWorker", app, apiKey,
+                    gson, testClient);
         }
         handler.start();
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.excludeFieldsWithoutExposeAnnotation();
-        gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
-        this.gson = gsonBuilder.create();
-
-        this.preferences = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        if (preferences.contains(PREFS_USER)) {
-            String userData = preferences.getString(PREFS_USER, "");
-            if (!TextUtils.isEmpty(userData)) {
-                this.activeUser = gson.fromJson(userData, User.class);
-            } else {
-                Log.w(TAG, "There is no stored user data, or there was a problem getting the user data.");
-            }
-        }
-        this.configLoaded = preferences.contains(PREFS_CONFIG);
-
         if (!isConnected()) {
             updateConnectionStatus();
-        } else if (!configLoaded) {
-            loadConfig();
         } else {
             handler.setReadyState(true);
         }
     }
 
     public synchronized void identify(User user) {
-        if (!enabled) {
+        if (user == null) {
+            Log.d(TAG, "Couldn't identify a null user");
             return;
         }
 
-        setUser(user, true);
+        com.zendesk.connect.User connectUser = new UserBuilder(user.getUserId())
+                .setPreviousId(user.getPreviousId())
+                .setFirstName(user.getFirstName())
+                .setLastName(user.getLastName())
+                .setEmail(user.getEmail())
+                .setPhoneNumber(user.getPhoneNumber())
+                .setUserAttributes(user.getAttributes())
+                .setGroupId(user.getGroupId())
+                .setGroupAttributes(user.getGroupAttributes())
+                .setFcmToken(user.getFcmToken())
+                .setTimezone(TimeZone.getDefault().getID())
+                .build();
+
+        Connect.INSTANCE.identifyUser(connectUser);
     }
 
     public void track(Event event) {
-        if (!enabled) {
-            return;
+        if (event == null) {
+            Log.d(TAG, "Couldn't track a null event");
         }
+        com.zendesk.connect.Event connectEvent =
+                EventFactory.createEvent(event.getName(), event.getProperties());
 
-        ensureUser();
-        event.setUserId(activeUser.getUserId(), activeUser.isAnonymous());
-        handler.queue(new OutboundRequest(OutboundRequest.Type.TRACK, gson.toJson(event)));
+        Connect.INSTANCE.trackEvent(connectEvent);
     }
 
     public void register() {
-        register(null);
-    }
-
-    public void register(String tokenToReplace) {
-        if (!enabled) {
-            return;
-        }
-
-        ensureUser(false);
-
-        // can't register a user if they don't have a token.
-        // ensureUser called above would have loaded the token
-        if (!activeUser.hasFcmToken()) {
-            Log.d(TAG, "could not register user with no token");
-            return;
-        }
-
-        try {
-            JSONObject payload;
-            payload = new JSONObject();
-            payload.put("user_id", activeUser.getUserId());
-            payload.put("token", activeUser.getFcmToken());
-
-            if (tokenToReplace != null) {
-                payload.put("replace", tokenToReplace);
-            }
-
-            handler.queue(new OutboundRequest(OutboundRequest.Type.REGISTER, payload.toString()));
-        } catch (JSONException e) {
-            Log.e(TAG, "Couldn't create basic JSON object for register payload.", e);
-        }
+        Connect.INSTANCE.registerForPush();
     }
 
     public void disable() {
-        if (!enabled) {
-            return;
-        }
-
-        // can't disable a user that we don't know about.
-        // don't want to generate anon user here either since we only need to disable
-        // users who have been identified. anon users don't exist yet so no point in disabling.
-        if (activeUser == null) {
-            return;
-        }
-
-        if (!activeUser.hasFcmToken()) {
-            Log.d(TAG, "can not disable user with no token");
-            return;
-        }
-
-        try {
-            JSONObject payload;
-            payload = new JSONObject();
-            payload.put("user_id", activeUser.getUserId());
-            payload.put("token", activeUser.getFcmToken());
-
-            handler.queue(new OutboundRequest(OutboundRequest.Type.DISABLE, payload.toString()));
-        } catch (JSONException e) {
-            Log.e(TAG, "Couldn't create basic JSON object for disable payload.", e);
-        }
+        Connect.INSTANCE.disablePush();
     }
 
     public void logout() {
-        if (!enabled) {
-            return;
-        }
-
-        if (activeUser == null) {
-            return;
-        }
-
-        this.activeUser = null;
+        Connect.INSTANCE.logout();
     }
 
     public boolean pairDevice(String pin) {
-        if (!enabled) {
+        if (!Connect.INSTANCE.isEnabled()) {
             return false;
         }
 
         boolean paired = false;
 
+        String token = getFcmToken();
+        if (token == null || token.isEmpty()) {
+            Log.d(TAG, "Device token could not be retrieved");
+            return false;
+        }
+
         try {
             JSONObject payload;
             payload = new JSONObject();
             payload.put("code", Integer.parseInt(pin));
-            payload.put("deviceToken", getFcmToken());
+            payload.put("deviceToken", token);
             payload.put("deviceName", Build.MANUFACTURER + " " + Build.MODEL);
 
             OutboundRequest request = new OutboundRequest(OutboundRequest.Type.PAIR, payload.toString());
@@ -247,53 +178,17 @@ class OutboundClient {
      * @return the FCM token, or null if we could not find it.
      */
     @Nullable private String getFcmToken() {
-        if (!enabled) {
-            return null;
-        }
-
         if (testMode) {
             return "test_token";
         }
 
-        FirebaseInstanceId iid = FirebaseInstanceId.getInstance();
-        String token = iid.getToken();
-        if (TextUtils.isEmpty(token)) {
-            Log.e(TAG, "Error getting Firebase token");
-        }
+        com.zendesk.connect.User user = Connect.INSTANCE.getActiveUser();
 
-        return token;
-    }
-
-    public void setConfig(String config) {
-        preferences.edit().putString(PREFS_CONFIG, config).apply();
-        configLoaded = true;
-        checkEnabled();
-        handler.setReadyState(true);
-    }
-
-    public void loadConfig(int attempts) {
-        if (!enabled) {
-            return;
-        }
-
-        OutboundRequest request = new OutboundRequest(OutboundRequest.Type.CONFIG, apiKey, attempts);
-        if (request.getAttempts() == 0) {
-            handler.processNow(request);
-        } else {
-            handler.processAfterDelay(request, request.getAttempts() * request.getAttempts() * 1000);
-        }
-    }
-
-    public void loadConfig() {
-        if (!enabled) {
-            return;
-        }
-
-        loadConfig(0);
+        return user != null ? user.getFcmToken() : null;
     }
 
     public void receiveNotification(String instanceId) {
-        if (!enabled) {
+        if (!Connect.INSTANCE.isEnabled()) {
             return;
         }
 
@@ -308,7 +203,7 @@ class OutboundClient {
     }
 
     public void openNotification(String instanceId) {
-        if (!enabled) {
+        if (!Connect.INSTANCE.isEnabled()) {
             return;
         }
 
@@ -324,7 +219,7 @@ class OutboundClient {
     }
 
     public void trackNotification(Context ctx, String instanceId) {
-        if (!enabled) {
+        if (!Connect.INSTANCE.isEnabled()) {
             return;
         }
 
@@ -348,51 +243,15 @@ class OutboundClient {
     // In this case, since it is called after IDENTIFY
     // It will wait for the FCM token to be put on the active user.
     public synchronized String fetchCurrentFcmToken() {
-        if (activeUser == null) {
-            return "";
-        }
+        com.zendesk.connect.User user = Connect.INSTANCE.getActiveUser();
 
-        return activeUser.getFcmToken();
-    }
-
-    public void refreshFcmToken() {
-        if (!enabled) {
-            return;
-        }
-
-        refreshFcmToken(false);
-    }
-
-    public void refreshFcmToken(boolean registerIfNew) {
-        if (!enabled) {
-            return;
-        }
-
-        if (activeUser == null) {
-            return;
-        }
-
-        String newToken = getFcmToken();
-        if (newToken != null && (!activeUser.hasFcmToken() || !activeUser.getFcmToken().equals(newToken))) {
-            String currentToken = activeUser.getFcmToken();
-            activeUser.setFcmToken(newToken);
-
-            if (registerIfNew) {
-                register(currentToken);
-            }
-        }
+        return user != null ? user.getFcmToken() : "";
     }
 
     public synchronized void updateConnectionStatus() {
         boolean currentlyOffline = !isConnected();
         boolean wasOnline = !offline;
         this.offline = currentlyOffline;
-
-        // if not previously online, but now connected
-        // and this is the first time we've been online, load the conig.
-        if (!wasOnline && !offline && !configLoaded) {
-            loadConfig();
-        }
 
         if (wasOnline && offline) {
             monitorConnection();
@@ -402,87 +261,13 @@ class OutboundClient {
         }
     }
 
-    /** Ensure that a user exists AND identify them if creating an anonymous user. */
-    private void ensureUser() {
-        ensureUser(true);
-    }
+    synchronized void checkEnabled() {
+        Boolean enabled = Connect.INSTANCE.isEnabled();
 
-    /**
-     * Ensure we have an active user object.
-     *
-     * @param identify if true, the user will automatically be identified.
-     */
-    private synchronized void ensureUser(boolean identify) {
-        if (activeUser != null) {
-            return;
-        }
-
-        setUser(User.newAnonymousUser(), identify);
-    }
-
-    private void sendIdentifyRequest() {
-        handler.queue(new OutboundRequest(OutboundRequest.Type.IDENTIFY, gson.toJson(activeUser)));
-        if (activeUser.getPreviousId() != null) {
-            activeUser.setPrevioudId(null);
-            persistUser();
-        }
-    }
-
-    /**
-     * Set the active user object.
-     *
-     * @param user new active user
-     * @param identify if true and the user is new (first user seen or different than current
-     *                        user, the user will automatically be identified.
-     */
-    private synchronized void setUser(User user, boolean identify) {
-        if (activeUser != null) {
-            if (!user.getUserId().equals(activeUser.getUserId())) {
-                if (activeUser.isAnonymous()) {
-                    user.setPrevioudId(activeUser.getUserId());
-                }
-            }
-        }
-
-        this.activeUser = user;
-        refreshFcmToken();
-
-        persistUser();
-
-        if (identify) {
-            sendIdentifyRequest();
-        }
-    }
-
-    private synchronized void persistUser() {
-        if (activeUser != null) {
-            preferences.edit().putString(PREFS_USER, gson.toJson(activeUser)).apply();
-        } else {
-            preferences.edit().remove(PREFS_USER).apply();
-        }
-    }
-
-    private synchronized void checkEnabled() {
-        if (configLoaded) {
-            String cfgStr = preferences.getString(PREFS_CONFIG, "");
-            if (!cfgStr.equals("")) {
-                boolean wasEnabled = enabled;
-
-                try {
-                    JSONObject cfg = new JSONObject(cfgStr);
-                    if (cfg.has("enabled")) {
-                        this.enabled = cfg.getBoolean("enabled");
-                    }
-                } catch (JSONException e) {
-                    Log.e(TAG, "Error processing config.", e);
-                }
-
-                if (wasEnabled && !enabled) {
-                    Monitor.remove(app);
-                } else if (!wasEnabled && enabled) {
-                    Monitor.add(app);
-                }
-            }
+        if (!enabled && Monitor.monitorActive) {
+            Monitor.remove(app);
+        } else if (enabled && !Monitor.monitorActive) {
+            Monitor.add(app);
         }
     }
 
@@ -529,6 +314,7 @@ class OutboundClient {
     static class Monitor implements Application.ActivityLifecycleCallbacks, Interceptor.OnInterceptionListener {
         private final Application application;
         private Activity foregroundActivity;
+        private static boolean monitorActive = false;
 
         Monitor(Application application) {
             this.application = application;
@@ -538,6 +324,7 @@ class OutboundClient {
 
             Monitor monitor = new Monitor(application);
             application.registerActivityLifecycleCallbacks(monitor);
+            monitorActive = true;
 
 
             // No admin panel for users pre ICS :(.  There just isn't any way else to do it
@@ -549,6 +336,7 @@ class OutboundClient {
 
             Monitor monitor = new Monitor(application);
             application.unregisterActivityLifecycleCallbacks(monitor);
+            monitorActive = false;
 
         }
 

@@ -1,4 +1,12 @@
+ext {
+    groupId = "com.zendesk"
+    artifactId = "connect"
+}
+
 apply plugin: 'com.android.library'
+apply plugin: "kotlin-android"
+apply from: '../scripts/gradle/connect-repos.gradle'
+apply from: '../scripts/gradle/connect-release.gradle'
 
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
@@ -10,26 +18,43 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        consumerProguardFiles 'consumer-proguard.pro'
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+    sourceSets {
+        test.java.srcDirs += 'src/test/kotlin'
     }
 
-}
-
-repositories {
-    google()
-    jcenter()
 }
 
 dependencies {
+    api group: "com.zendesk", name: "java-common", version: rootProject.ext.javaCommon, changing: true
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
     implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation group: "com.google.dagger", name: "dagger", version: rootProject.ext.daggerVersion
+    implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
+    implementation group: "com.squareup.retrofit2", name: "converter-gson", version: rootProject.ext.retrofitVersion
+    implementation group: "com.squareup.retrofit2", name: "retrofit", version: rootProject.ext.retrofitVersion
+    implementation (group: "com.squareup.tape2", name: "tape", version: rootProject.ext.tapeVersion) {
+        because "Using a beta version because it is seen to be a stable build"
+    }
+    implementation group: "com.firebase", name: "firebase-jobdispatcher", version: "0.8.5"
+    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
+        exclude group: "com.android.support", module: "*"
+    }
+
+    if (useLocalDependency()) {
+        api project(":NetworkClient")
+    } else {
+        api files('libs/NetworkClient-1.0.0.jar')
+    }
+
+    annotationProcessor group: "com.google.dagger", name: "dagger-compiler", version: rootProject.ext.daggerVersion
+
+    testImplementation group: "com.zendesk", name: "java-common-test", version: rootProject.ext.javaCommonTestVersion
+    testImplementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib", version: rootProject.ext.kotlinVersion
+    testImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
+    testImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
+    testImplementation group: "com.google.truth", name: "truth", version: rootProject.ext.googleTruthVersion
+    testImplementation group: "com.zendesk", name: "java-common-test", version: rootProject.ext.javaCommonTestVersion, changing: true
 }

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 boxOut(){
     local s="$*"
     tput setaf 3
@@ -28,12 +29,20 @@ createAvd() {
     ${EMULATOR} -avd test -no-audio -netfast -no-window &
 }
 
+runConnectUnitTests() {
+    echo "Running Connect unit tests"
+    ./gradlew clean --settings-file settings_tests.gradle test --stacktrace
+    exitOnFailedBuild "Connect unit tests failed"
+    echo "Connect unit tests succeeded"
+}
 runConnectInstrumentedTests() {
     echo "Waiting for emulator..."
     android-wait-for-emulator
 
-    ./gradlew clean --settings-file settings_instrumented_tests.gradle connectedCheck --stacktrace
-    exitOnFailedBuild "ConnectTestApp instrumentation tests"
+    echo "Running Connect instrumented tests"
+    ./gradlew clean --settings-file settings_tests.gradle connectedCheck --stacktrace
+    exitOnFailedBuild "Connect instrumented tests failed"
+    echo "Connect instrumented tests succeeded"
 
     adb -s emulator-5554 emu kill || true
 }
@@ -46,7 +55,10 @@ prBuildBeforeScript() {
 pullRequestBuild() {
     export LOCAL_BUILD="true"
 
-    boxOut "Testing Connect SDK"
+    boxOut "Running Connect Unit Tests"
+    runConnectUnitTests
+
+    boxOut "Running Connect Instrumented Tests"
     runConnectInstrumentedTests
 
     unset LOCAL_BUILD

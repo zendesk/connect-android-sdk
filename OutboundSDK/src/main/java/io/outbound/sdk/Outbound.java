@@ -12,7 +12,6 @@ import okhttp3.OkHttpClient;
  * method. Events are sent using the {@link #track(Event)} method.</p>
  */
 public class Outbound {
-    private static WorkerThread worker;
 
     /**
      * Initialize the Outbound SDK.
@@ -33,16 +32,12 @@ public class Outbound {
      */
     public static void init(Application app, String apiKey, String notificationChannelId) {
         OutboundClient.init(app, apiKey, notificationChannelId);
-        worker = new WorkerThread("outboundWorker");
-        worker.start();
     }
 
     @VisibleForTesting
     static void initForTesting(Application app, String apiKey,
                                String notificationChannelId, OkHttpClient testClient) {
         OutboundClient.initForTesting(app, apiKey, notificationChannelId, testClient);
-        worker = new WorkerThread("outboundWorker");
-        worker.start();
     }
 
     /**
@@ -63,12 +58,7 @@ public class Outbound {
      * @param user the user to be identified
      */
     public static void identify(final User user) {
-        worker.post(new Runnable() {
-            @Override
-            public void run() {
-                OutboundClient.getInstance().identify(user);
-            }
-        });
+        OutboundClient.getInstance().identify(user);
     }
 
     /**
@@ -82,12 +72,7 @@ public class Outbound {
      * @param event the event to be tracked
      */
     public static void track(final Event event) {
-        worker.post(new Runnable() {
-            @Override
-            public void run() {
-                OutboundClient.getInstance().track(event);
-            }
-        });
+        OutboundClient.getInstance().track(event);
     }
 
     /**
@@ -100,12 +85,7 @@ public class Outbound {
      * anonymous user is created (with a FCM token).</p>
      */
     public static void register() {
-        worker.post(new Runnable() {
-            @Override
-            public void run() {
-                OutboundClient.getInstance().register();
-            }
-        });
+        OutboundClient.getInstance().register();
     }
 
     /**
@@ -120,12 +100,7 @@ public class Outbound {
      * way of disabling a user's device token.</p>
      */
     public static void disable() {
-        worker.post(new Runnable() {
-            @Override
-            public void run() {
-                OutboundClient.getInstance().disable();
-            }
-        });
+        OutboundClient.getInstance().disable();
     }
 
     /**
@@ -135,12 +110,7 @@ public class Outbound {
      * user will be created.
      */
     public static void logout() {
-        worker.post(new Runnable() {
-            @Override
-            public void run() {
-                OutboundClient.getInstance().logout();
-            }
-        });
+        OutboundClient.getInstance().logout();
     }
 
     /**

@@ -1,0 +1,6 @@
+repositories {
+    google()
+    jcenter()
+    maven { url "https://jitpack.io" }
+    maven { url "https://zendesk.jfrog.io/zendesk/repo" }
+}

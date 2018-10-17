@@ -1,20 +1,23 @@
 package io.outbound.sdk;
 
 import android.app.Application;
-import android.database.sqlite.SQLiteException;
+import android.content.Context;
+import android.net.ConnectivityManager;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
-import org.json.JSONArray;
-import org.json.JSONException;
+import com.google.gson.Gson;
+import com.zendesk.connect.BaseQueue;
+import com.zendesk.connect.Connect;
+import com.zendesk.connect.Tls1Dot2SocketFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 class RequestHandler extends WorkerThread {
@@ -27,20 +30,23 @@ class RequestHandler extends WorkerThread {
     private String apiKey;
     private Application app;
     private OkHttpClient httpClient;
-    private RequestStorage storage;
+    private BaseQueue<String> queue;
+    private Gson gson;
     private boolean ready = false;
     private boolean connected = true;
 
     private AtomicBoolean processing = new AtomicBoolean(false);
     private AtomicBoolean processingScheduled = new AtomicBoolean(false);
 
-    public RequestHandler(String name, Application app, String apiKey) {
+    public RequestHandler(String name, Application app, String apiKey, Gson gson) {
         super(name);
 
         this.apiKey = apiKey;
-        this.httpClient = new OkHttpClient();
+        this.httpClient = Tls1Dot2SocketFactory
+                .enableTls1Dot2OnPreLollipop(new OkHttpClient.Builder()).build();
         this.app = app;
-        this.storage = new RequestStorage(app);
+        this.queue = Connect.INSTANCE.outboundQueue();
+        this.gson = gson;
     }
 
     /**
@@ -50,11 +56,12 @@ class RequestHandler extends WorkerThread {
      * @param name name for the handler
      * @param app the host application
      * @param apiKey Connect private api key
+     * @param gson an instance of Gson for serialization
      * @param testClient OkHttpClient for testing
      */
     @VisibleForTesting
-    RequestHandler(String name, Application app, String apiKey, OkHttpClient testClient) {
-        this(name, app, apiKey);
+    RequestHandler(String name, Application app, String apiKey, Gson gson, OkHttpClient testClient) {
+        this(name, app, apiKey, gson);
         this.httpClient = testClient;
     }
 
@@ -87,7 +94,7 @@ class RequestHandler extends WorkerThread {
     }
 
     public void queue(OutboundRequest request) {
-        storage.add(request);
+        queue.add(gson.toJson(request));
         schedule();
     }
 
@@ -101,6 +108,10 @@ class RequestHandler extends WorkerThread {
     }
 
     private boolean canProcess() {
+        ConnectivityManager manager = (ConnectivityManager) app.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (manager != null && manager.getActiveNetworkInfo() != null) {
+            return manager.getActiveNetworkInfo().isConnectedOrConnecting() && ready;
+        }
         return connected && ready;
     }
 
@@ -179,37 +190,39 @@ class RequestHandler extends WorkerThread {
         }
 
         if (!processing.getAndSet(true)) {
-            boolean moreInQueue = false;
-
-            JSONArray requests = storage.getRequests();
-            for (int i = 0; i < requests.length(); i++) {
+            /*
+            * We get a snapshot of the outboundQueue size because we will be adding
+            * requests back into the outboundQueue if a retry is needed and we don't
+            * want to be looping forever if a request constantly needs to
+            * retried at a given moment in time (e.g. bad network connection)
+            * */
+            int queueSize = queue.size();
+            for (int i = 0; i < queueSize; i++) {
                 if (!canProcess()) {
                     break;
                 }
 
-                OutboundRequest request;
-                try {
-                    request = (OutboundRequest) requests.get(i);
-                } catch (JSONException e) {
-                    continue;
-                }
+                /*
+                * We are peeking and removing items 1 at a time here just because of
+                * how the existing logic for Outbound SDK works. It isn't aware of the
+                * batching endpoints and refactoring to allow them would leave a lot of
+                * room for error without tests.
+                * */
+                OutboundRequest request = gson
+                        .fromJson(queue.peek(1).get(0), OutboundRequest.class);
 
-                try {
-                    storage.remove(request.getId());
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error removing queued request from queue. Skipping to try later.", e);
-                    moreInQueue = true;
-                    continue;
-                }
+                queue.remove(1);
 
-                request.incAttempts();
-                if (sendQueuedRequest(request) == Status.RETRY) {
-                    storage.add(request);
+                if (request != null) {
+                    request.incAttempts();
+                    if (sendQueuedRequest(request) == Status.RETRY) {
+                        queue.add(gson.toJson(request));
+                    }
                 }
             }
             processing.set(false);
 
-            if (moreInQueue) {
+            if (queue.size() > 0) {
                 schedule();
             }
         }

@@ -1,13 +1,12 @@
 package com.zendesk.connect.testapp.blackbox
 
-import com.zendesk.connect.testapp.helpers.clearDatabase
+import com.zendesk.connect.testapp.helpers.clearFiles
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.outbound.sdk.Event
 import io.outbound.sdk.Outbound
 import io.outbound.sdk.User
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyString
 
 /**
  * Tests any exceptions expected by using the SDK non-init methods before initialisation.
@@ -26,10 +25,10 @@ class AnyExceptionTests {
     @Before
     fun setUp() {
         clearSharedPrefs()
-        clearDatabase()
+        clearFiles()
     }
 
-    @Test(expected = NullPointerException::class)
+    @Test(expected = IllegalStateException::class)
     fun callingIdentifyBeforeInitShouldRaiseAnException() {
         val user = User.Builder()
                 .setUserId("test_123")
@@ -38,22 +37,22 @@ class AnyExceptionTests {
         Outbound.identify(user)
     }
 
-    @Test(expected = NullPointerException::class)
+    @Test(expected = IllegalStateException::class)
     fun callingTrackEventBeforeInitShouldRaiseAnException() {
         Outbound.track(Event("Test Event"))
     }
 
-    @Test(expected = NullPointerException::class)
+    @Test(expected = IllegalStateException::class)
     fun callingRegisterForPushBeforeInitShouldRaiseAnException() {
         Outbound.register()
     }
 
-    @Test(expected = NullPointerException::class)
+    @Test(expected = IllegalStateException::class)
     fun callingDisablePushNotificationsBeforeInitShouldRaiseAnException() {
         Outbound.disable()
     }
 
-    @Test(expected = NullPointerException::class)
+    @Test(expected = IllegalStateException::class)
     fun callingLogoutBeforeInitShouldRaiseAnException() {
         Outbound.logout()
     }
@@ -65,6 +64,6 @@ class AnyExceptionTests {
 
     @Test(expected = IllegalStateException::class)
     fun callingPairDeviceBeforeInitShouldRaiseAnException() {
-        Outbound.pairDevice(anyString())
+        Outbound.pairDevice("0000")
     }
 }

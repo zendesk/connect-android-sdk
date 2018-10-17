@@ -35,6 +35,12 @@ class OutboundRequest {
     private static final String ENDPOINT_PAIR = "/i/testsend/push/pair/android";
     private static final String TAG = "OutboundRequest";
 
+    public static final String COLUMN_NAME_ID = "id";
+    public static final String COLUMN_NAME_REQUEST = "request";
+    public static final String COLUMN_NAME_PAYLOAD = "payload";
+    public static final String COLUMN_NAME_GUID = "guid";
+    public static final String COLUMN_NAME_ATTEMPTS = "attempts";
+
     private Type request;
     private String payload;
     private int attempts = 0;
@@ -126,12 +132,12 @@ class OutboundRequest {
     public ContentValues content() {
         ContentValues contentValues = new ContentValues();
         if (id != 0) {
-            contentValues.put(RequestStorage.COLUMN_NAME_ID, id);
+            contentValues.put(COLUMN_NAME_ID, id);
         }
-        contentValues.put(RequestStorage.COLUMN_NAME_REQUEST, request.toString());
-        contentValues.put(RequestStorage.COLUMN_NAME_PAYLOAD, payload);
-        contentValues.put(RequestStorage.COLUMN_NAME_ATTEMPTS, attempts);
-        contentValues.put(RequestStorage.COLUMN_NAME_GUID, guid);
+        contentValues.put(COLUMN_NAME_REQUEST, request.toString());
+        contentValues.put(COLUMN_NAME_PAYLOAD, payload);
+        contentValues.put(COLUMN_NAME_ATTEMPTS, attempts);
+        contentValues.put(COLUMN_NAME_GUID, guid);
         return contentValues;
     }
 
@@ -184,26 +190,10 @@ class OutboundRequest {
         } else {
             Log.e(TAG, "response or response body was null.");
         }
-
-        if (request == Type.CONFIG) {
-            OutboundClient.getInstance().loadConfig(attempts);
-        }
     }
 
     public void onSuccess(Response response) throws IOException {
-        switch (request) {
-            case CONFIG:
-
-                if (response != null && response.body() != null) {
-                    String body = response.body().string();
-                    response.body().close();
-                    OutboundClient.getInstance().setConfig(body);
-                } else {
-                    Log.e(TAG, "response or response body was null.");
-                }
-
-                break;
-        }
+        OutboundClient.getInstance().checkEnabled();
     }
 
     public Request.Builder getBuilder() {

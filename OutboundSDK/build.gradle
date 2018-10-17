@@ -1,10 +1,11 @@
-apply plugin: 'com.android.library'
-
-repositories {
-    google()
-    jcenter()
-    maven { url "https://jitpack.io" }
+ext {
+    groupId = "io.outbound.sdk"
+    artifactId = "android-sdk"
 }
+
+apply plugin: 'com.android.library'
+apply from: '../scripts/gradle/connect-repos.gradle'
+apply from: '../scripts/gradle/connect-release.gradle'
 
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
@@ -13,13 +14,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionName rootProject.ext.sdkVersion
-    }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+        consumerProguardFiles 'consumer-proguard.pro'
     }
 
     lintOptions {
@@ -32,12 +28,15 @@ dependencies {
     implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
     implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
     implementation group: "com.squareup.okhttp3", name: "okhttp", version: rootProject.ext.okhttpVersion
-    implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
     implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
         exclude group: "com.android.support", module: "*"
     }
 
-    implementation project(":ConnectSDK")
+    api group: "com.zendesk", name: "java-common", version: rootProject.ext.javaCommon, changing: true
+
+    if (useLocalDependency()) {
+        implementation project(":ConnectSDK")
+    } else {
+        implementation group: "com.zendesk", name: "connect", version: rootProject.ext.sdkVersion
+    }
 }

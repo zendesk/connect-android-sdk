@@ -1,6 +1,9 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+
+apply from: '../scripts/gradle/connect-repos.gradle'
+
 android {
     compileSdkVersion rootProject.ext.targetSdkVersion
 
@@ -21,41 +24,29 @@ android {
     }
 }
 
-repositories {
-    google()
-    jcenter()
-    maven {
-        url "https://jitpack.io"
-    }
-}
-
 dependencies {
     implementation project(":OutboundSDK")
+    implementation project(":ConnectSDK")
     implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre7", version: kotlin_version
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
-    implementation (group: "com.google.firebase", name: "firebase-core", version: rootProject.ext.firebaseCoreVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
     implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
         exclude group: "com.android.support", module: "*"
     }
 
     androidTestImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
-    androidTestImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
+    androidTestImplementation group: "org.mockito", name: "mockito-android", version: rootProject.ext.mockitoVersion
     androidTestImplementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
     androidTestImplementation group: "com.google.truth", name: "truth", version: rootProject.ext.googleTruthVersion
 
-    androidTestImplementation ('com.android.support.test:runner:1.0.2') {
+    androidTestImplementation (group: "com.android.support.test", name: "runner", version: "1.0.2") {
         exclude group: "com.android.support", module: "support-annotations"
     }
-    androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.0.2'){
+    androidTestImplementation (group: "com.android.support.test.espresso", name: "espresso-core", version: "3.0.2"){
         exclude group: "com.android.support", module: "support-annotations"
     }
-    androidTestImplementation ('com.github.andrzejchm.RESTMock:android:0.3.1') {
+    androidTestImplementation (group: "com.github.andrzejchm.RESTMock", name: "android", version: rootProject.ext.restMockVersion) {
         exclude group: "com.android.support", module: "support-annotations"
     }
-
-    androidTestImplementation 'com.jakewharton.espresso:okhttp3-idling-resource:1.0.0'
 
 }
 

@@ -1,7 +1,7 @@
 package com.zendesk.connect.sampleapp
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import io.outbound.sdk.Event
 import io.outbound.sdk.Outbound
@@ -16,9 +16,14 @@ class MainActivity : AppCompatActivity() {
             .setUserId("th3_warth0g")
             .setFirstName("Frank")
             .setLastName("Reynolds")
+            .setEmail("thewarthog@example.com")
+            .setPhoneNumber("01-123-4567")
+            .setAttributes(mapOf(Pair("Occupation", "Making money")))
+            .setGroupId("Frank's Fluids")
+            .setGroupAttributes(mapOf(Pair("Merch", "Egg"), Pair("Fluid", "Wolf Cola")))
             .build()
 
-    private val sampleEvent = Event("Sample Event")
+    private var eventCounter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         track_event_button.setOnClickListener {
-            trackEvent(sampleEvent)
+            trackEvent(Event( "Event ${eventCounter++}"))
         }
 
         register_button.setOnClickListener {
