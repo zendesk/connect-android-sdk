@@ -15,11 +15,7 @@ public class EventFactory {
      * @return a constructed {@link Event} object
      */
     public static Event createEvent(String eventName, Map<String, Object> properties) {
-        Event event = new Event();
-        event.setEvent(eventName);
-        event.setProperties(properties);
-        event.setTimestamp(System.currentTimeMillis());
-        return event;
+        return new Event(null, eventName, properties, System.currentTimeMillis());
     }
 
     /**

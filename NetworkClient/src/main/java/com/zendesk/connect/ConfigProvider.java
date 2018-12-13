@@ -15,13 +15,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface ConfigProvider {
+interface ConfigProvider {
 
     /**
      * Config
      * 
-     * @param platform  (required) * @param version  (required)
-     * @return Call&lt;Config&gt;
+     * @param platform  (required)
+     * @param version  (required)
+     * @return Call<Config>
      */
     Call<Config> config(String platform, String version);
 

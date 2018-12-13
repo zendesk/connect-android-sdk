@@ -32,4 +32,14 @@ ext {
 
         return rootProject.ext.buildSettings.localBuild
     }
+
+    /**
+     * Checks if we should use release dependencies. This normally means using JARs instead
+     * of using local modules while building modules for release.
+     *
+     * @return true if release dependencies should be used
+     */
+    useReleaseDependency = {
+        return rootProject.ext.buildSettings.releaseBuild
+    }
 }

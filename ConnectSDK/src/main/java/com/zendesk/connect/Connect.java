@@ -1,13 +1,9 @@
 package com.zendesk.connect;
 
-import android.content.Context;
-import android.support.annotation.NonNull;
+import android.app.Application;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.iid.InstanceIdResult;
 import com.zendesk.logger.Logger;
 
 /**
@@ -17,22 +13,31 @@ public enum Connect {
     INSTANCE;
 
     private static final String LOG_TAG = "Connect";
+    private static final String NOT_ENABLED_LOG = "Connect SDK is not enabled";
+    private static final String NOT_INITIALIZED_LOG = "Connect SDK has not been initialised";
+
+    static final String CLIENT_VERSION = BuildConfig.VERSION_NAME;
+    static final String CLIENT_PLATFORM = "android";
 
     private ConnectComponent connectComponent;
 
     /**
      * <p>Initialise Connect SDK</p>
      *
-     * @param context an application context
+     * @param application an instance of {@link Application}
+     * @param privateKey a Connect private API key
      */
-    public void init(Context context, String apiKey) {
+    public void init(Application application, String privateKey) {
         ConnectComponent connectComponent = DaggerConnectComponent.builder()
-                .connectModule(new ConnectModule(context))
-                .connectStorageModule(new ConnectStorageModule(context))
-                .connectNetworkModule(new ConnectNetworkModule(apiKey))
+                .connectModule(new ConnectModule(application.getApplicationContext()))
+                .connectStorageModule(new ConnectStorageModule())
+                .connectNetworkModule(new ConnectNetworkModule(privateKey))
+                .connectNotificationModule(new ConnectNotificationModule())
                 .build();
 
         init(connectComponent);
+
+        TouchGestureMonitor.add(application);
     }
 
     /**
@@ -58,23 +63,7 @@ public enum Connect {
         // If there is no stored user then we store an anonymous user
         final StorageController storageController = component.storageController();
         if (storageController.getUser() == null) {
-            final User user = UserBuilder.anonymousUser();
-            OnSuccessListener<InstanceIdResult> successListener = new OnSuccessListener<InstanceIdResult>() {
-                @Override
-                public void onSuccess(InstanceIdResult instanceIdResult) {
-                    user.setFcmToken(instanceIdResult.getToken());
-                    storageController.saveUser(user);
-                }
-            };
-
-            OnFailureListener failureListener = new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    storageController.saveUser(user);
-                }
-            };
-
-            component.instanceId().getToken(successListener, failureListener);
+            DefaultConnectClient.persistAnonymousUser(component.storageController(), component.instanceId());
         }
     }
 
@@ -108,9 +97,9 @@ public enum Connect {
      *
      * @return true if network requests are enabled, false otherwise.
      */
-    public boolean isEnabled() {
+    boolean isEnabled() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return false;
         }
         Config config = connectComponent.storageController().getConfig();
@@ -122,10 +111,6 @@ public enum Connect {
      *     Provides a concrete implementation of {@link BaseStorage} for storing things like
      *     {@link User} and {@link Config}.
      * </p>
-     * <p>
-     *     Temporarily exposing storage for the Outbound SDK to use. Will be restricted
-     *     once the Outbound SDK is removed from the project.
-     * </p>
      *
      * @return an implementation of {@link BaseStorage}, or {@code null} if Connect
      *          wasn't initialised.
@@ -133,23 +118,10 @@ public enum Connect {
     @Nullable
     StorageController storageController() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.storageController();
-    }
-
-    /**
-     * Temporarily exposing a queue for the Outbound SDK to use. Will be restricted
-     * once the Outbound SDK is removed from the project.
-     */
-    @Nullable
-    public BaseQueue<String> outboundQueue() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
-            return null;
-        }
-        return connectComponent.outboundQueue();
     }
 
     /**
@@ -161,7 +133,7 @@ public enum Connect {
      */
     ConfigProvider configProvider() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.configProvider();
@@ -176,7 +148,7 @@ public enum Connect {
      */
     IdentifyProvider identifyProvider() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.identifyProvider();
@@ -191,7 +163,7 @@ public enum Connect {
      */
     EventProvider eventProvider() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.eventProvider();
@@ -206,10 +178,26 @@ public enum Connect {
      */
     PushProvider pushProvider() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.pushProvider();
+    }
+
+    MetricsProvider metricsProvider() {
+        if (!isInitialised()) {
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
+            return null;
+        }
+        return connectComponent.metricsProvider();
+    }
+
+    TestSendProvider testSendProvider() {
+        if (!isInitialised()) {
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
+            return null;
+        }
+        return connectComponent.testSendProvider();
     }
 
     /**
@@ -222,7 +210,7 @@ public enum Connect {
      */
     BaseQueue<User> userQueue() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.userQueue();
@@ -238,10 +226,61 @@ public enum Connect {
      */
     BaseQueue<Event> eventQueue() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return null;
         }
         return connectComponent.eventQueue();
+    }
+
+    /**
+     * <p>
+     *     Gets the {@link NotificationProcessor} used for parsing incoming push notifications
+     *     and constructing {@link android.app.Notification} objects to display
+     * </p>
+     *
+     * @return an instance of {@link NotificationProcessor}, or {@code null} if Connect
+     *          wasn't initialised.
+     */
+    NotificationProcessor notificationProcessor() {
+        if (!isInitialised()) {
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
+            return null;
+        }
+        return connectComponent.notificationProcessor();
+    }
+
+    /**
+     * <p>
+     *     Gets the {@link ConnectActionProcessor} used for processing incoming intents received
+     *     by the {@link ConnectActionService}
+     * </p>
+     *
+     * @return an instance of {@link ConnectActionProcessor}, or {@code null} if Connect
+     *          wasn't initialised
+     */
+    ConnectActionProcessor actionProcessor() {
+        if (!isInitialised()) {
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
+            return null;
+        }
+        return connectComponent.actionProcessor();
+    }
+
+    /**
+     * <p>
+     *     Gets the {@link MetricRequestsProcessor} used for sending metrics requests
+     *     when push notifications are received
+     * </p>
+     *
+     * @return an instance of {@link MetricRequestsProcessor}, or {@code null} if Connect
+     *          wasn't initialised
+     */
+    MetricRequestsProcessor metricsProcessor() {
+        if (!isInitialised()) {
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
+            return null;
+        }
+        return connectComponent.metricsProcessor();
     }
 
     /**
@@ -259,7 +298,7 @@ public enum Connect {
      */
     public void identifyUser(User user) {
         if (!isEnabled()) {
-            Logger.e(LOG_TAG, "Connect SDK is not enabled");
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
             return;
         }
         connectComponent.client().identifyUser(user);
@@ -279,7 +318,7 @@ public enum Connect {
      */
     public void trackEvent(Event event) {
         if (!isEnabled()) {
-            Logger.e(LOG_TAG, "Connect SDK is not enabled");
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
             return;
         }
         connectComponent.client().trackEvent(event);
@@ -292,7 +331,7 @@ public enum Connect {
      */
     public void registerForPush() {
         if (!isEnabled()) {
-            Logger.e(LOG_TAG, "Connect SDK is not enabled");
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
             return;
         }
         connectComponent.client().registerForPush();
@@ -305,7 +344,7 @@ public enum Connect {
      */
     public void disablePush() {
         if (!isEnabled()) {
-            Logger.e(LOG_TAG, "Connect SDK is not enabled");
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
             return;
         }
         connectComponent.client().disablePush();
@@ -317,12 +356,12 @@ public enum Connect {
      *     from local storage and disabling push notifications.
      * </p>
      */
-    public void logout() {
+    public void logoutUser() {
         if (!isEnabled()) {
-            Logger.e(LOG_TAG, "Connect SDK is not enabled");
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
             return;
         }
-        connectComponent.client().logout();
+        connectComponent.client().logoutUser();
     }
 
     /**
@@ -332,11 +371,11 @@ public enum Connect {
      * @return the currently active {@link User}, or {@code null} if the user does
      *          not exist or Connect has not been initialised
      */
-    public User getActiveUser() {
+    public User getUser() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, "Connect SDK has not been initialised");
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
             return null;
         }
-        return connectComponent.client().getActiveUser();
+        return connectComponent.client().getUser();
     }
 }

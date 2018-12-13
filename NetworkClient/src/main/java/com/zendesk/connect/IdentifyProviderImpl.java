@@ -1,17 +1,17 @@
 package com.zendesk.connect;
 
-import com.google.gson.Gson;
-
-import java.util.List;
-
-import okhttp3.OkHttpClient;
 import retrofit2.Call;
+import com.google.gson.Gson;
+import retrofit2.http.*;
+import okhttp3.*;
+import com.zendesk.connect.User;
+import java.util.*;
 
-public class IdentifyProviderImpl extends BaseProvider implements IdentifyProvider {
+class IdentifyProviderImpl extends BaseProvider implements IdentifyProvider {
 
     private IdentifyService service;
 
-    public IdentifyProviderImpl(OkHttpClient client, String baseUrl, Gson gson) {
+    IdentifyProviderImpl(OkHttpClient client, String baseUrl, Gson gson) {
         super(client, baseUrl, gson);
         service = retrofit.create(IdentifyService.class);
     }

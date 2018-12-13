@@ -4,24 +4,30 @@ import retrofit2.Call;
 // This is required because there is ambiguity between okhttp3 and retrofit2
 import retrofit2.http.Headers;
 import retrofit2.http.*;
+import okhttp3.*;
+import com.zendesk.connect.PushRegistration;
+import java.util.*;
 
-public interface PushService {
+interface PushService {
+
     /**
-    * Register
-    * 
-    * @param body  (optional)
-    * @return Call&lt;Void&gt;
-    */
+     * Register
+     * 
+     * @param platform  (required) * @param body  (optional)
+     * @return Call<Void>
+     */
     @Headers({"Content-Type:application/json"})
-    @POST("v2/gcm/register")
-    Call<Void> register(@retrofit2.http.Body PushRegistration body);
+    @POST("v2/{platform}/register")
+    Call<Void> register(@retrofit2.http.Path("platform") String platform, @retrofit2.http.Body PushRegistration body);
+
     /**
-    * Unregister
-    * 
-    * @param body  (optional)
-    * @return Call&lt;Void&gt;
-    */
+     * Unregister
+     * 
+     * @param platform  (required) * @param body  (optional)
+     * @return Call<Void>
+     */
     @Headers({"Content-Type:application/json"})
-    @POST("v2/gcm/disable")
-    Call<Void> unregister(@retrofit2.http.Body PushRegistration body);
+    @POST("v2/{platform}/disable")
+    Call<Void> unregister(@retrofit2.http.Path("platform") String platform, @retrofit2.http.Body PushRegistration body);
+
 }

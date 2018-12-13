@@ -18,10 +18,10 @@ class ConnectNetworkModule {
     private static final String CONNECT_BASE_URL = "https://api.outbound.io";
     private static final String CONNECT_CLIENT_HEADER_FORMAT = "Android/%s";
 
-    private final String apiKey;
+    private final String privateKey;
 
-    ConnectNetworkModule(String apiKey) {
-        this.apiKey = apiKey;
+    ConnectNetworkModule(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     /**
@@ -59,28 +59,28 @@ class ConnectNetworkModule {
      */
     @Provides
     @ConnectScope
-    ClientInterceptors.OutboundKeyInterceptor provideOutboundApiKeyInterceptor() {
-        return new ClientInterceptors.OutboundKeyInterceptor(apiKey);
+    ClientInterceptors.OutboundKeyInterceptor provideOutboundPrivateKeyInterceptor() {
+        return new ClientInterceptors.OutboundKeyInterceptor(privateKey);
     }
 
     /**
-     * Provides an instance of an {@link OkHttpClient} with the required outbound headers
+     * Provides an instance of an {@link OkHttpClient} with the required request headers
      * and a TLS1.2 patch
      *
      * @param clientInterceptor the required {@link ClientInterceptors.OutboundClientInterceptor}
      * @param guidInterceptor the required {@link ClientInterceptors.OutboundGUIDInterceptor}
-     * @param apiKeyInterceptor the required {@link ClientInterceptors.OutboundKeyInterceptor}
+     * @param privateKeyInterceptor the required {@link ClientInterceptors.OutboundKeyInterceptor}
      * @return an instance of an {@link OkHttpClient}
      */
     @Provides
     @ConnectScope
     OkHttpClient provideBaseOkHttpClient(ClientInterceptors.OutboundClientInterceptor clientInterceptor,
                                          ClientInterceptors.OutboundGUIDInterceptor guidInterceptor,
-                                         ClientInterceptors.OutboundKeyInterceptor apiKeyInterceptor) {
+                                         ClientInterceptors.OutboundKeyInterceptor privateKeyInterceptor) {
         return Tls1Dot2SocketFactory.enableTls1Dot2OnPreLollipop(new OkHttpClient.Builder())
                 .addInterceptor(clientInterceptor)
                 .addInterceptor(guidInterceptor)
-                .addInterceptor(apiKeyInterceptor)
+                .addInterceptor(privateKeyInterceptor)
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
@@ -137,6 +137,25 @@ class ConnectNetworkModule {
     @ConnectScope
     PushProvider providePushProvider(OkHttpClient client, Gson gson) {
         return new PushProviderImpl(client, CONNECT_BASE_URL, gson);
+    }
+
+    /**
+     * Provides an implementation of {@link MetricsProvider}
+     *
+     * @param client an instance of an {@link OkHttpClient}
+     * @param gson an instance of {@link Gson}
+     * @return an instance of {@link MetricsProviderImpl}
+     */
+    @Provides
+    @ConnectScope
+    MetricsProvider provideMetricsProvider(OkHttpClient client, Gson gson) {
+        return new MetricsProviderImpl(client, CONNECT_BASE_URL, gson);
+    }
+
+    @Provides
+    @ConnectScope
+    TestSendProvider providerTestSendProvider(OkHttpClient client, Gson gson) {
+        return new TestSendProviderImpl(client, CONNECT_BASE_URL, gson);
     }
 
 }

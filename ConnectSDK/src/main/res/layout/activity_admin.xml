@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/connect_double_spacing">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/connect_default_spacing"
+        android:text="@string/connect_admin_pairing_title"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <com.zendesk.connect.ProgressRelativeLayout
+        android:id="@+id/progressViewController"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="@dimen/connect_double_spacing">
+
+        <ProgressBar
+            android:id="@+id/indicator"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_marginEnd="@dimen/connect_default_spacing"
+            android:indeterminateTint="@color/connect_admin_pin_box_border"
+            tools:ignore="UnusedAttribute" />
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/indicator"
+            android:layout_toEndOf="@+id/indicator"
+            android:text="@string/connect_admin_pairing_status"
+            android:textColor="@color/connect_admin_pin_box_bg" />
+    </com.zendesk.connect.ProgressRelativeLayout>
+
+    <com.zendesk.connect.PinLinearLayout
+        android:id="@+id/pinController"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/pin1"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/connect_pin_box_spacing"
+            android:imeOptions="actionNext"
+            android:nextFocusRight="@+id/pin2"
+            tools:text="1"
+            tools:ignore="Autofill,LabelFor" />
+
+        <EditText
+            android:id="@+id/pin2"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/connect_pin_box_spacing"
+            android:imeOptions="actionNext"
+            android:nextFocusRight="@+id/pin3"
+            tools:text="2"
+            tools:ignore="Autofill,LabelFor" />
+
+        <EditText
+            android:id="@+id/pin3"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/connect_pin_box_spacing"
+            android:imeOptions="actionNext"
+            android:nextFocusRight="@+id/pin4"
+            tools:text="3"
+            tools:ignore="Autofill,LabelFor" />
+
+        <EditText
+            android:id="@+id/pin4"
+            style="@style/PinBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionDone"
+            tools:text="4"
+            tools:ignore="Autofill,LabelFor" />
+    </com.zendesk.connect.PinLinearLayout>
+</LinearLayout>

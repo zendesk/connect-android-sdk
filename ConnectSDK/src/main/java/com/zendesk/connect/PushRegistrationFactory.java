@@ -15,10 +15,6 @@ class PushRegistrationFactory {
      * @return a constructed {@link PushRegistration} object
      */
     static PushRegistration create(String userId, String pushToken) {
-        PushRegistration registration = new PushRegistration();
-        registration.setUserId(userId);
-        registration.setToken(pushToken);
-        registration.setTimestamp(System.currentTimeMillis());
-        return registration;
+        return new PushRegistration(userId, pushToken);
     }
 }

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.zendesk.connect">
 
@@ -6,17 +7,31 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application>
-        <service android:exported="false" android:name=".QueuedRequestsJobService">
+        <service
+            android:name=".QueuedRequestsJobService"
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".ConfigJobService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
             </intent-filter>
         </service>
 
-        <service android:exported="false" android:name=".ConfigJobService">
-            <intent-filter>
-                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
-            </intent-filter>
-        </service>
+        <activity
+            android:name=".AdminActivity"
+            android:exported="false"
+            android:theme="@style/AdminActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_connect_notification_icon" />
+
     </application>
 
 </manifest>

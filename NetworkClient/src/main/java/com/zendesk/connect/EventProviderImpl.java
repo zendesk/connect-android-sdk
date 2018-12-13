@@ -7,11 +7,11 @@ import okhttp3.*;
 import com.zendesk.connect.Event;
 import java.util.*;
 
-public class EventProviderImpl extends BaseProvider implements EventProvider {
+class EventProviderImpl extends BaseProvider implements EventProvider {
 
     private EventService service;
 
-    public EventProviderImpl(OkHttpClient client, String baseUrl, Gson gson) {
+    EventProviderImpl(OkHttpClient client, String baseUrl, Gson gson) {
         super(client, baseUrl, gson);
         service = retrofit.create(EventService.class);
     }

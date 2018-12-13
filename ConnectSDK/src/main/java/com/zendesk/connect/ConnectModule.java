@@ -22,6 +22,17 @@ class ConnectModule {
     }
 
     /**
+     * Provides an instance of the application context
+     *
+     * @return an instance of {@link Context}
+     */
+    @Provides
+    @ConnectScope
+    Context provideApplicationContext() {
+        return context.getApplicationContext();
+    }
+
+    /**
      * Provides an implementation of the {@link ConnectClient}
      *
      * @return An implementation of {@link ConnectClient}

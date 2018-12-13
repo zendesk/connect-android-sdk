@@ -21,12 +21,6 @@ class ConnectStorageModule {
     private static final String CONNECT_USER_QUEUE_FILE = "connect_user_queue_file";
     private static final String CONNECT_EVENT_QUEUE_FILE = "connect_event_queue_file";
 
-    private final Context context;
-
-    ConnectStorageModule(Context context) {
-        this.context = context;
-    }
-
     /**
      * Provides an instance of {@link SharedPreferences}
      *
@@ -34,7 +28,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    SharedPreferences provideSharedPreferences() {
+    SharedPreferences provideSharedPreferences(Context context) {
         return context.getSharedPreferences(CONNECT_PREFERENCES_NAME, Context.MODE_PRIVATE);
     }
 
@@ -65,7 +59,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    ObjectQueue<String> provideObjectQueue(GsonConverter<String> gsonConverter) {
+    ObjectQueue<String> provideObjectQueue(GsonConverter<String> gsonConverter, Context context) {
         File file = new File(context.getFilesDir(), CONNECT_STRING_QUEUE_FILE);
         QueueFile queueFile;
         try {
@@ -89,7 +83,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    ObjectQueue<User> provideUserObjectQueue(GsonConverter<User> userConverter) {
+    ObjectQueue<User> provideUserObjectQueue(GsonConverter<User> userConverter, Context context) {
         File file = new File(context.getFilesDir(), CONNECT_USER_QUEUE_FILE);
         QueueFile queueFile;
         try {
@@ -113,7 +107,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    ObjectQueue<Event> provideEventObjectQueue(GsonConverter<Event> eventConverter) {
+    ObjectQueue<Event> provideEventObjectQueue(GsonConverter<Event> eventConverter, Context context) {
         File file = new File(context.getFilesDir(), CONNECT_EVENT_QUEUE_FILE);
         QueueFile queueFile;
         try {

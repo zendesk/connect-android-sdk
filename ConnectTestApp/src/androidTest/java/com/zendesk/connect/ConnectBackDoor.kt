@@ -38,12 +38,13 @@ internal fun resetConnect() {
  * * Provides a mock [ConnectInstanceId] to provide tokens with Firebase
  */
 internal fun getTestComponent(testClient: OkHttpClient): ConnectComponent {
-    val apiKey = "auth_me_plz"
+    val privateKey = "auth_me_plz"
     val baseUrl = RESTMockServer.getUrl()
     return DaggerConnectComponent.builder()
             .connectModule(getTestConnectModule())
-            .connectNetworkModule(getTestConnectNetworkModule(apiKey, baseUrl, testClient))
-            .connectStorageModule(ConnectStorageModule(InstrumentationRegistry.getTargetContext()))
+            .connectNetworkModule(getTestConnectNetworkModule(privateKey, baseUrl, testClient))
+            .connectNotificationModule(ConnectNotificationModule())
+            .connectStorageModule(ConnectStorageModule())
             .build()
 }
 
@@ -51,7 +52,7 @@ internal fun getTestComponent(testClient: OkHttpClient): ConnectComponent {
  * Provides a [ConnectModule] with any overrides needed for testing
  */
 internal fun getTestConnectModule(): ConnectModule {
-    return object: ConnectModule(InstrumentationRegistry.getContext()) {
+    return object: ConnectModule(InstrumentationRegistry.getTargetContext()) {
         override fun provideConnectScheduler(): ConnectScheduler {
             return getMockScheduler()
         }
@@ -74,8 +75,8 @@ internal fun getTestConnectModule(): ConnectModule {
 /**
  * Provides a [ConnectNetworkModule] with any overrides needed for testing
  */
-internal fun getTestConnectNetworkModule(apiKey: String, baseUrl: String, testClient: OkHttpClient): ConnectNetworkModule {
-    return object: ConnectNetworkModule(apiKey) {
+internal fun getTestConnectNetworkModule(privateKey: String, baseUrl: String, testClient: OkHttpClient): ConnectNetworkModule {
+    return object: ConnectNetworkModule(privateKey) {
         override fun provideConfigProvider(client: OkHttpClient?, gson: Gson?): ConfigProvider {
             return ConfigProviderImpl(client, baseUrl, gson)
         }
@@ -94,7 +95,7 @@ internal fun getTestConnectNetworkModule(apiKey: String, baseUrl: String, testCl
 
         override fun provideBaseOkHttpClient(clientInterceptor: ClientInterceptors.OutboundClientInterceptor?,
                                              guidInterceptor: ClientInterceptors.OutboundGUIDInterceptor?,
-                                             apiKeyInterceptor: ClientInterceptors.OutboundKeyInterceptor?): OkHttpClient {
+                                             privateKeyInterceptor: ClientInterceptors.OutboundKeyInterceptor?): OkHttpClient {
             return testClient.newBuilder()
                     .connectTimeout(5, TimeUnit.SECONDS)
                     .readTimeout(5, TimeUnit.SECONDS)

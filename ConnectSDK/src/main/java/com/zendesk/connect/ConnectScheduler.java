@@ -8,8 +8,6 @@ import com.firebase.jobdispatcher.Trigger;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
 /**
  * <p>
  *     This class handles dispatching {@link Job}s to the {@link FirebaseJobDispatcher}
@@ -19,7 +17,6 @@ class ConnectScheduler {
 
     private FirebaseJobDispatcher dispatcher;
 
-    @Inject
     ConnectScheduler(FirebaseJobDispatcher dispatcher) {
         this.dispatcher = dispatcher;
     }

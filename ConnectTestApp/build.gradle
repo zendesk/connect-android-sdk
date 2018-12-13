@@ -25,9 +25,8 @@ android {
 }
 
 dependencies {
-    implementation project(":OutboundSDK")
     implementation project(":ConnectSDK")
-    implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jre7", version: kotlin_version
+    implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk7", version: kotlin_version
     implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
     implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
         exclude group: "com.android.support", module: "*"

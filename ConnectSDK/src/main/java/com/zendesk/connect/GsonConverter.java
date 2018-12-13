@@ -1,5 +1,7 @@
 package com.zendesk.connect;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.squareup.tape2.ObjectQueue;
 
@@ -38,7 +40,7 @@ class GsonConverter<T> implements ObjectQueue.Converter<T>{
      * @return the deserialized object
      */
     @Override
-    public T from(byte[] bytes) throws IOException {
+    public T from(@NonNull byte[] bytes) {
         InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(bytes));
         return gson.fromJson(reader, clazz);
     }
@@ -50,7 +52,7 @@ class GsonConverter<T> implements ObjectQueue.Converter<T>{
      * @param outputStream the target {@link OutputStream} for the serialized object
      */
     @Override
-    public void toStream(T object, OutputStream outputStream) throws IOException {
+    public void toStream(@NonNull T object, @NonNull OutputStream outputStream) throws IOException {
         try (OutputStreamWriter writer = new OutputStreamWriter(outputStream)) {
             gson.toJson(object, writer);
         }
