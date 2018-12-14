@@ -1,6 +1,7 @@
 package com.zendesk.connect.testapp.blackbox
 
 import com.google.common.truth.Truth.assertThat
+import com.zendesk.connect.Connect
 import com.zendesk.connect.resetConnect
 import com.zendesk.connect.testInitConnect
 import com.zendesk.connect.testapp.helpers.clearFiles
@@ -9,8 +10,7 @@ import io.appflate.restmock.RESTMockServer
 import io.appflate.restmock.RequestsVerifier.verifyRequest
 import io.appflate.restmock.utils.RequestMatchers.pathContains
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
-import io.outbound.sdk.Outbound
-import io.outbound.sdk.testInitOutbound
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -52,13 +52,17 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(identifyPath))
                 .thenReturnEmpty(200)
 
-        testInitConnect(testClient) // This is done internally by Outbound
-        testInitOutbound(testApplication, "Whatever", "Whatevs", testClient)
+        testInitConnect(testClient)
+    }
+
+    @After
+    fun tearDown() {
+        RESTMockServer.reset()
     }
 
     @Test
     fun callingIdentifyUserShouldMakeAnIdentifyRequestToTheApi() {
-        Outbound.identify(testUser)
+        Connect.INSTANCE.identifyUser(testUser)
 
         verifyRequest(pathEndsWith(identifyPath)).invoked()
     }
@@ -68,9 +72,9 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(trackPath))
                 .thenReturnEmpty(200)
 
-        Outbound.identify(testUser)
+        Connect.INSTANCE.identifyUser(testUser)
 
-        Outbound.track(testEvent)
+        Connect.INSTANCE.trackEvent(testEvent)
 
         verifyRequest(pathEndsWith(trackPath)).invoked()
     }
@@ -80,9 +84,9 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(registerPath))
                 .thenReturnEmpty(200)
 
-        Outbound.identify(testUser)
+        Connect.INSTANCE.identifyUser(testUser)
 
-        Outbound.register()
+        Connect.INSTANCE.registerForPush()
 
         Thread.sleep(50) // tiny delay just to let async ops catch up
 
@@ -94,9 +98,9 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(disablePath))
                 .thenReturnEmpty(200)
 
-        Outbound.identify(testUser)
+        Connect.INSTANCE.identifyUser(testUser)
 
-        Outbound.disable()
+        Connect.INSTANCE.disablePush()
 
         Thread.sleep(50) // tiny delay just to let async ops catch up
 
@@ -105,31 +109,14 @@ class ConfigEnabledTests {
 
     @Test
     fun callingGetActiveTokenShouldReturnANonEmptyStringIfAUserIsIdentified() {
-        Outbound.identify(testUser)
+        Connect.INSTANCE.identifyUser(testUser)
 
         verifyRequest(pathEndsWith(identifyPath)).invoked()
 
-        assertThat(Outbound.getActiveToken()).isNotEmpty()
-    }
+        val tokens = Connect.INSTANCE.user.fcm
 
-    @Test
-    fun callingPairDeviceWithAValidPinShouldReturnTrue() {
-        RESTMockServer.whenPOST(pathEndsWith(pairPath))
-                .thenReturnEmpty(200)
-
-        assertThat(Outbound.pairDevice("9999")).isTrue()
-
-        verifyRequest(pathEndsWith(pairPath)).invoked()
-    }
-
-    @Test
-    fun callingPairDeviceWithAnInvalidPinShouldReturnFalse() {
-        RESTMockServer.whenPOST(pathEndsWith(pairPath))
-                .thenReturnEmpty(401)
-
-        assertThat(Outbound.pairDevice("9999")).isFalse()
-
-        verifyRequest(pathEndsWith(pairPath)).invoked()
+        assertThat(tokens).isNotEmpty()
+        assertThat(tokens[0]).isNotEmpty()
     }
 
 }

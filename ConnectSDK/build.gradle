@@ -1,6 +1,8 @@
 ext {
     groupId = "com.zendesk"
     artifactId = "connect"
+    versionName = rootProject.ext.sdkVersion
+    modulePackaging = "aar"
 }
 
 apply plugin: 'com.android.library'
@@ -35,18 +37,18 @@ dependencies {
     implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
     implementation group: "com.squareup.retrofit2", name: "converter-gson", version: rootProject.ext.retrofitVersion
     implementation group: "com.squareup.retrofit2", name: "retrofit", version: rootProject.ext.retrofitVersion
-    implementation (group: "com.squareup.tape2", name: "tape", version: rootProject.ext.tapeVersion) {
+    implementation(group: "com.squareup.tape2", name: "tape", version: rootProject.ext.tapeVersion) {
         because "Using a beta version because it is seen to be a stable build"
     }
     implementation group: "com.firebase", name: "firebase-jobdispatcher", version: "0.8.5"
-    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
+    implementation(group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
         exclude group: "com.android.support", module: "*"
     }
 
-    if (useLocalDependency()) {
-        api project(":NetworkClient")
+    if (useReleaseDependency()) {
+        implementation group: "com.zendesk", name: "connect-network-client", version: rootProject.ext.connectNetworkClientVersion
     } else {
-        api files('libs/NetworkClient-1.0.0.jar')
+        api project(":NetworkClient")
     }
 
     annotationProcessor group: "com.google.dagger", name: "dagger-compiler", version: rootProject.ext.daggerVersion

@@ -6,15 +6,14 @@ import java.io.IOException;
 
 import retrofit2.Response;
 
+import static com.zendesk.connect.Connect.CLIENT_PLATFORM;
+
 /**
  * Processor responsible for fetching {@link Config} objects.
  */
 class ConfigJobProcessor {
 
     private static final String LOG_TAG = "ConfigJobProcessor";
-
-    private static final String CONFIG_PATH_PLATFORM = "android";
-    private static final String CONFIG_PATH_CLIENT_VERSION = BuildConfig.VERSION_NAME;
 
     /**
      * Fetches a {@link Config} from Connect backend and stores the response.
@@ -34,8 +33,9 @@ class ConfigJobProcessor {
 
         try {
             Response<Config> response = configProvider
-                    .config(CONFIG_PATH_PLATFORM, CONFIG_PATH_CLIENT_VERSION).execute();
-            if (response.code() == 200 && response.body() != null) {
+                    .config(CLIENT_PLATFORM, Connect.CLIENT_VERSION)
+                    .execute();
+            if (response.isSuccessful() && response.body() != null) {
                 storageController.saveConfig(response.body());
             } else {
                 Logger.d(LOG_TAG, "Failed to retrieve config. Request returned status code:",

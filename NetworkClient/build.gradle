@@ -1,8 +1,5 @@
 apply plugin: 'idea'
 
-group = 'io.swagger'
-version = '1.0.0'
-
 buildscript {
     repositories {
         jcenter()
@@ -16,14 +13,21 @@ repositories {
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'maven'
-
 ext {
+    groupId = "com.zendesk"
+    artifactId = "connect-network-client"
+    versionName = rootProject.ext.connectNetworkClientVersion
+    modulePackaging = "jar"
+
     retrofit_version = "2.4.0"
     gson_version = "2.8.2"
     java_common_version = "1.14"
 }
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply from: '../scripts/gradle/connect-repos.gradle'
+apply from: '../scripts/gradle/connect-release.gradle'
 
 dependencies {
     implementation "com.google.code.gson:gson:$gson_version"

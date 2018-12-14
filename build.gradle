@@ -1,14 +1,15 @@
 ext {
     minSdkVersion = 19
-    targetSdkVersion = 27
-    sdkVersion = "1.0.0"
+    targetSdkVersion = 28
+    sdkVersion = "2.0.0"
 
     buildSettings = [
         localBuild : true,
+        releaseBuild : false,
         sdkVersion : sdkVersion
     ]
 
-    androidSupportLibraryVersion = "27.1.1"
+    androidSupportLibraryVersion = "28.0.0"
     firebaseMessagingVersion = "17.1.0"
     javaCommon = "1.14"
     gsonVersion = "2.8.2"
@@ -17,6 +18,7 @@ ext {
     kotlinVersion = "1.2.51"
     daggerVersion = "2.12"
     tapeVersion = "2.0.0-beta1"
+    connectNetworkClientVersion = "1.0.0"
 
     // Test dependency versions
     junitVersion = "4.12"
@@ -44,10 +46,10 @@ buildscript {
     }
 
     dependencies {
-        classpath group: "com.android.tools.build", name: "gradle", version: "3.2.0"
+        classpath group: "com.android.tools.build", name: "gradle", version: "3.2.1"
         classpath group: "com.github.dcendents", name: "android-maven-gradle-plugin", version: "2.0"
         classpath group: "com.jfrog.bintray.gradle", name: "gradle-bintray-plugin", version: "1.8.0"
         classpath group: "org.jetbrains.kotlin", name: "kotlin-gradle-plugin", version: kotlin_version
-        classpath group: "com.google.gms", name: "google-services", version: "4.0.1"
+        classpath group: "com.google.gms", name: "google-services", version: "4.2.0"
     }
 }

@@ -1,1 +1,1 @@
-include ':ConnectSDK', ':OutboundSDK', ':ConnectTestApp', ':NetworkClient'
+include ':ConnectSDK', ':ConnectTestApp', ':NetworkClient'

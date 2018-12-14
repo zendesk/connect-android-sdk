@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">ConnectSDK</string>
+
+    <string name="connect_admin_activated">Connect admin mode activated!</string>
+    <string name="connect_admin_pairing_success">Success!</string>
+    <string name="connect_admin_pairing_fail">Pairing failed!</string>
+    <string name="connect_admin_pairing_status">Pairing…</string>
+    <string name="connect_admin_pairing_prompt">Enter the 4-digit code:</string>
+    <string name="connect_admin_pairing_title">Admin device pairing</string>
+    <string name="connect_title_activity_notification">NotificationActivity</string>
+
+    <string name="_connect_notification_channel_id">default_notification_channel_id</string>
+    <string name="connect_notification_channel_id">@string/_connect_notification_channel_id</string>
 </resources>

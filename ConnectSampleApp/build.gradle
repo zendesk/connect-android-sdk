@@ -13,17 +13,17 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionName "1.0"
 
-        buildConfigField "String", "CONNECT_API_KEY", "\"${getConfigurationParameter("CONNECT_API_KEY")}\""
+        buildConfigField "String", "CONNECT_PRIVATE_KEY", "\"${getConfigurationParameter("CONNECT_PRIVATE_KEY")}\""
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -38,10 +38,13 @@ dependencies {
     }
 
     if (useLocalDependency()) {
-        implementation project(":OutboundSDK")
+        implementation project(":ConnectSDK")
     } else {
-        implementation group: "io.outbound.sdk", name: "android-sdk", version: rootProject.ext.sdkVersion
+        implementation group: "com.zendesk", name: "connect", version: "2.0.0", changing: true
     }
+
+    debugImplementation group: "com.squareup.leakcanary", name: "leakcanary-android", version: "1.6.2"
+    releaseImplementation group: "com.squareup.leakcanary", name: "leakcanary-android-no-op", version: "1.6.2"
 }
 
 apply plugin: "com.google.gms.google-services"

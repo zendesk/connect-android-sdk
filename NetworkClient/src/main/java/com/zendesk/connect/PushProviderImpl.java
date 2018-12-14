@@ -1,27 +1,29 @@
 package com.zendesk.connect;
 
-import com.google.gson.Gson;
-
-import okhttp3.OkHttpClient;
 import retrofit2.Call;
+import com.google.gson.Gson;
+import retrofit2.http.*;
+import okhttp3.*;
+import com.zendesk.connect.PushRegistration;
+import java.util.*;
 
-public class PushProviderImpl extends BaseProvider implements PushProvider {
+class PushProviderImpl extends BaseProvider implements PushProvider {
 
     private PushService service;
 
-    public PushProviderImpl(OkHttpClient client, String baseUrl, Gson gson) {
+    PushProviderImpl(OkHttpClient client, String baseUrl, Gson gson) {
         super(client, baseUrl, gson);
         service = retrofit.create(PushService.class);
     }
 
     @Override
-    public Call<Void> register(PushRegistration body) {
-        return service.register(body);
+    public Call<Void> register(String platform, PushRegistration body) {
+        return service.register(platform, body);
     }
 
     @Override
-    public Call<Void> unregister(PushRegistration body) {
-        return service.unregister(body);
+    public Call<Void> unregister(String platform, PushRegistration body) {
+        return service.unregister(platform, body);
     }
 
 }

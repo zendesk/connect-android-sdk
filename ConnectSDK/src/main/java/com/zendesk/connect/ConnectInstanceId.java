@@ -4,6 +4,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
+import com.zendesk.logger.Logger;
 
 /**
  * Class for interacting with {@link FirebaseInstanceId} to retrieve the device FCM token.
@@ -12,6 +13,8 @@ import com.google.firebase.iid.InstanceIdResult;
  * </p>
  */
 class ConnectInstanceId {
+
+    private static final String LOG_TAG = "ConnectInstanceId";
 
     private FirebaseInstanceId firebaseInstanceId;
 
@@ -28,6 +31,11 @@ class ConnectInstanceId {
      *                        not successfully retrieved.
      */
     void getToken(OnSuccessListener<InstanceIdResult> successListener, OnFailureListener failureListener) {
+        if (successListener == null || failureListener == null) {
+            Logger.e(LOG_TAG, "Success listener and failure listener must be non null");
+            return;
+        }
+
         firebaseInstanceId.getInstanceId()
                 .addOnSuccessListener(successListener)
                 .addOnFailureListener(failureListener);

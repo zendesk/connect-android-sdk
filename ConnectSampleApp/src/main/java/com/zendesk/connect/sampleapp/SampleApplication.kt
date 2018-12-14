@@ -5,35 +5,46 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
-import io.outbound.sdk.Outbound
+import com.squareup.leakcanary.LeakCanary
+import com.zendesk.connect.Connect
+import com.zendesk.logger.Logger
 
 private const val LOG_TAG = "SampleApplication"
 
-private const val NOTIFICATION_CHANNEL_ID = "outbound_sample_app_notifications"
-private const val NOTIFICATION_CHANNEL_NAME = "Outbound Sample App Notifications"
-
 // Place your configuration keys in ~/.gradle/gradle.properties
-private const val CONNECT_API_KEY: String = BuildConfig.CONNECT_API_KEY
+private const val CONNECT_PRIVATE_KEY: String = BuildConfig.CONNECT_PRIVATE_KEY
 
 class SampleApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        Log.d(LOG_TAG, "Initialising Outbound")
+        Logger.setLoggable(true)
+
+        if(LeakCanary.isInAnalyzerProcess(this)) {
+            return
+        }
+        LeakCanary.install(this)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID,
-                    NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
+            Logger.d(LOG_TAG, "Device running Oreo or above, creating notification channel")
+
+            val notificationChannelId = getString(R.string.connect_notification_channel_id)
+            val notificationChannelName = getString(R.string.connect_notification_channel_name)
+
+            val notificationChannel = NotificationChannel(
+                    notificationChannelId,
+                    notificationChannelName,
+                    NotificationManager.IMPORTANCE_DEFAULT
+            )
             notificationChannel.enableVibration(true)
 
             val notificationManager =
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(notificationChannel)
-
-            Outbound.init(this, CONNECT_API_KEY, NOTIFICATION_CHANNEL_ID)
-        } else {
-            Outbound.init(this, CONNECT_API_KEY)
         }
+
+        Log.d(LOG_TAG, "Initialising Connect")
+        Connect.INSTANCE.init(this, CONNECT_PRIVATE_KEY)
     }
 }

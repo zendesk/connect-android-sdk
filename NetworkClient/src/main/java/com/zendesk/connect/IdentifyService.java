@@ -8,23 +8,26 @@ import okhttp3.*;
 import com.zendesk.connect.User;
 import java.util.*;
 
-public interface IdentifyService {
+interface IdentifyService {
+
     /**
-    * Identify
-    * 
-    * @param body  (optional)
-    * @return Call&lt;Void&gt;
-    */
+     * Identify
+     * 
+     * @param body  (optional)
+     * @return Call<Void>
+     */
     @Headers({"Content-Type:application/json"})
     @POST("v2/identify")
     Call<Void> identify(@retrofit2.http.Body User body);
+
     /**
-    * Identify Batch
-    * 
-    * @param body  (optional)
-    * @return Call&lt;Void&gt;
-    */
+     * Identify Batch
+     * 
+     * @param body  (optional)
+     * @return Call<Void>
+     */
     @Headers({"Content-Type:application/json"})
     @POST("v2/identify/batch")
     Call<Void> identifyBatch(@retrofit2.http.Body List<User> body);
+
 }

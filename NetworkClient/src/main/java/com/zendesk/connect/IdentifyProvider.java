@@ -15,20 +15,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface IdentifyProvider {
+interface IdentifyProvider {
 
     /**
      * Identify
      * 
      * @param body  (optional)
-     * @return Call&lt;Void&gt;
+     * @return Call<Void>
      */
     Call<Void> identify(User body);
+
     /**
      * Identify Batch
      * 
      * @param body  (optional)
-     * @return Call&lt;Void&gt;
+     * @return Call<Void>
      */
     Call<Void> identifyBatch(List<User> body);
 

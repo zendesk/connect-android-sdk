@@ -24,7 +24,7 @@ class ConfigJobProcessorTests {
 
     private val gson = Gson()
 
-    private val testConfig = Config().apply { isEnabled = true }
+    private val testConfig = Config(true, null)
 
     private lateinit var storageControllerSpy: StorageController
 
@@ -37,11 +37,13 @@ class ConfigJobProcessorTests {
     @Mock
     private lateinit var mockConfigResponse: Response<Config>
 
-    private val logAppender = TestLogAppender().apply { Logger.addLogAppender(this) }
+    private val logAppender = TestLogAppender().apply {
+        Logger.setLoggable(true)
+        Logger.addLogAppender(this)
+    }
 
     @Before
     fun setUp() {
-        Logger.setLoggable(true)
         MockitoAnnotations.initMocks(ConfigJobProcessorTests::class.java)
 
         val preferencesStorage = SharedPreferencesStorage(MockedSharedPreferences().getSharedPreferences(), gson)
@@ -78,7 +80,7 @@ class ConfigJobProcessorTests {
 
     @Test
     fun `returned config should be stored into the provided storage mechanism`() {
-        `when`(mockConfigResponse.code()).thenReturn(200)
+        `when`(mockConfigResponse.isSuccessful).thenReturn(true)
         `when`(mockConfigResponse.body()).thenReturn(testConfig)
 
         ConfigJobProcessor.process(mockConfigProvider, storageControllerSpy)

@@ -5,4 +5,7 @@
     <string name="register">Register</string>
     <string name="disable">Disable</string>
     <string name="logout">Logout</string>
+
+    <string name="connect_notification_channel_id">connect_sample_app_notifications</string>
+    <string name="connect_notification_channel_name">Connect Sample App Notifications</string>
 </resources>

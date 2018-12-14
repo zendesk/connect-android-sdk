@@ -11,7 +11,8 @@ class ConnectQueueTests {
 
     private val NULL_OBJECT_WARNING = "Cannot add a null object to the queue"
     private val ADD_OBJECT_WARNING = "Failed to add object to queue, discarding object"
-    private val RETRIEVE_OBJECT_WARNING = "Failed to retrieve objects from queue"
+    private val RETRIEVE_OBJECT_WARNING = "Failed to retrieve object from queue"
+    private val RETRIEVE_OBJECTS_WARNING = "Failed to retrieve objects from queue"
     private val REMOVE_OBJECT_WARNING = "Failed to remove objects from queue"
 
     private val queueGenerator = MockedObjectQueue<Any>()
@@ -29,11 +30,6 @@ class ConnectQueueTests {
         mockObjectQueue = queueGenerator.getObjectQueue()
 
         connectQueue = ConnectQueue<Any>(mockObjectQueue)
-    }
-
-    @After
-    fun teardown() {
-        logAppender.reset()
     }
 
     @Test
@@ -90,6 +86,15 @@ class ConnectQueueTests {
     }
 
     @Test
+    fun `io exceptions caught by peek should be logged`() {
+        mockObjectQueue.close()
+
+        connectQueue.peek()
+
+        assertThat(logAppender.lastLog()).isEqualTo(RETRIEVE_OBJECT_WARNING)
+    }
+
+    @Test
     fun `peek with max should return the number of items requested`() {
         val names = listOf("Charlie", "Dee", "Mac", "Dennis", "Frank")
         names.forEach { name ->
@@ -122,7 +127,7 @@ class ConnectQueueTests {
         mockObjectQueue.close()
         connectQueue.peek(1)
 
-        assertThat(logAppender.lastLog()).isEqualTo(RETRIEVE_OBJECT_WARNING)
+        assertThat(logAppender.lastLog()).isEqualTo(RETRIEVE_OBJECTS_WARNING)
     }
 
     @Test
@@ -174,4 +179,22 @@ class ConnectQueueTests {
         assertThat(logAppender.lastLog()).isEqualTo(REMOVE_OBJECT_WARNING)
     }
 
+    @Test
+    fun `clear should remove all objects from the queue`() {
+        connectQueue.apply {
+            add("Hammer")
+            add("Bend")
+            add("Snap")
+            add("Jerk")
+        }
+
+        connectQueue.clear()
+
+        assertThat(connectQueue.size()).isEqualTo(0)
+    }
+
+    @After
+    fun teardown() {
+        logAppender.reset()
+    }
 }

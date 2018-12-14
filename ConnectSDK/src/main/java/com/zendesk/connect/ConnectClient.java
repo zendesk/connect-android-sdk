@@ -33,13 +33,13 @@ interface ConnectClient {
      * Logs the currently active user out of the Connect SDK by
      * clearing storage and disabling push.
      */
-    void logout();
+    void logoutUser();
 
     /**
      * Gets the currently active user
      *
      * @return the currently active {@link User}
      */
-    User getActiveUser();
+    User getUser();
 
 }

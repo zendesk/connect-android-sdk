@@ -1,5 +1,11 @@
 package com.zendesk.connect;
 
+import android.support.annotation.NonNull;
+
+import com.zendesk.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -12,7 +18,7 @@ public class UserBuilder {
     private String lastName;
     private String email;
     private String phoneNumber;
-    private String fcmToken;
+    private List<String> fcmToken;
     private Map<String, Object> userAttributes;
     private String groupId;
     private Map<String, Object> groupAttributes;
@@ -80,11 +86,15 @@ public class UserBuilder {
     /**
      * Sets the user's fcm token
      *
-     * @param fcmToken the user's fcm token
+     * @param token the user's fcm token
      * @return the builder
      */
-    public UserBuilder setFcmToken(String fcmToken) {
-        this.fcmToken = fcmToken;
+    public UserBuilder setFcmToken(String token) {
+        if (StringUtils.isEmpty(token)) {
+            this.fcmToken = null;
+        } else {
+            this.fcmToken = Arrays.asList(token);
+        }
         return this;
     }
 
@@ -138,19 +148,19 @@ public class UserBuilder {
      * @return a constructed {@link User} model
      */
     public User build() {
-        User user = new User();
-        user.setUserId(this.userId);
-        user.setPreviousId(this.previousId);
-        user.setFirstName(this.firstName);
-        user.setLastName(this.lastName);
-        user.setEmail(this.email);
-        user.setPhoneNumber(this.phoneNumber);
-        user.setAttributes(this.userAttributes);
-        user.setGroupId(this.groupId);
-        user.setGroupAttributes(this.groupAttributes);
-        user.setTimezone(this.timezone != null ? this.timezone : TimeZone.getDefault().getID());
-        user.setFcmToken(this.fcmToken);
-        return user;
+        return new User(
+                userId,
+                previousId,
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                userAttributes,
+                groupId,
+                groupAttributes,
+                timezone != null ? timezone : TimeZone.getDefault().getID(),
+                fcmToken,
+                null);
     }
 
     /**
@@ -160,6 +170,41 @@ public class UserBuilder {
      * @return an anonymous {@link User}
      */
     public static User anonymousUser() {
-        return new UserBuilder(UUID.randomUUID().toString()).build();
+        return anonymousUserBuilder().build();
+    }
+
+    /**
+     * Constructs a {@link UserBuilder} with an anonymous user id to allow information
+     * to be added to the model
+     *
+     * @return a {@link UserBuilder} with an anonymous id
+     */
+    public static UserBuilder anonymousUserBuilder() {
+        return new UserBuilder(UUID.randomUUID().toString());
+    }
+
+    /**
+     * Constructs a new {@link UserBuilder} from an existing {@link User}
+     *
+     * @param user an instance of {@link User}
+     * @return an instance of a {@link UserBuilder}
+     */
+    public static UserBuilder newBuilder(@NonNull User user) {
+        UserBuilder builder = new UserBuilder(user.getUserId())
+                .setPreviousId(user.getPreviousId())
+                .setFirstName(user.getFirstName())
+                .setLastName(user.getLastName())
+                .setEmail(user.getEmail())
+                .setPhoneNumber(user.getPhoneNumber())
+                .setUserAttributes(user.getAttributes())
+                .setGroupId(user.getGroupId())
+                .setGroupAttributes(user.getGroupAttributes())
+                .setTimezone(user.getTimezone());
+
+        if (user.getFcm() != null && !user.getFcm().isEmpty()) {
+            builder.setFcmToken(user.getFcm().get(0));
+        }
+
+        return builder;
     }
 }

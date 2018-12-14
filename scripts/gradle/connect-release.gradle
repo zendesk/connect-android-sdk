@@ -4,14 +4,10 @@ apply from: '../scripts/gradle/connect-commons.gradle'
 ext {
     sdkGroupId = project.groupId
     sdkArtifactId = project.ext.artifactId
-    sdkVersionName = rootProject.ext.sdkVersion
+    versionName = project.ext.versionName
 
     repoUsername = getConfigurationParameter("zendeskRepoUsername")
     repoPassword = getConfigurationParameter("zendeskRepoPassword")
-}
-
-artifacts {
-    archives file: file("$buildDir/outputs/aar/${project.getName()}-release.aar"), classifier: "source"
 }
 
 afterEvaluate { project ->
@@ -30,8 +26,8 @@ afterEvaluate { project ->
                 pom.project {
                     groupId sdkGroupId
                     artifactId sdkArtifactId
-                    packaging 'aar'
-                    version sdkVersionName
+                    packaging modulePackaging
+                    version versionName
 
                     licenses {
                         license {

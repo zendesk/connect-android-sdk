@@ -1,7 +1,6 @@
 package com.zendesk.connect;
 
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -11,7 +10,11 @@ import com.zendesk.logger.Logger;
 import com.zendesk.service.ErrorResponse;
 import com.zendesk.service.RetrofitZendeskCallbackAdapter;
 import com.zendesk.service.ZendeskCallback;
+import com.zendesk.util.CollectionUtils;
+import com.zendesk.util.StringUtils;
+
 import retrofit2.Call;
+import retrofit2.Callback;
 
 /**
  * Default implementation of {@link ConnectClient}
@@ -19,6 +22,7 @@ import retrofit2.Call;
 class DefaultConnectClient implements ConnectClient {
 
     private static final String LOG_TAG = "DefaultConnectClient";
+    private static final String PUSH_CLIENT = "fcm";
 
     private StorageController storageController;
     private BaseQueue<User> userQueue;
@@ -57,17 +61,18 @@ class DefaultConnectClient implements ConnectClient {
         }
 
         User activeUser = storageController.getUser();
+        final UserBuilder userBuilder = UserBuilder.newBuilder(user);
 
         // We alias the currently active user with the new user id if it is different
         if (activeUser != null && !activeUser.getUserId().equals(user.getUserId())) {
-            user.setPreviousId(activeUser.getUserId());
+            userBuilder.setPreviousId(activeUser.getUserId());
         }
 
         OnSuccessListener<InstanceIdResult> successListener = new OnSuccessListener<InstanceIdResult>() {
             @Override
             public void onSuccess(InstanceIdResult instanceIdResult) {
-                user.setFcmToken(instanceIdResult.getToken());
-                persistUser(user);
+                userBuilder.setFcmToken(instanceIdResult.getToken());
+                persistUser(userBuilder.build());
             }
         };
 
@@ -114,11 +119,15 @@ class DefaultConnectClient implements ConnectClient {
             activeUser = UserBuilder.anonymousUser();
             identifyUser(activeUser);
         }
-        event.setUserId(activeUser.getUserId());
+        Event eventToTrack = new Event(
+                activeUser.getUserId(),
+                event.getEvent(),
+                event.getProperties(),
+                event.getTimestamp());
 
-        Logger.d(LOG_TAG, "Tracking event: %s", event.toString());
+        Logger.d(LOG_TAG, "Tracking event: %s", eventToTrack.toString());
 
-        eventQueue.add(event);
+        eventQueue.add(eventToTrack);
         scheduler.scheduleQueuedNetworkRequests();
     }
 
@@ -149,8 +158,8 @@ class DefaultConnectClient implements ConnectClient {
      * @param token the device token
      */
     private void registerPushToken(final String token) {
-        if (TextUtils.isEmpty(token)) {
-            Logger.d(LOG_TAG, "No token to register");
+        if (StringUtils.isEmpty(token)) {
+            Logger.d(LOG_TAG, "There is no push token to register");
             return;
         }
 
@@ -158,100 +167,184 @@ class DefaultConnectClient implements ConnectClient {
 
         if (activeUser == null) {
             Logger.d(LOG_TAG, "No active user, identifying anonymous user");
-            User anonymousUser = UserBuilder.anonymousUser();
-            anonymousUser.setFcmToken(token);
-            identifyUser(anonymousUser);
+            UserBuilder userBuilder = UserBuilder.anonymousUserBuilder();
+            userBuilder.setFcmToken(token);
+            identifyUser(userBuilder.build());
             return;
         }
 
         PushRegistration registration = PushRegistrationFactory
                 .create(activeUser.getUserId(), token);
 
-        Call<Void> call = pushProvider.register(registration);
-        if (call == null) {
-            Logger.d(LOG_TAG, "Couldn't send register for push request");
-            return;
-        }
-
-        Logger.d(LOG_TAG, "Registering for push");
-        call.enqueue(new RetrofitZendeskCallbackAdapter<Void, Void>(new ZendeskCallback<Void>() {
+        Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(new ZendeskCallback<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 Logger.d(LOG_TAG, "Successfully registered for push");
-                activeUser.setFcmToken(token);
-                storageController.saveUser(activeUser);
+                UserBuilder userBuilder = UserBuilder.newBuilder(activeUser);
+                userBuilder.setFcmToken(token);
+                storageController.saveUser(userBuilder.build());
             }
 
             @Override
             public void onError(ErrorResponse errorResponse) {
                 Logger.e(LOG_TAG, "Failed to register for push", errorResponse.getReason());
             }
-        }));
+        });
+
+        sendRegisterRequest(registration, callback);
+    }
+
+    /**
+     * Sends a register request to Connect to register the device for push
+     *
+     * @param registration an instance of {@link PushRegistration}
+     * @param callback an implementation of {@link Callback} to handle the response
+     */
+    private void sendRegisterRequest(PushRegistration registration, Callback<Void> callback) {
+        Call<Void> call = pushProvider.register(PUSH_CLIENT, registration);
+        if (call == null) {
+            Logger.d(LOG_TAG, "Couldn't send register for push request");
+            return;
+        }
+        Logger.d(LOG_TAG, "Registering for push");
+        call.enqueue(callback);
     }
 
     @Override
     public void disablePush() {
-        final User activeUser = storageController.getUser();
-        if (activeUser == null || TextUtils.isEmpty(activeUser.getFcmToken())) {
-            Logger.d(LOG_TAG, "There is no push token to disable");
-            return;
+        final User activeUser = getUser();
+        PushRegistration unregistration = createPushUnregistration(activeUser);
+
+        if (unregistration != null) {
+            Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(
+                    new DisableRequestCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            super.onSuccess(aVoid);
+                            UserBuilder userBuilder = UserBuilder.newBuilder(activeUser);
+                            userBuilder.setFcmToken(null);
+                            storageController.saveUser(userBuilder.build());
+                        }
+                    }
+            );
+
+            sendUnregisterRequest(unregistration, callback);
         }
+    }
 
-        PushRegistration unregistration = PushRegistrationFactory
-                .create(activeUser.getUserId(), activeUser.getFcmToken());
+    /**
+     * Checks if the given user has a push token
+     *
+     * @param user the {@link User} to be examined
+     * @return true if the user has a push token, false otherwise
+     */
+    private boolean userHasPushToken(User user) {
+        return user != null
+                && CollectionUtils.isNotEmpty(user.getFcm())
+                && !StringUtils.isEmpty(user.getFcm().get(0));
+    }
 
-        Call<Void> call = pushProvider.unregister(unregistration);
+    /**
+     * Creates an instance of {@link PushRegistration} for disable push on this device
+     *
+     * @param user the user containing the device token
+     * @return an instance of {@link PushRegistration}
+     */
+    private PushRegistration createPushUnregistration(User user) {
+        if (!userHasPushToken(user)) {
+            Logger.e(LOG_TAG, "There is no push token to disable");
+            return null;
+        }
+        return new PushRegistration(user.getUserId(), user.getFcm().get(0));
+    }
+
+    /**
+     * Sends an unregister call to Connect to disable the device push token
+     *
+     * @param unregistration an instance of {@link PushRegistration}
+     * @param callback an implementation of {@link Callback} to handle the response
+     */
+    private void sendUnregisterRequest(PushRegistration unregistration, Callback<Void> callback) {
+        Call<Void> call = pushProvider.unregister(PUSH_CLIENT, unregistration);
         if (call == null) {
             Logger.d(LOG_TAG, "Couldn't send disable push request");
             return;
         }
-
         Logger.d(LOG_TAG, "Disabling push");
-        call.enqueue(new RetrofitZendeskCallbackAdapter<Void, Void>(new ZendeskCallback<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                Logger.d(LOG_TAG, "Successfully disabled push");
-                activeUser.setFcmToken(null);
-                storageController.saveUser(activeUser);
-            }
-
-            @Override
-            public void onError(ErrorResponse errorResponse) {
-                Logger.e(LOG_TAG, "Failed to disable push", errorResponse.getReason());
-            }
-        }));
+        call.enqueue(callback);
     }
 
     @Override
-    public void logout() {
+    public void logoutUser() {
         Logger.d(LOG_TAG, "Logging out Connect user");
 
-        disablePush();
+        PushRegistration unregistration = createPushUnregistration(getUser());
+        if (unregistration != null) {
+            Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(
+                    new DisableRequestCallback<>());
+            sendUnregisterRequest(unregistration, callback);
+        }
 
-        storageController.clearUser();
+        clearUserData();
 
-        final User anonymousUser = UserBuilder.anonymousUser();
+        persistAnonymousUser(storageController, instanceId);
+    }
+
+    /**
+     * Fetches the device push token and persists a new anonymous user with that token
+     *
+     * @param storageController an instance of {@link StorageController}
+     * @param instanceId an instance of {@link ConnectInstanceId}
+     */
+    static void persistAnonymousUser(final StorageController storageController,
+                                     final ConnectInstanceId instanceId) {
+        final UserBuilder userBuilder = UserBuilder.anonymousUserBuilder();
 
         OnSuccessListener<InstanceIdResult> successListener = new OnSuccessListener<InstanceIdResult>() {
             @Override
             public void onSuccess(InstanceIdResult instanceIdResult) {
-                anonymousUser.setFcmToken(instanceIdResult.getToken());
-                storageController.saveUser(anonymousUser);
+                userBuilder.setFcmToken(instanceIdResult.getToken());
+                storageController.saveUser(userBuilder.build());
             }
         };
 
         OnFailureListener failureListener = new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                storageController.saveUser(anonymousUser);
+                storageController.saveUser(userBuilder.build());
             }
         };
 
         instanceId.getToken(successListener, failureListener);
     }
 
+    /**
+     * Clears all data related to the current login
+     */
+    private void clearUserData() {
+        storageController.clearUser();
+        userQueue.clear();
+        eventQueue.clear();
+    }
+
     @Override
-    public User getActiveUser() {
+    public User getUser() {
         return storageController.getUser();
+    }
+
+    /**
+     * An implementation of {@link ZendeskCallback} to be used as a basic callback for
+     * disable push token requests.
+     */
+    static class DisableRequestCallback<T> extends ZendeskCallback<T> {
+        @Override
+        public void onSuccess(T t) {
+            Logger.d(LOG_TAG, "Successfully disabled push");
+        }
+
+        @Override
+        public void onError(ErrorResponse errorResponse) {
+            Logger.e(LOG_TAG, "Failed to disable push", errorResponse.getReason());
+        }
     }
 }

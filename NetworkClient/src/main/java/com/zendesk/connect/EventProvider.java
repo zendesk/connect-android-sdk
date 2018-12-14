@@ -15,20 +15,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface EventProvider {
+interface EventProvider {
 
     /**
      * Track
      * 
      * @param body  (optional)
-     * @return Call&lt;Void&gt;
+     * @return Call<Void>
      */
     Call<Void> track(Event body);
+
     /**
      * Track Batch
      * 
      * @param body  (optional)
-     * @return Call&lt;Void&gt;
+     * @return Call<Void>
      */
     Call<Void> trackBatch(List<Event> body);
 

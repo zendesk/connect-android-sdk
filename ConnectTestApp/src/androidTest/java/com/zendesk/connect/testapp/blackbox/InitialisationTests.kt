@@ -7,7 +7,6 @@ import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
 import io.appflate.restmock.RequestsVerifier.verifyRequest
 import io.appflate.restmock.utils.RequestMatchers.pathContains
-import io.outbound.sdk.testInitOutbound
 import org.junit.Before
 import org.junit.Test
 
@@ -29,19 +28,16 @@ class InitialisationTests {
 
     @Test
     fun callingInitShouldRetrieveAConfigFromTheApi() {
-        testInitConnect(testClient) // This is done internally by Outbound
-        testInitOutbound(testApplication, "Whatever", "Whatevs", testClient)
+        testInitConnect(testClient)
 
         verifyRequest(pathContains(configPath)).invoked()
     }
 
     @Test
     fun callingInitMoreThanOnceShouldOnlyResultInASingleConfigRequestToTheApi() {
-        testInitConnect(testClient) // This is done internally by Outbound
-        testInitOutbound(testApplication, "Whatever", "Whatevs", testClient)
+        testInitConnect(testClient)
 
-        testInitConnect(testClient) // This is done internally by Outbound
-        testInitOutbound(testApplication, "Whatever", "Whatevs", testClient)
+        testInitConnect(testClient)
 
         verifyRequest(pathContains(configPath)).invoked()
     }

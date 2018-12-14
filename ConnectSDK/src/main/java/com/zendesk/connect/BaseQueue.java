@@ -2,7 +2,7 @@ package com.zendesk.connect;
 
 import java.util.List;
 
-public interface BaseQueue<T> {
+interface BaseQueue<T> {
 
     /**
      * Adds an object to the queue
