@@ -9,19 +9,35 @@ import dagger.Component;
         ConnectNetworkModule.class,
         ConnectNotificationModule.class})
 interface ConnectComponent {
+
     ConnectClient client();
+
     StorageController storageController();
+
     BaseQueue<User> userQueue();
+
     BaseQueue<Event> eventQueue();
+
     ConnectScheduler scheduler();
+
     ConfigProvider configProvider();
+
     IdentifyProvider identifyProvider();
+
     EventProvider eventProvider();
+
     PushProvider pushProvider();
+
     MetricsProvider metricsProvider();
+
     TestSendProvider testSendProvider();
+
     ConnectInstanceId instanceId();
+
     NotificationProcessor notificationProcessor();
+
     ConnectActionProcessor actionProcessor();
+
     MetricRequestsProcessor metricsProcessor();
+
 }

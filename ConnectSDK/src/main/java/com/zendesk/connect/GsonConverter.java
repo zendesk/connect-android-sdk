@@ -17,7 +17,7 @@ import java.io.OutputStreamWriter;
  *
  * @param <T> the type of the object
  */
-class GsonConverter<T> implements ObjectQueue.Converter<T>{
+class GsonConverter<T> implements ObjectQueue.Converter<T> {
 
     private Gson gson;
     private Class<T> clazz;

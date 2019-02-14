@@ -1,6 +1,12 @@
 package com.zendesk.connect
 
-import com.firebase.jobdispatcher.*
+import com.firebase.jobdispatcher.Constraint
+import com.firebase.jobdispatcher.FirebaseJobDispatcher
+import com.firebase.jobdispatcher.Job
+import com.firebase.jobdispatcher.JobService
+import com.firebase.jobdispatcher.JobTrigger
+import com.firebase.jobdispatcher.Lifetime
+import com.firebase.jobdispatcher.Trigger
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Before
@@ -9,7 +15,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit
 
@@ -37,8 +42,6 @@ class ConnectSchedulerTests {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(ConnectSchedulerTests::class.java)
-
         connectScheduler = ConnectScheduler(mockDispatcher)
 
         `when`(mockDispatcher.newJobBuilder()).thenReturn(mockJobBuilder)

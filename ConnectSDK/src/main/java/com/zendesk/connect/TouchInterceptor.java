@@ -53,7 +53,8 @@ public class TouchInterceptor implements Window.Callback {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_POINTER_DOWN:
                 if (event.getPointerCount() == ACTIVATION_GESTURE_POINTER_COUNT) {
-                    handler.sendEmptyMessageAtTime(ACTIVATION_GESTURE, event.getDownTime() + ACTIVATION_GESTURE_TIMEOUT);
+                    handler.sendEmptyMessageAtTime(ACTIVATION_GESTURE,
+                            event.getDownTime() + ACTIVATION_GESTURE_TIMEOUT);
                 }
 
                 break;
@@ -205,9 +206,12 @@ public class TouchInterceptor implements Window.Callback {
             this.interceptor = interceptor;
         }
 
-        @Override public void handleMessage(Message msg) {
+        @Override
+        public void handleMessage(Message msg) {
             TouchInterceptionListener listener = interceptor.getListener();
-            if (listener == null) return;
+            if (listener == null) {
+                return;
+            }
 
             switch (msg.what) {
                 case ACTIVATION_GESTURE:

@@ -1,5 +1,7 @@
 package com.zendesk.connect;
 
+import com.zendesk.util.DigestUtils;
+
 import javax.inject.Inject;
 
 import dagger.Reusable;
@@ -11,6 +13,7 @@ class StorageController {
 
     private static final String PREFERENCES_KEY_CONFIG = "connect_preferences_key_config";
     private static final String PREFERENCES_KEY_USER = "connect_preferences_key_user";
+    private static final String PREFERENCES_KEY_PRIVATE_KEY = "connect_preferences_key_private_key";
 
     private BaseStorage storage;
 
@@ -45,7 +48,7 @@ class StorageController {
      *     Retrieves the {@link Config} stored in the provided {@link BaseStorage}
      * </p>
      *
-     * @return the stored {@link Config}
+     * @return the stored {@link Config}, or null if it doesn't exist
      */
     Config getConfig() {
         return storage.get(PREFERENCES_KEY_CONFIG, Config.class);
@@ -76,7 +79,7 @@ class StorageController {
      *     Retrieves the {@link User} stored in the provided {@link BaseStorage}
      * </p>
      *
-     * @return the stored {@link User}
+     * @return the stored {@link User}, or null if it doesn't exist
      */
     User getUser() {
         return storage.get(PREFERENCES_KEY_USER, User.class);
@@ -89,5 +92,49 @@ class StorageController {
      */
     void clearUser() {
         storage.remove(PREFERENCES_KEY_USER);
+    }
+
+    /**
+     * <p>
+     *     Encrypts and stores the given private key into the provided {@link BaseStorage}
+     * </p>
+     *
+     * @param privateKey the private key to be stored
+     */
+    void savePrivateKey(String privateKey) {
+        String hashedKey = DigestUtils.sha256(privateKey);
+        storage.put(PREFERENCES_KEY_PRIVATE_KEY, hashedKey);
+    }
+
+    /**
+     * <p>
+     *     Checks if the given private key is a new key
+     * </p>
+     *
+     * @param privateKey the private key to compare
+     * @return true if the keys match or the stored key is null, false otherwise
+     */
+    boolean isNewPrivateKey(String privateKey) {
+        String storedKey = storage.get(PREFERENCES_KEY_PRIVATE_KEY);
+        String hashedKey = DigestUtils.sha256(privateKey);
+        return storedKey == null || !storedKey.equals(hashedKey);
+    }
+
+    /**
+     * <p>
+     *     Clears the stored private key from the provided {@link BaseStorage}
+     * </p>
+     */
+    void clearPrivateKey() {
+        storage.remove(PREFERENCES_KEY_PRIVATE_KEY);
+    }
+
+    /**
+     * <p>
+     *     Clears everything from storage
+     * </p>
+     */
+    void clearAllStorage() {
+        storage.clear();
     }
 }

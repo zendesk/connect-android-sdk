@@ -14,7 +14,7 @@ import static com.zendesk.connect.Connect.CLIENT_PLATFORM;
 
 class MetricRequestsProcessor {
 
-    private final static String LOG_TAG = "MetricRequestsProcessor";
+    private static final String LOG_TAG = "MetricRequestsProcessor";
 
     private MetricsProvider metricsProvider;
 
@@ -96,7 +96,9 @@ class MetricRequestsProcessor {
         try {
             Response<Void> response = call.execute();
             if (!response.isSuccessful()) {
-                Logger.d(LOG_TAG, "Metric request unsuccessful. Response code:", response.code());
+                Logger.e(LOG_TAG, "Metric request unsuccessful. Response code:", response.code());
+            } else {
+                Logger.d(LOG_TAG, "Metric request successful");
             }
         } catch (IOException e) {
             Logger.e(LOG_TAG, "There was a problem sending the metric request:", e);

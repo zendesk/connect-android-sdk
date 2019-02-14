@@ -15,7 +15,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner.Silent::class)
@@ -47,8 +46,6 @@ class ConnectInstanceIdTests {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(ConnectInstanceIdTests::class.java)
-
         connectInstanceId = ConnectInstanceId(mockFirebaseInstanceId)
 
         `when`(mockInstanceIdResult.token).thenReturn(testToken)

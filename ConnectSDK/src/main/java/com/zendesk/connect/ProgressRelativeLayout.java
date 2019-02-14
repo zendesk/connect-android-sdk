@@ -36,18 +36,21 @@ public class ProgressRelativeLayout extends RelativeLayout implements ProgressCo
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    @Override protected void onFinishInflate() {
+    @Override
+    protected void onFinishInflate() {
         super.onFinishInflate();
 
         indicator = findViewById(R.id.indicator);
         text = findViewById(R.id.text);
     }
 
-    @Override public void setText(@StringRes int textRes) {
+    @Override
+    public void setText(@StringRes int textRes) {
         text.setText(textRes);
     }
 
-    @Override public void showIndicator(boolean showIndicator) {
+    @Override
+    public void showIndicator(boolean showIndicator) {
         if (showIndicator) {
             indicator.setVisibility(View.VISIBLE);
         } else {
@@ -55,7 +58,8 @@ public class ProgressRelativeLayout extends RelativeLayout implements ProgressCo
         }
     }
 
-    @Override public void showText(boolean showText) {
+    @Override
+    public void showText(boolean showText) {
         if (showText) {
             text.setVisibility(View.VISIBLE);
         } else {
@@ -63,11 +67,13 @@ public class ProgressRelativeLayout extends RelativeLayout implements ProgressCo
         }
     }
 
-    @Override public void setTextColor(@ColorRes int color) {
+    @Override
+    public void setTextColor(@ColorRes int color) {
         text.setTextColor(getResources().getColor(color));
     }
 
-    @Override public void show(boolean show) {
+    @Override
+    public void show(boolean show) {
         showIndicator(show);
         showText(show);
     }

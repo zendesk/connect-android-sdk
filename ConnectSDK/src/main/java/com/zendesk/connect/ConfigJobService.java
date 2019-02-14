@@ -20,7 +20,7 @@ public class ConfigJobService extends SimpleJobService {
     @Override
     public int onRunJob(JobParameters job) {
         if (!Connect.INSTANCE.isInitialised()) {
-            Logger.d(LOG_TAG, "Connect has not been initialised, ending worker");
+            Logger.e(LOG_TAG, "Connect has not been initialised, ending worker");
             return RESULT_FAIL_NORETRY;
         }
 

@@ -56,7 +56,7 @@ class DefaultConnectClient implements ConnectClient {
     @Override
     public void identifyUser(final User user) {
         if (user == null) {
-            Logger.d(LOG_TAG, "Couldn't identify a null user");
+            Logger.e(LOG_TAG, "Couldn't identify a null user");
             return;
         }
 
@@ -108,7 +108,7 @@ class DefaultConnectClient implements ConnectClient {
     @Override
     public void trackEvent(Event event) {
         if (event == null) {
-            Logger.d(LOG_TAG, "Couldn't track a null event");
+            Logger.e(LOG_TAG, "Couldn't track a null event");
             return;
         }
 
@@ -159,7 +159,7 @@ class DefaultConnectClient implements ConnectClient {
      */
     private void registerPushToken(final String token) {
         if (StringUtils.isEmpty(token)) {
-            Logger.d(LOG_TAG, "There is no push token to register");
+            Logger.e(LOG_TAG, "There is no push token to register");
             return;
         }
 
@@ -178,7 +178,7 @@ class DefaultConnectClient implements ConnectClient {
 
         Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(new ZendeskCallback<Void>() {
             @Override
-            public void onSuccess(Void aVoid) {
+            public void onSuccess(Void unused) {
                 Logger.d(LOG_TAG, "Successfully registered for push");
                 UserBuilder userBuilder = UserBuilder.newBuilder(activeUser);
                 userBuilder.setFcmToken(token);
@@ -203,7 +203,7 @@ class DefaultConnectClient implements ConnectClient {
     private void sendRegisterRequest(PushRegistration registration, Callback<Void> callback) {
         Call<Void> call = pushProvider.register(PUSH_CLIENT, registration);
         if (call == null) {
-            Logger.d(LOG_TAG, "Couldn't send register for push request");
+            Logger.e(LOG_TAG, "Couldn't send register for push request");
             return;
         }
         Logger.d(LOG_TAG, "Registering for push");
@@ -219,8 +219,8 @@ class DefaultConnectClient implements ConnectClient {
             Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(
                     new DisableRequestCallback<Void>() {
                         @Override
-                        public void onSuccess(Void aVoid) {
-                            super.onSuccess(aVoid);
+                        public void onSuccess(Void unused) {
+                            super.onSuccess(unused);
                             UserBuilder userBuilder = UserBuilder.newBuilder(activeUser);
                             userBuilder.setFcmToken(null);
                             storageController.saveUser(userBuilder.build());
@@ -267,7 +267,7 @@ class DefaultConnectClient implements ConnectClient {
     private void sendUnregisterRequest(PushRegistration unregistration, Callback<Void> callback) {
         Call<Void> call = pushProvider.unregister(PUSH_CLIENT, unregistration);
         if (call == null) {
-            Logger.d(LOG_TAG, "Couldn't send disable push request");
+            Logger.e(LOG_TAG, "Couldn't send disable push request");
             return;
         }
         Logger.d(LOG_TAG, "Disabling push");

@@ -19,7 +19,7 @@ public class QueuedRequestsJobService extends SimpleJobService {
     @Override
     public int onRunJob(JobParameters job) {
         if (!Connect.INSTANCE.isEnabled()) {
-            Logger.d(LOG_TAG, "Connect is not enabled, cancelling queued requests job");
+            Logger.e(LOG_TAG, "Connect is not enabled, cancelling queued requests job");
             return RESULT_FAIL_NORETRY;
         }
 

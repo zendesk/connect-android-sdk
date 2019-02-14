@@ -16,12 +16,31 @@ import static com.zendesk.connect.ConnectActionService.EXTRA_NOTIFICATION;
  */
 class ConnectActionProcessor {
 
-    private final static String LOG_TAG = "ConnectActionProcessor";
+    private static final String LOG_TAG = "ConnectActionProcessor";
 
     private MetricsProvider metricsProvider;
 
     ConnectActionProcessor(MetricsProvider metricsProvider) {
         this.metricsProvider = metricsProvider;
+    }
+
+    /**
+     * Attempts to extract the extra from the given {@link Intent} and deserialise it into a
+     * {@link NotificationPayload}.
+     *
+     * @param intent the received {@link Intent}
+     * @param packageName the host app package name
+     * @return an instance of {@link NotificationPayload}, or null if an error was encountered
+     */
+    NotificationPayload extractPayload(Intent intent, String packageName) {
+        String expectedActionName = packageName + ConnectActionService.ACTION_OPEN_NOTIFICATION;
+        boolean isValidIntent = verifyIntent(intent, expectedActionName);
+        if (!isValidIntent) {
+            Logger.e(LOG_TAG, "Intent was null or contained invalid action name");
+            return null;
+        }
+
+        return extractPayloadFromIntent(intent);
     }
 
     /**
@@ -80,5 +99,24 @@ class ConnectActionProcessor {
         } catch (IOException e) {
             Logger.e(LOG_TAG, "Error sending opened notification metric", e);
         }
+    }
+
+    /**
+     * Resolves and builds an intent from the provided deep link URL
+     *
+     * @param deepLinkUrl the deep link url
+     * @param intentBuilder an instance of {@link IntentBuilder}
+     * @return an {@link Intent} to launch the deep link, or null if the URL was invalid
+     */
+    Intent resolveDeepLinkIntent(String deepLinkUrl, IntentBuilder intentBuilder) {
+        if (StringUtils.isEmpty(deepLinkUrl)) {
+            Logger.w(LOG_TAG, "Deep link url was null or empty");
+            return null;
+        }
+
+        return intentBuilder
+                .withAction(Intent.ACTION_VIEW)
+                .withData(deepLinkUrl)
+                .build();
     }
 }

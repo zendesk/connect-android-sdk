@@ -2,6 +2,7 @@ package com.zendesk.connect;
 
 import android.app.Application;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
 import com.zendesk.logger.Logger;
@@ -35,6 +36,8 @@ public enum Connect {
                 .connectNotificationModule(new ConnectNotificationModule())
                 .build();
 
+        updateStoredPrivateKey(connectComponent, privateKey);
+
         init(connectComponent);
 
         TouchGestureMonitor.add(application);
@@ -49,6 +52,7 @@ public enum Connect {
      * @param component: Dagger component used to initialise the SDK
      */
     @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void init(ConnectComponent component) {
         boolean coldStart = connectComponent == null;
         connectComponent = component;
@@ -68,11 +72,32 @@ public enum Connect {
     }
 
     /**
+     * Clears all storage if the provided private key doesn't match the one stored on device
+     *
+     * @param connectComponent an instance of {@link ConnectComponent}
+     * @param providedPrivateKey the key provided by the host app
+     */
+    @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    void updateStoredPrivateKey(ConnectComponent connectComponent, String providedPrivateKey) {
+        StorageController storageController = connectComponent.storageController();
+
+        if (storageController.isNewPrivateKey(providedPrivateKey)) {
+            storageController.clearAllStorage();
+            connectComponent.userQueue().clear();
+            connectComponent.eventQueue().clear();
+        }
+
+        storageController.savePrivateKey(providedPrivateKey);
+    }
+
+    /**
      * <p>
      *     Allows us to reset the Connect instance for testing
      * </p>
      */
     @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void reset() {
         connectComponent = null;
     }
@@ -97,6 +122,7 @@ public enum Connect {
      *
      * @return true if network requests are enabled, false otherwise.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     boolean isEnabled() {
         if (!isInitialised()) {
             Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);

@@ -10,7 +10,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import retrofit2.Response
@@ -44,8 +43,6 @@ class ConfigJobProcessorTests {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(ConfigJobProcessorTests::class.java)
-
         val preferencesStorage = SharedPreferencesStorage(MockedSharedPreferences().getSharedPreferences(), gson)
 
         storageControllerSpy = spy(StorageController(preferencesStorage))
