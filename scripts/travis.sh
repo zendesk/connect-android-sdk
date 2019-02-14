@@ -7,14 +7,14 @@ boxOut(){
 }
 
 exitOnFailedBuild() {
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         exit 1
     fi
 }
 
 acceptLicenses() {
     mkdir -p ${ANDROID_HOME}licenses
-    echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e" > ${ANDROID_HOME}licenses/android-sdk-license
+    echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > ${ANDROID_HOME}licenses/android-sdk-license
 }
 
 createAvd() {
@@ -35,6 +35,7 @@ runConnectUnitTests() {
     exitOnFailedBuild "Connect unit tests failed"
     echo "Connect unit tests succeeded"
 }
+
 runConnectInstrumentedTests() {
     echo "Waiting for emulator..."
     android-wait-for-emulator
@@ -45,6 +46,14 @@ runConnectInstrumentedTests() {
     echo "Connect instrumented tests succeeded"
 
     adb -s emulator-5554 emu kill || true
+}
+
+runConnectCodeAnalysis() {
+    ./gradlew :ConnectSdk:lintDebug \
+              :ConnectSdk:checkStyle \
+              -PincludeOverride=ConnectSdk \
+              -PlocalBuild=true
+    exitOnFailedBuild "AnswerBotProviders code analysis failed"
 }
 
 prBuildBeforeScript() {
@@ -61,10 +70,13 @@ pullRequestBuild() {
     boxOut "Running Connect Instrumented Tests"
     runConnectInstrumentedTests
 
+    boxOut "Running Connect Sdk Code Analysis"
+    runConnectCodeAnalysis
+
     unset LOCAL_BUILD
 }
 
-if [ "$1" == "before" ]; then
+if [[ "$1" == "before" ]]; then
     acceptLicenses
 
     boxOut "This is a PR. Hook: before_script"

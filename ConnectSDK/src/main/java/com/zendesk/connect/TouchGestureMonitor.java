@@ -9,7 +9,8 @@ import android.view.Window;
 /**
  * Responsible for intercepting touch events on the window to activate Connect admin mode.
  */
-class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks, TouchInterceptor.TouchInterceptionListener {
+class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks,
+        TouchInterceptor.TouchInterceptionListener {
     private final Application application;
     private Activity foregroundActivity;
     private static boolean monitorActive = false;
@@ -42,13 +43,14 @@ class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks, Tou
         return monitorActive;
     }
 
-    @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-    }
+    @Override
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) { }
 
-    @Override public void onActivityStarted(Activity activity) {
-    }
+    @Override
+    public void onActivityStarted(Activity activity) { }
 
-    @Override public void onActivityResumed(Activity activity) {
+    @Override
+    public void onActivityResumed(Activity activity) {
         // Proxy the window callback;
         Window window = activity.getWindow();
         Window.Callback callback = window.getCallback();
@@ -61,7 +63,8 @@ class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks, Tou
         this.foregroundActivity = activity;
     }
 
-    @Override public void onActivityPaused(Activity activity) {
+    @Override
+    public void onActivityPaused(Activity activity) {
         // Remove proxy onPause;
         Window window = activity.getWindow();
         Window.Callback callback = window.getCallback();
@@ -72,16 +75,17 @@ class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks, Tou
         this.foregroundActivity = null;
     }
 
-    @Override public void onActivityStopped(Activity activity) {
-    }
+    @Override
+    public void onActivityStopped(Activity activity) { }
 
-    @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-    }
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) { }
 
-    @Override public void onActivityDestroyed(Activity activity) {
-    }
+    @Override
+    public void onActivityDestroyed(Activity activity) { }
 
-    @Override public void onActivationGesture() {
+    @Override
+    public void onActivationGesture() {
         if (foregroundActivity == null) {
             throw new IllegalStateException("This should never reached if no activity is in the foreground.");
         }

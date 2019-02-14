@@ -49,7 +49,7 @@ class SharedPreferencesStorage implements BaseStorage {
             String storedValue = get(key);
             return storedValue == null ? null : gson.fromJson(storedValue, clazz);
         } catch (JsonSyntaxException e) {
-            Logger.d(LOG_TAG, "Unable to deserialise JSON String into type %s",
+            Logger.e(LOG_TAG, "Unable to deserialise JSON String into type %s",
                     clazz.getSimpleName(), e);
             return null;
         }

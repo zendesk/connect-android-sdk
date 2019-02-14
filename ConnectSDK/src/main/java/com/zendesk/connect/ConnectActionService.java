@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.support.annotation.Nullable;
 
 import com.zendesk.logger.Logger;
@@ -66,14 +65,18 @@ public class ConnectActionService extends IntentService {
     @Override
     protected final void onHandleIntent(@Nullable Intent intent) {
         if (!Connect.INSTANCE.isInitialised()) {
-            Logger.d(LOG_TAG, "Connect has not been initialised, ending service");
+            Logger.e(LOG_TAG, "Connect has not been initialised, ending service");
             return;
         }
 
         String packageName = getPackageName();
         ConnectActionProcessor actionProcessor = Connect.INSTANCE.actionProcessor();
+        if (actionProcessor == null) {
+            Logger.e(LOG_TAG, "Action processor must not be null");
+            return;
+        }
 
-        NotificationPayload payload = extractPayload(intent, packageName, actionProcessor);
+        NotificationPayload payload = actionProcessor.extractPayload(intent, packageName);
         if (payload == null) {
             Logger.e(LOG_TAG, "Payload couldn't extracted from the intent");
             return;
@@ -82,7 +85,7 @@ public class ConnectActionService extends IntentService {
         MetricRequestsProcessor metricsProcessor = Connect.INSTANCE.metricsProcessor();
         sendMetrics(payload, metricsProcessor);
 
-        Intent intentToOpen = resolveIntent(payload, packageName);
+        Intent intentToOpen = resolveIntent(payload, packageName, actionProcessor);
         if (intentToOpen != null) {
             startActivity(intentToOpen);
         } else {
@@ -90,31 +93,6 @@ public class ConnectActionService extends IntentService {
         }
 
         onOpenNotification(payload);
-    }
-
-    /**
-     * Attempts to extract the extra from the given {@link Intent} and deserialise it into a
-     * {@link NotificationPayload}.
-     *
-     * @param intent the received {@link Intent}
-     * @param packageName the host app package name
-     * @param actionProcessor an instance of {@link ConnectActionProcessor}
-     * @return an instance of {@link NotificationPayload}, or null if an error was encountered
-     */
-    private NotificationPayload extractPayload(Intent intent, String packageName, ConnectActionProcessor actionProcessor) {
-        if (actionProcessor == null) {
-            Logger.e(LOG_TAG, "Action processor is null");
-            return null;
-        }
-
-        String expectedActionName = packageName + ACTION_OPEN_NOTIFICATION;
-        boolean isValidIntent = actionProcessor.verifyIntent(intent, expectedActionName);
-        if (!isValidIntent) {
-            Logger.e(LOG_TAG, "Intent was null or contained invalid action name");
-            return null;
-        }
-
-        return actionProcessor.extractPayloadFromIntent(intent);
     }
 
     /**
@@ -127,7 +105,7 @@ public class ConnectActionService extends IntentService {
         if (metricsProcessor != null) {
             metricsProcessor.sendOpenedRequest(payload);
         } else {
-            Logger.d(LOG_TAG, "Metrics processor was null, unable to send metrics");
+            Logger.e(LOG_TAG, "Metrics processor was null, unable to send metrics");
         }
     }
 
@@ -137,22 +115,26 @@ public class ConnectActionService extends IntentService {
      *
      * @param payload the {@link NotificationPayload} extracted from the received Intent
      * @param packageName the package name of the host app
+     * @param actionProcessor an instance of {@link ConnectActionProcessor}
      * @return the intent to be opened
      */
-    private Intent resolveIntent(NotificationPayload payload, String packageName) {
-
-        Uri deepLink = Uri.parse(payload.getDeeplinkUrl());
+    private Intent resolveIntent(NotificationPayload payload,
+                                 String packageName,
+                                 ConnectActionProcessor actionProcessor) {
         PackageManager packageManager = getApplicationContext().getPackageManager();
+        if (packageManager == null) {
+            Logger.e(LOG_TAG, "Package manager was null");
+            return null;
+        }
 
-        Intent intentToOpen = openLaunchActivity
-                ? packageManager.getLaunchIntentForPackage(packageName)
-                : null;
+        Intent intentToOpen = null;
+        if (openLaunchActivity) {
+            intentToOpen = packageManager.getLaunchIntentForPackage(packageName);
+        }
 
-        if (deepLink != null && handleDeepLinks) {
-            Intent deepLinkIntent = new Intent(Intent.ACTION_VIEW);
-            deepLinkIntent.setData(deepLink);
-            deepLinkIntent.setPackage(packageName);
-
+        if (handleDeepLinks && payload.getDeeplinkUrl() != null) {
+            IntentBuilder intentBuilder = new IntentBuilder();
+            Intent deepLinkIntent = actionProcessor.resolveDeepLinkIntent(payload.getDeeplinkUrl(), intentBuilder);
             ComponentName componentName = deepLinkIntent.resolveActivity(packageManager);
             if (componentName != null) {
                 intentToOpen = deepLinkIntent;

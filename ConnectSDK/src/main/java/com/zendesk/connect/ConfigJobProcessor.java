@@ -27,7 +27,7 @@ class ConfigJobProcessor {
      */
     static synchronized void process(ConfigProvider configProvider, StorageController storageController) {
         if (configProvider == null || storageController == null) {
-            Logger.d(LOG_TAG, "Config provider and storage controller must not be null");
+            Logger.e(LOG_TAG, "Config provider and storage controller must not be null");
             return;
         }
 
@@ -36,9 +36,10 @@ class ConfigJobProcessor {
                     .config(CLIENT_PLATFORM, Connect.CLIENT_VERSION)
                     .execute();
             if (response.isSuccessful() && response.body() != null) {
+                Logger.d(LOG_TAG, "Successful config retrieval. Storing response");
                 storageController.saveConfig(response.body());
             } else {
-                Logger.d(LOG_TAG, "Failed to retrieve config. Request returned status code:",
+                Logger.e(LOG_TAG, "Failed to retrieve config. Request returned status code:",
                         response.code());
             }
         } catch (IOException e) {

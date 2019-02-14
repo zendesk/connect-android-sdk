@@ -9,7 +9,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import retrofit2.Response
@@ -55,7 +54,6 @@ class QueuedRequestsJobProcessorTests {
         }
 
         Logger.setLoggable(true)
-        MockitoAnnotations.initMocks(QueuedRequestsJobProcessorTests::class.java)
 
         `when`(mockIdentifyProvider.identifyBatch(any())).thenReturn(mockCall)
         `when`(mockIdentifyProvider.identify(any())).thenReturn(mockCall)

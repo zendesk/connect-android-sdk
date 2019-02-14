@@ -18,7 +18,11 @@ import java.util.List;
  * Created by jophde on 6/22/15 for Outbound.
  */
 public class PinLinearLayout extends LinearLayout implements PinController {
-    private EditText pin1, pin2, pin3, pin4;
+
+    private EditText pin1;
+    private EditText pin2;
+    private EditText pin3;
+    private EditText pin4;
 
     public PinLinearLayout(Context context) {
         super(context);
@@ -38,7 +42,8 @@ public class PinLinearLayout extends LinearLayout implements PinController {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    @Override protected void onFinishInflate() {
+    @Override
+    protected void onFinishInflate() {
         super.onFinishInflate();
 
         pin1 = findViewById(R.id.pin1);
@@ -53,12 +58,13 @@ public class PinLinearLayout extends LinearLayout implements PinController {
         pin4.addTextChangedListener(watcher);
     }
 
-    @Override protected void onAttachedToWindow() {
+    @Override
+    protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-
     }
 
-    @Override protected void onDetachedFromWindow() {
+    @Override
+    protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
     }
 
@@ -79,15 +85,14 @@ public class PinLinearLayout extends LinearLayout implements PinController {
             pins = new LinkedList<>(Arrays.asList(p));
         }
 
-        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
-        }
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
-        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-        }
-
-        @Override public void afterTextChanged(Editable s) {
+        @Override
+        public void afterTextChanged(Editable s) {
             String text = s.toString();
             if (text.length() == 1) {
                 EditText pin = (EditText) getFocusedChild();
@@ -99,9 +104,11 @@ public class PinLinearLayout extends LinearLayout implements PinController {
                 }
 
                 getHandler().post(new Runnable() {
-                    @Override public void run() {
+                    @Override
+                    public void run() {
                         if (hasPin()) {
-                            ((AdminController) getContext()).onPin(getPin()); // Handler hasn't updated the 4th pin's text yet ;)
+                            // Handler hasn't updated the 4th pin's text yet ;)
+                            ((AdminController) getContext()).onPin(getPin());
                         }
                     }
                 });

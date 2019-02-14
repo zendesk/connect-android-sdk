@@ -204,33 +204,68 @@ public class NotificationPayload implements Parcelable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         NotificationPayload payload1 = (NotificationPayload) o;
 
-        if (isQuietPush != payload1.isQuietPush) return false;
-        if (isUninstallTracker != payload1.isUninstallTracker) return false;
-        if (isTestPush != payload1.isTestPush) return false;
-        if (isSilent != payload1.isSilent) return false;
-        if (isDefaultSound != payload1.isDefaultSound) return false;
-        if (notificationId != payload1.notificationId) return false;
-        if (instanceId != null ? !instanceId.equals(payload1.instanceId) : payload1.instanceId != null)
+        if (isQuietPush != payload1.isQuietPush) {
             return false;
-        if (deeplinkUrl != null ? !deeplinkUrl.equals(payload1.deeplinkUrl) : payload1.deeplinkUrl != null)
+        }
+        if (isUninstallTracker != payload1.isUninstallTracker) {
             return false;
-        if (title != null ? !title.equals(payload1.title) : payload1.title != null) return false;
-        if (body != null ? !body.equals(payload1.body) : payload1.body != null) return false;
-        if (category != null ? !category.equals(payload1.category) : payload1.category != null)
+        }
+        if (isTestPush != payload1.isTestPush) {
             return false;
-        if (largeNotificationImagePath != null ? !largeNotificationImagePath.equals(payload1.largeNotificationImagePath) : payload1.largeNotificationImagePath != null)
+        }
+        if (isSilent != payload1.isSilent) {
             return false;
-        if (largeNotificationFolderPath != null ? !largeNotificationFolderPath.equals(payload1.largeNotificationFolderPath) : payload1.largeNotificationFolderPath != null)
+        }
+        if (isDefaultSound != payload1.isDefaultSound) {
             return false;
-        if (smallNotificationImagePath != null ? !smallNotificationImagePath.equals(payload1.smallNotificationImagePath) : payload1.smallNotificationImagePath != null)
+        }
+        if (notificationId != payload1.notificationId) {
             return false;
-        if (smallNotificationFolderPath != null ? !smallNotificationFolderPath.equals(payload1.smallNotificationFolderPath) : payload1.smallNotificationFolderPath != null)
+        }
+        if (instanceId != null ? !instanceId.equals(payload1.instanceId) : payload1.instanceId != null) {
             return false;
+        }
+        if (deeplinkUrl != null ? !deeplinkUrl.equals(payload1.deeplinkUrl) : payload1.deeplinkUrl != null) {
+            return false;
+        }
+        if (title != null ? !title.equals(payload1.title) : payload1.title != null) {
+            return false;
+        }
+        if (body != null ? !body.equals(payload1.body) : payload1.body != null) {
+            return false;
+        }
+        if (category != null ? !category.equals(payload1.category) : payload1.category != null) {
+            return false;
+        }
+        if (largeNotificationImagePath != null
+                ? !largeNotificationImagePath.equals(payload1.largeNotificationImagePath)
+                : payload1.largeNotificationImagePath != null) {
+            return false;
+        }
+        if (largeNotificationFolderPath != null
+                ? !largeNotificationFolderPath.equals(payload1.largeNotificationFolderPath)
+                : payload1.largeNotificationFolderPath != null) {
+            return false;
+        }
+        if (smallNotificationImagePath != null
+                ? !smallNotificationImagePath.equals(payload1.smallNotificationImagePath)
+                : payload1.smallNotificationImagePath != null) {
+            return false;
+        }
+        if (smallNotificationFolderPath != null
+                ? !smallNotificationFolderPath.equals(payload1.smallNotificationFolderPath)
+                : payload1.smallNotificationFolderPath != null) {
+            return false;
+        }
         return payload != null ? payload.equals(payload1.payload) : payload1.payload == null;
     }
 

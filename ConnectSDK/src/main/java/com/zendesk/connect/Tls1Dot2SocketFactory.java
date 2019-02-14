@@ -65,8 +65,8 @@ public class Tls1Dot2SocketFactory extends SSLSocketFactory {
             Logger.d(LOG_TAG, "Skipping TLS 1.2 patch");
             //only use modern tls 1.2 & 1.3 on newer devices
             client.connectionSpecs(Collections.singletonList(new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-            .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_3)
-            .build()));
+                    .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_3)
+                    .build()));
         }
         return client;
     }
@@ -96,7 +96,8 @@ public class Tls1Dot2SocketFactory extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+            throws IOException, UnknownHostException {
         return patch(delegate.createSocket(host, port, localHost, localPort));
     }
 
@@ -106,7 +107,8 @@ public class Tls1Dot2SocketFactory extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+    public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
+            throws IOException {
         return patch(delegate.createSocket(address, port, localAddress, localPort));
     }
 

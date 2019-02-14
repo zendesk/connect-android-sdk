@@ -23,8 +23,8 @@ public class AdminActivity extends Activity implements AdminController {
     private ProgressController progressController;
     private Handler handler;
 
-    private final int SUCCESS_TIME_DELAY = (int) TimeUnit.MILLISECONDS.convert(1, TimeUnit.SECONDS);
-    private final int FAILURE_TIME_DELAY = (int) TimeUnit.MILLISECONDS.convert(2, TimeUnit.SECONDS);
+    private static final int SUCCESS_TIME_DELAY = (int) TimeUnit.MILLISECONDS.convert(1, TimeUnit.SECONDS);
+    private static final int FAILURE_TIME_DELAY = (int) TimeUnit.MILLISECONDS.convert(2, TimeUnit.SECONDS);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,14 +44,14 @@ public class AdminActivity extends Activity implements AdminController {
     public void onPin(String pin) {
         TestSendProvider testSendProvider = Connect.INSTANCE.testSendProvider();
         if (testSendProvider == null) {
-            Logger.d(LOG_TAG, "Provider was null, can't send request");
+            Logger.e(LOG_TAG, "Provider was null, can't send request");
             pairingFailed();
             return;
         }
 
         User user = Connect.INSTANCE.getUser();
         if (user == null) {
-            Logger.d(LOG_TAG, "No stored user");
+            Logger.e(LOG_TAG, "No stored user");
             pairingFailed();
             return;
         }
@@ -64,7 +64,9 @@ public class AdminActivity extends Activity implements AdminController {
 
         progressController.setText(R.string.connect_admin_pairing_status);
 
-        PairDevice pairDeviceBody = new PairDevice(Integer.parseInt(pin), user.getFcm().get(0), Build.MANUFACTURER + " " + Build.MODEL);
+        PairDevice pairDeviceBody = new PairDevice(Integer.parseInt(pin),
+                user.getFcm().get(0),
+                Build.MANUFACTURER + " " + Build.MODEL);
         testSendProvider.pairDevice(Connect.CLIENT_PLATFORM, pairDeviceBody).enqueue(
                 new Callback<Void>() {
                     @Override
@@ -94,7 +96,7 @@ public class AdminActivity extends Activity implements AdminController {
      * error will disappear after a delay.
      */
     private void pairingFailed() {
-        Logger.d(LOG_TAG, "Failed to pair device!");
+        Logger.e(LOG_TAG, "Failed to pair device!");
 
         pinController.reset();
         progressController.showIndicator(false);
@@ -121,7 +123,8 @@ public class AdminActivity extends Activity implements AdminController {
         progressController.setText(R.string.connect_admin_pairing_success);
 
         handler.postDelayed(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 finish(); // Finishes activity going back to host app
             }
         }, SUCCESS_TIME_DELAY);

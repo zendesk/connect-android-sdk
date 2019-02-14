@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationCompat;
 
 /**
@@ -128,8 +129,22 @@ class NotificationBuilder {
      */
     NotificationBuilder setLargeIcon(String fileName, String folderName) {
         int largeIcon = resources.getIdentifier(fileName, folderName, context.getPackageName());
-        setLargeIcon(BitmapFactory.decodeResource(resources, largeIcon));
+        setLargeIcon(decodeLargeIconResource(resources, largeIcon));
         return this;
+    }
+
+    /**
+     * Decodes a bitmap resource using {@link BitmapFactory}. This is "VisibileForTesting" just
+     * so I can spy on the object and prevent this method from being called since bitmap is an
+     * Android class
+     *
+     * @param resources an instance of {@link Resources}
+     * @param largeIcon the resource id
+     * @return The decoded {@link Bitmap}
+     */
+    @VisibleForTesting
+    Bitmap decodeLargeIconResource(Resources resources, int largeIcon) {
+        return BitmapFactory.decodeResource(resources, largeIcon);
     }
 
     /**

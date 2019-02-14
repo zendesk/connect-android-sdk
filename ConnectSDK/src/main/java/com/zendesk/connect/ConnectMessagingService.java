@@ -54,7 +54,7 @@ import com.zendesk.logger.Logger;
  */
 public class ConnectMessagingService extends FirebaseMessagingService {
 
-    private final static String LOG_TAG = "ConnectMessagingService";
+    private static final String LOG_TAG = "ConnectMessagingService";
 
     private NotificationProcessor notificationProcessor;
 
@@ -65,19 +65,19 @@ public class ConnectMessagingService extends FirebaseMessagingService {
     @Override
     public final void onMessageReceived(RemoteMessage message) {
         if (message == null || message.getData() == null) {
-            Logger.d(LOG_TAG, "Push Notification contained no data");
+            Logger.e(LOG_TAG, "Push Notification contained no data");
             return;
         }
 
         notificationProcessor = Connect.INSTANCE.notificationProcessor();
         if (notificationProcessor == null) {
-            Logger.d(LOG_TAG, "Notification processor was null, couldn't handle notification");
+            Logger.e(LOG_TAG, "Notification processor was null, couldn't handle notification");
             return;
         }
 
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) {
-            Logger.d(LOG_TAG, "Notification Manager was null");
+            Logger.e(LOG_TAG, "Notification Manager was null");
             return;
         }
 
@@ -126,16 +126,17 @@ public class ConnectMessagingService extends FirebaseMessagingService {
      * @param metricsProcessor an instance of {@link MetricRequestsProcessor} to handle sending metrics requests
      */
     private void sendMetrics(NotificationPayload payload, MetricRequestsProcessor metricsProcessor) {
-        if (metricsProcessor != null) {
-            if (payload.isUninstallTracker()) {
-                NotificationManagerCompat compatManager = NotificationManagerCompat.from(this);
-                boolean revoked = !compatManager.areNotificationsEnabled();
-                metricsProcessor.sendUninstallTrackerRequest(payload, revoked);
-            } else {
-                metricsProcessor.sendReceivedRequest(payload);
-            }
+        if (metricsProcessor == null) {
+            Logger.e(LOG_TAG, "Metrics processor was null, unable to send metrics");
+            return;
+        }
+
+        if (payload.isUninstallTracker()) {
+            NotificationManagerCompat compatManager = NotificationManagerCompat.from(this);
+            boolean revoked = !compatManager.areNotificationsEnabled();
+            metricsProcessor.sendUninstallTrackerRequest(payload, revoked);
         } else {
-            Logger.d(LOG_TAG, "Metrics processor was null, unable to send metrics");
+            metricsProcessor.sendReceivedRequest(payload);
         }
     }
 

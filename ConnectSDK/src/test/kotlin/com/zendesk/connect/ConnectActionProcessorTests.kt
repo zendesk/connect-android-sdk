@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Parcel
+import android.os.Parcelable
 import com.google.common.truth.Truth.assertThat
 import com.zendesk.logger.Logger
 import org.junit.After
@@ -14,7 +15,6 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import java.io.IOException
@@ -23,13 +23,16 @@ import java.io.Serializable
 @RunWith(MockitoJUnitRunner.Silent::class)
 class ConnectActionProcessorTests {
 
+    private val INVALID_INTENT_WARNING = "Intent was null or contained invalid action name"
     private val NULL_PAYLOAD_WARNING = "Payload must not be null"
     private val INVALID_PAYLOAD_WARNING = "Payload is not a valid Connect notification"
     private val TEST_PUSH_WARNING = "Notification is a test push, not sending metrics"
     private val REQUEST_EXCEPTION_WARNING = "Error sending opened notification metric"
+    private val INVALID_DEEP_LINK_URL = "Deep link url was null or empty"
 
     private val testActionName = "test.action.SOME_SHOUTING"
     private val testInstanceId = "some_instance_id_it_really_doesn't_matter_right_now"
+    private val testPackageName = "com.testing.123"
 
     private lateinit var actionProcessor: ConnectActionProcessor
 
@@ -51,6 +54,12 @@ class ConnectActionProcessorTests {
     @Mock
     private lateinit var mockParcel: Parcel
 
+    @Mock
+    private lateinit var mockIntentBuilder: IntentBuilder
+
+    @Mock
+    private lateinit var mockUri: Uri
+
     private val logAppender = TestLogAppender().apply {
         Logger.setLoggable(true)
         Logger.addLogAppender(this)
@@ -58,8 +67,6 @@ class ConnectActionProcessorTests {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(ConnectActionProcessorTests::class.java)
-
         `when`(mockPayload.instanceId).thenReturn(testInstanceId)
         `when`(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockIntent)
         `when`(mockIntent.setData(any<Uri>())).then {  }
@@ -68,7 +75,46 @@ class ConnectActionProcessorTests {
         `when`(mockParcel.readByte()).thenReturn(0)
         `when`(mockParcel.readInt()).thenReturn(0)
 
+        `when`(mockIntentBuilder.withAction(anyString())).thenReturn(mockIntentBuilder)
+        `when`(mockIntentBuilder.withData(anyString())).thenReturn(mockIntentBuilder)
+        `when`(mockIntentBuilder.withData(any<Uri>())).thenReturn(mockIntentBuilder)
+        `when`(mockIntentBuilder.withFlags(anyInt())).thenReturn(mockIntentBuilder)
+        `when`(mockIntentBuilder.withPackageName(anyString())).thenReturn(mockIntentBuilder)
+        `when`(mockIntentBuilder.parseUrl(anyString())).thenReturn(mockUri)
+        `when`(mockIntentBuilder.build()).thenReturn(mockIntent)
+
         actionProcessor = ConnectActionProcessor(mockMetricsProvider)
+    }
+
+    @Test
+    fun `extractPayload should return null for an invalid Intent`() {
+        val extractedPayload = actionProcessor.extractPayload(null, testPackageName)
+
+        assertThat(extractedPayload).isNull()
+    }
+
+    @Test
+    fun `extractPayload should log a warning for an invalid Intent`() {
+        actionProcessor.extractPayload(null, testPackageName)
+
+        assertThat(logAppender.lastLog()).isEqualTo(INVALID_INTENT_WARNING)
+    }
+
+    @Test
+    fun `extractPayload should return null for if the intent extra is invalid`() {
+        val extractedPayload = actionProcessor.extractPayload(mockIntent, testPackageName)
+
+        assertThat(extractedPayload).isNull()
+    }
+
+    @Test
+    fun `extractPayload should return a NotificationPayload for a valid intent`() {
+        `when`(mockIntent.getParcelableExtra<Parcelable>(anyString())).thenReturn(mockPayload)
+        `when`(mockIntent.action).thenReturn(testPackageName + ConnectActionService.ACTION_OPEN_NOTIFICATION)
+
+        val extractedPayload = actionProcessor.extractPayload(mockIntent, testPackageName)
+
+        assertThat(extractedPayload).isNotNull()
     }
 
     @Test
@@ -186,6 +232,28 @@ class ConnectActionProcessorTests {
         actionProcessor.sendMetrics(mockPayload)
 
         verify(mockMetricsProvider).opened(anyString(), any<PushBasicMetric>())
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should return null for an empty deep link url`() {
+        val resolvedIntent = actionProcessor.resolveDeepLinkIntent("", mockIntentBuilder)
+
+        assertThat(resolvedIntent).isNull()
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should log a warning for an empty deep link url`() {
+        actionProcessor.resolveDeepLinkIntent("", mockIntentBuilder)
+
+        assertThat(logAppender.lastLog()).isEqualTo(INVALID_DEEP_LINK_URL)
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should return an intent for the deep link Uri`() {
+        val deepLinkUrl = "https://www.google.com"
+        val resolvedIntent = actionProcessor.resolveDeepLinkIntent(deepLinkUrl, mockIntentBuilder)
+
+        assertThat(resolvedIntent).isNotNull()
     }
 
     @After

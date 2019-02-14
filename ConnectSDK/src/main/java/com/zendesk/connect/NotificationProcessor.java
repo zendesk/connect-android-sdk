@@ -19,8 +19,8 @@ import java.util.Map;
  */
 class NotificationProcessor {
 
-    private final static String LOG_TAG = "NotificationProcessor";
-    private final static String PAYLOAD_KEY = "payload";
+    private static final String LOG_TAG = "NotificationProcessor";
+    private static final String PAYLOAD_KEY = "payload";
 
     private Gson gson;
     private NotificationBuilder notificationBuilder;
@@ -39,7 +39,7 @@ class NotificationProcessor {
      */
     Notification buildConnectNotification(NotificationPayload data) {
         if (data == null) {
-            Logger.d(LOG_TAG, "Payload data was null, unable to create notification");
+            Logger.e(LOG_TAG, "Payload data was null, unable to create notification");
             return null;
         }
 
@@ -62,7 +62,7 @@ class NotificationProcessor {
         if (StringUtils.hasLengthMany(smallImageFile, smallImageFolder)) {
             notificationBuilder.setSmallIcon(smallImageFile, smallImageFolder);
         } else {
-            Logger.d(LOG_TAG, "Small icon doesn't exist, using default icon");
+            Logger.w(LOG_TAG, "Small icon doesn't exist, using default icon");
             notificationBuilder.setSmallIcon(R.drawable.ic_connect_notification_icon);
         }
 
@@ -71,7 +71,7 @@ class NotificationProcessor {
         if (StringUtils.hasLengthMany(largeImageFile, largeImageFolder)) {
             notificationBuilder.setLargeIcon(largeImageFile, largeImageFolder);
         } else {
-            Logger.d(LOG_TAG, "Large icon doesn't exist, there will be no large icon");
+            Logger.w(LOG_TAG, "Large icon doesn't exist, there will be no large icon");
         }
 
         String category = data.getCategory();
@@ -93,7 +93,7 @@ class NotificationProcessor {
      */
     NotificationPayload parseRemoteMessage(RemoteMessage remoteMessage) {
         if (remoteMessage == null || remoteMessage.getData() == null) {
-            Logger.d(LOG_TAG, "Notification data was null or empty");
+            Logger.e(LOG_TAG, "Notification data was null or empty");
             return null;
         }
 
@@ -105,7 +105,7 @@ class NotificationProcessor {
         // parse it directly as a Map when creating the NotificationPayload
         String payloadString = data.get(PAYLOAD_KEY);
         if (payloadString != null) {
-            Type payloadMapType = new TypeToken<Map<String, Object>>() {}.getType();
+            Type payloadMapType = new TypeToken<Map<String, Object>>() { }.getType();
             Map<String, Object> map = gson.fromJson(payloadString, payloadMapType);
             jsonObject.add(PAYLOAD_KEY, gson.toJsonTree(map));
             data.remove(PAYLOAD_KEY);
