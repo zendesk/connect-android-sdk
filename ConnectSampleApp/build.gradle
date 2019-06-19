@@ -40,7 +40,7 @@ dependencies {
     if (useLocalDependency()) {
         implementation project(":ConnectSDK")
     } else {
-        implementation group: "com.zendesk", name: "connect", version: "2.0.0", changing: true
+        implementation group: "com.zendesk", name: "connect", version: "2.1.0", changing: true
     }
 
     debugImplementation group: "com.squareup.leakcanary", name: "leakcanary-android", version: "1.6.2"

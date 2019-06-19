@@ -1,89 +1,109 @@
 #!/usr/bin/env bash
+set -e
+
 boxOut(){
     local s="$*"
-    tput setaf 3
-    echo -e " =${s//?/=}=\n| $(tput setaf 4)$s$(tput setaf 3) |\n =${s//?/=}=\n"
-    tput sgr 0
+    echo -e "\n\e[34m =${s//?/=}=\n\e[34m|\e[33m $s \e[34m|\n\e[34m =${s//?/=}=\n\e[0m"
+}
+
+isPullRequest() {
+    [[ "$TRAVIS_PULL_REQUEST" == "false" ]] && return 1 || return 0
 }
 
 exitOnFailedBuild() {
     if [[ $? -ne 0 ]]; then
+        boxOut "BUILD FAILED: $1"
         exit 1
     fi
 }
 
-acceptLicenses() {
-    mkdir -p ${ANDROID_HOME}licenses
-    echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > ${ANDROID_HOME}licenses/android-sdk-license
-}
-
-createAvd() {
-    SDK_MANAGER="${ANDROID_HOME}tools/bin/sdkmanager"
-    AVD_MANAGER="${ANDROID_HOME}tools/bin/avdmanager"
-    EMULATOR="${ANDROID_HOME}emulator/emulator"
-    EMULATOR_IMG="system-images;android-19;default;armeabi-v7a"
-
-    ${SDK_MANAGER} --channel=0 ${EMULATOR_IMG} "tools" "emulator"
-
-    echo no | ${AVD_MANAGER} create avd --force -n test --abi "armeabi-v7a" -k ${EMULATOR_IMG} --device "3.2in QVGA (ADP2)"
-    ${EMULATOR} -avd test -no-audio -netfast -no-window &
-}
+###########
+# CONNECT #
+###########
 
 runConnectUnitTests() {
-    echo "Running Connect unit tests"
-    ./gradlew clean --settings-file settings_tests.gradle test --stacktrace
-    exitOnFailedBuild "Connect unit tests failed"
-    echo "Connect unit tests succeeded"
-}
+    boxOut "Running Connect unit tests"
 
-runConnectInstrumentedTests() {
-    echo "Waiting for emulator..."
-    android-wait-for-emulator
-
-    echo "Running Connect instrumented tests"
-    ./gradlew clean --settings-file settings_tests.gradle connectedCheck --stacktrace
-    exitOnFailedBuild "Connect instrumented tests failed"
-    echo "Connect instrumented tests succeeded"
-
-    adb -s emulator-5554 emu kill || true
+    ./gradlew :ConnectSdk:test \
+                -PincludeOverride=ConnectSdk \
+                -PlocalBuild=true
+    exitOnFailedBuild "Connect unit tests"
 }
 
 runConnectCodeAnalysis() {
+    boxOut "Running Connect code analysis"
+
     ./gradlew :ConnectSdk:lintDebug \
               :ConnectSdk:checkStyle \
               -PincludeOverride=ConnectSdk \
               -PlocalBuild=true
-    exitOnFailedBuild "AnswerBotProviders code analysis failed"
+    exitOnFailedBuild "Connect code analysis"
 }
 
-prBuildBeforeScript() {
-    boxOut "Starting AVD for instrumented tests"
-    createAvd
+runConnectDeploy() {
+    boxOut "Running Connect deploy [UNDER CONSTRUCTION]"
 }
 
-pullRequestBuild() {
-    export LOCAL_BUILD="true"
+##################
+# NETWORK CLIENT #
+##################
 
-    boxOut "Running Connect Unit Tests"
-    runConnectUnitTests
+runNetworkClientCodeAnalysis() {
+    boxOut "Running Network Client code analysis"
 
-    boxOut "Running Connect Instrumented Tests"
-    runConnectInstrumentedTests
-
-    boxOut "Running Connect Sdk Code Analysis"
-    runConnectCodeAnalysis
-
-    unset LOCAL_BUILD
+    ./gradlew :NetworkClient:lintDebug \
+              :NetworkClient:checkStyle \
+              -PincludeOverride=NetworkClient \
+              -PlocalBuild=true
+    exitOnFailedBuild "Network Client code analysis"
 }
 
-if [[ "$1" == "before" ]]; then
-    acceptLicenses
+runNetworkClientDeploy() {
+    boxOut "Running Network Client deploy [UNDER CONSTRUCTION]"
+}
 
-    boxOut "This is a PR. Hook: before_script"
-    prBuildBeforeScript
-else
-    boxOut "This is a PR. Hook: script"
-    pullRequestBuild
+###################
+# STAGE FUNCTIONS #
+###################
+
+prBuild() {
+    if [[ "$1" == "test" ]]; then
+
+        if [[ "$2" == "Connect" ]]; then runConnectUnitTests; fi
+
+    elif [[ "$1" == "analysis" ]]; then
+
+        if [[ "$2" == "Connect" ]]; then runConnectCodeAnalysis; fi
+        if [[ "$2" == "NetworkClient" ]]; then runNetworkClientCodeAnalysis; fi
+
+    fi
+}
+
+branchBuild() {
+    if [[ "$1" == "deploy" ]]; then
+
+        if [[ "$2" == "Connect" ]]; then runConnectDeploy; fi
+        if [[ "$2" == "NetworkClient" ]]; then runNetworkClientDeploy; fi
+
+    fi
+}
+
+###############
+# ENTRY POINT #
+###############
+
+if [[ "$1" == "install" ]]; then
+    boxOut "Hook: install"
+fi
+
+if [[ "$1" == "script" ]]; then
+    if isPullRequest ; then
+        boxOut "This is a PR build. Hook: script"
+        prBuild "$3" "$2"
+    else
+        boxOut "This is a branch build. Hook: script"
+        branchBuild "$3" "$2"
+    fi
 fi
 
 exit 0

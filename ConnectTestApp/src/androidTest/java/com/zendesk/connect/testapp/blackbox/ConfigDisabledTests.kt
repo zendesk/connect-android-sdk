@@ -1,12 +1,16 @@
 package com.zendesk.connect.testapp.blackbox
 
+import android.support.test.InstrumentationRegistry
 import com.zendesk.connect.Connect
 import com.zendesk.connect.resetConnect
+import com.zendesk.connect.storeDisabledConfig
 import com.zendesk.connect.testInitConnect
-import com.zendesk.connect.testapp.helpers.clearFiles
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
+import io.appflate.restmock.RESTMockServerStarter
 import io.appflate.restmock.RequestsVerifier.verifyRequest
+import io.appflate.restmock.android.AndroidAssetsFileParser
+import io.appflate.restmock.android.AndroidLogger
 import io.appflate.restmock.utils.RequestMatchers
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
 import org.junit.After
@@ -19,21 +23,28 @@ import org.junit.Test
  */
 class ConfigDisabledTests {
 
-    @Before
-    fun setUp() {
-        resetConnect()
+    init {
+        RESTMockServerStarter.startSync(
+                AndroidAssetsFileParser(InstrumentationRegistry.getTargetContext()),
+                AndroidLogger()
+        )
+
         RESTMockServer.reset()
-        clearSharedPrefs()
-        clearFiles()
 
         RESTMockServer.whenGET(RequestMatchers.pathContains(configPath))
                 .thenReturnFile(200, "config_disabled_response.json")
+    }
 
-        testInitConnect(testClient)
+    @Before
+    fun setUp() {
+        testInitConnect(testClient, shouldMakeConfigCall = false)
+        storeDisabledConfig()
     }
 
     @After
     fun tearDown() {
+        clearSharedPrefs()
+        resetConnect()
     }
 
     @Test

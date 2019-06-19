@@ -1,13 +1,18 @@
 package com.zendesk.connect.testapp.blackbox
 
+import android.support.test.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.zendesk.connect.Connect
 import com.zendesk.connect.resetConnect
+import com.zendesk.connect.storeEnabledConfig
 import com.zendesk.connect.testInitConnect
 import com.zendesk.connect.testapp.helpers.clearFiles
 import com.zendesk.connect.testapp.helpers.clearSharedPrefs
 import io.appflate.restmock.RESTMockServer
+import io.appflate.restmock.RESTMockServerStarter
 import io.appflate.restmock.RequestsVerifier.verifyRequest
+import io.appflate.restmock.android.AndroidAssetsFileParser
+import io.appflate.restmock.android.AndroidLogger
 import io.appflate.restmock.utils.RequestMatchers.pathContains
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
 import org.junit.After
@@ -39,12 +44,13 @@ import org.junit.Test
  */
 class ConfigEnabledTests {
 
-    @Before
-    fun setup() {
-        resetConnect()
+    init {
+        RESTMockServerStarter.startSync(
+                AndroidAssetsFileParser(InstrumentationRegistry.getTargetContext()),
+                AndroidLogger()
+        )
+
         RESTMockServer.reset()
-        clearSharedPrefs()
-        clearFiles()
 
         RESTMockServer.whenGET(pathContains(configPath))
                 .thenReturnFile(200, "config_enabled_response.json")
@@ -52,12 +58,27 @@ class ConfigEnabledTests {
         RESTMockServer.whenPOST(pathEndsWith(identifyPath))
                 .thenReturnEmpty(200)
 
-        testInitConnect(testClient)
+        RESTMockServer.whenPOST(pathEndsWith(trackPath))
+                .thenReturnEmpty(200)
+
+        RESTMockServer.whenPOST(pathEndsWith(registerPath))
+                .thenReturnEmpty(200)
+
+        RESTMockServer.whenPOST(pathEndsWith(disablePath))
+                .thenReturnEmpty(200)
+    }
+
+    @Before
+    fun setup() {
+        testInitConnect(testClient, shouldMakeConfigCall = false)
+        storeEnabledConfig()
     }
 
     @After
     fun tearDown() {
-        RESTMockServer.reset()
+        clearSharedPrefs()
+        clearFiles()
+        resetConnect()
     }
 
     @Test
@@ -69,9 +90,6 @@ class ConfigEnabledTests {
 
     @Test
     fun callingTrackEventShouldMakeATrackRequestToTheApi() {
-        RESTMockServer.whenPOST(pathEndsWith(trackPath))
-                .thenReturnEmpty(200)
-
         Connect.INSTANCE.identifyUser(testUser)
 
         Connect.INSTANCE.trackEvent(testEvent)
@@ -81,9 +99,6 @@ class ConfigEnabledTests {
 
     @Test
     fun callingRegisterForPushShouldMakeARegisterRequestToTheApi() {
-        RESTMockServer.whenPOST(pathEndsWith(registerPath))
-                .thenReturnEmpty(200)
-
         Connect.INSTANCE.identifyUser(testUser)
 
         Connect.INSTANCE.registerForPush()
@@ -95,9 +110,6 @@ class ConfigEnabledTests {
 
     @Test
     fun callingDisablePushNotificationsShouldMakeADisableRequestToTheApi() {
-        RESTMockServer.whenPOST(pathEndsWith(disablePath))
-                .thenReturnEmpty(200)
-
         Connect.INSTANCE.identifyUser(testUser)
 
         Connect.INSTANCE.disablePush()

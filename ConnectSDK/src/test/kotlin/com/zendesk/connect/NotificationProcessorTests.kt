@@ -12,8 +12,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -21,7 +26,6 @@ import org.mockito.junit.MockitoJUnitRunner
 class NotificationProcessorTests {
 
     private val NULL_PAYLOAD_DATA = "Payload data was null, unable to create notification"
-    private val NO_SMALL_ICON = "Small icon doesn't exist, using default icon"
     private val NO_LARGE_ICON = "Large icon doesn't exist, there will be no large icon"
     private val NULL_REMOTE_MESSAGE = "Notification data was null or empty"
 
@@ -63,9 +67,10 @@ class NotificationProcessorTests {
         `when`(mockNotificationBuilder.setAutoCancel(anyBoolean())).thenReturn(mockNotificationBuilder)
         `when`(mockNotificationBuilder.setLocalOnly(anyBoolean())).thenReturn(mockNotificationBuilder)
         `when`(mockNotificationBuilder.setSmallIcon(anyInt())).thenReturn(mockNotificationBuilder)
-        `when`(mockNotificationBuilder.setSmallIcon(anyString(), anyString())).thenReturn(mockNotificationBuilder)
+        `when`(mockNotificationBuilder.setSmallIcon(anyString(), anyString(), anyInt())).thenReturn(mockNotificationBuilder)
         `when`(mockNotificationBuilder.setLargeIcon(any<Bitmap>())).thenReturn(mockNotificationBuilder)
         `when`(mockNotificationBuilder.setLargeIcon(anyString(), anyString())).thenReturn(mockNotificationBuilder)
+        `when`(mockNotificationBuilder.setSilent()).thenReturn(mockNotificationBuilder)
         `when`(mockNotificationBuilder.setCategory(anyString())).thenReturn(mockNotificationBuilder)
 
         notificationProcessor = NotificationProcessor(gson, mockNotificationBuilder)
@@ -127,21 +132,7 @@ class NotificationProcessorTests {
     }
 
     @Test
-    fun `build connect notification should set a default small icon if not specified`() {
-        notificationProcessor.buildConnectNotification(mockPayload)
-
-        verify(mockNotificationBuilder).setSmallIcon(R.drawable.ic_connect_notification_icon)
-    }
-
-    @Test
-    fun `build connect notification should log a warning if small icon not specified`() {
-        notificationProcessor.buildConnectNotification(mockPayload)
-
-        assertThat(logAppender.logs).contains(NO_SMALL_ICON)
-    }
-
-    @Test
-    fun `build connect notification should set a small icon with the file and folder specified`() {
+    fun `build connect notification should set a small icon with the file and folder specified and fallback icon id`() {
         val smallImageFile = "tiny_image"
         val smallFolderFile = "miniscule_folder"
         `when`(mockPayload.smallNotificationImagePath).thenReturn(smallImageFile)
@@ -149,7 +140,7 @@ class NotificationProcessorTests {
 
         notificationProcessor.buildConnectNotification(mockPayload)
 
-        verify(mockNotificationBuilder).setSmallIcon(smallImageFile, smallFolderFile)
+        verify(mockNotificationBuilder).setSmallIcon(smallImageFile, smallFolderFile, R.drawable.ic_connect_notification_icon)
     }
 
     @Test
@@ -176,6 +167,24 @@ class NotificationProcessorTests {
         notificationProcessor.buildConnectNotification(mockPayload)
 
         verify(mockNotificationBuilder).setLargeIcon(largeImageFile, largeFolderFile)
+    }
+
+    @Test
+    fun `build connect notification should not set silent if payload isSilent is false`() {
+        given(mockPayload.isSilent).willReturn(false)
+
+        notificationProcessor.buildConnectNotification(mockPayload)
+
+        verify(mockNotificationBuilder, never()).setSilent()
+    }
+
+    @Test
+    fun `build connect notification should set silent if payload value is true`() {
+        given(mockPayload.isSilent).willReturn(true)
+
+        notificationProcessor.buildConnectNotification(mockPayload)
+
+        verify(mockNotificationBuilder).setSilent()
     }
 
     @Test

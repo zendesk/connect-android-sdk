@@ -9,8 +9,15 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.*
-import org.mockito.Mockito.*
+import org.mockito.ArgumentCaptor
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.any
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import retrofit2.Callback
@@ -356,23 +363,6 @@ class DefaultConnectClientTests {
         connectClient.disablePush()
 
         assertThat(logAppender.lastLog()).isEqualTo(NULL_DISABLE_CALL)
-    }
-
-    @Test
-    fun `successful disable request should remove fcm token from active user`() {
-        Mockito.reset(mockPushProvider)
-        testStoredUser = UserBuilder.newBuilder(testStoredUser)
-                .setFcmToken(testToken)
-                .build()
-
-        `when`(mockStorageController.user).thenReturn(testStoredUser)
-        `when`(mockPushProvider.unregister(anyString(), any<PushRegistration>())).thenReturn(mockCall)
-
-        connectClient.disablePush()
-
-        verify(mockStorageController).saveUser(userCaptor.capture())
-        assertThat(userCaptor.value.fcm).isNull()
-
     }
 
     @Test

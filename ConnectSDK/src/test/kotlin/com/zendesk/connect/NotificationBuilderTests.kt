@@ -6,24 +6,39 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.support.v4.app.NotificationCompat
 import com.google.common.truth.Truth.assertThat
+import com.zendesk.logger.Logger
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner.Silent::class)
 class NotificationBuilderTests {
 
+    companion object {
+        private const val LOG_SMALL_ICON_DOESNT_EXIST = "Small icon doesn't exist, using default icon"
+    }
+
+    private val testNotificationChannelId = "test_channel_id"
     private val testTitle = "Mac & Dennis Move to the Suburbs"
     private val testBody = "You ever been been in a storm Wally?"
     private val testIconResourceId = 115
+    private val testFallbackIconResourceId = 230
     private val testIconFileName = "Mac's Famous Mac and Cheese"
     private val testIconFolder = "Boxes in the Pantry"
     private val testPackageName = "Muscle Mac"
     private val testCategory = "Disturbing"
+
+    private val logAppender = TestLogAppender().apply {
+        Logger.setLoggable(true)
+        Logger.addLogAppender(this)
+    }
 
     private lateinit var spyNotificationBuilder: NotificationBuilder
 
@@ -55,7 +70,11 @@ class NotificationBuilderTests {
 
         `when`(mockCompatBuilder.build()).thenReturn(mockNotification)
 
-        spyNotificationBuilder = spy(NotificationBuilder(mockCompatBuilder, mockContext))
+        spyNotificationBuilder = spy(NotificationBuilder(
+                mockCompatBuilder,
+                mockContext,
+                testNotificationChannelId
+        ))
 
         doReturn(mockBitmap).`when`(spyNotificationBuilder).decodeLargeIconResource(mockResources, testIconResourceId)
     }
@@ -104,16 +123,36 @@ class NotificationBuilderTests {
 
     @Test
     fun `setSmallIcon via filename should search for the desired resource`() {
-        spyNotificationBuilder.setSmallIcon(testIconFileName, testIconFolder)
+        spyNotificationBuilder.setSmallIcon(testIconFileName, testIconFolder, testFallbackIconResourceId)
 
         verify(mockResources).getIdentifier(testIconFileName, testIconFolder, testPackageName)
     }
 
     @Test
     fun `setSmallIcon via filename should set the small icon attribute on the builder`() {
-        spyNotificationBuilder.setSmallIcon(testIconFileName, testIconFolder)
+        spyNotificationBuilder.setSmallIcon(testIconFileName, testIconFolder, testFallbackIconResourceId)
 
         verify(mockCompatBuilder).setSmallIcon(testIconResourceId)
+    }
+
+    @Test
+    fun `setSmallIcon via filename should use the fallback icon id if getIdentifier returns 0`() {
+        `when`(mockResources.getIdentifier(testIconFileName, testIconFolder, testPackageName))
+                .thenReturn(0)
+
+        spyNotificationBuilder.setSmallIcon(testIconFileName, testIconFolder, testFallbackIconResourceId)
+
+        verify(mockCompatBuilder).setSmallIcon(testFallbackIconResourceId)
+    }
+
+    @Test
+    fun `setSmallIcon via filename should log a warning if getIdentifier returns 0`() {
+        `when`(mockResources.getIdentifier(testIconFileName, testIconFolder, testPackageName))
+                .thenReturn(0)
+
+        spyNotificationBuilder.setSmallIcon(testIconFileName, testIconFolder, testFallbackIconResourceId)
+
+        assertThat(logAppender.lastLog()).isEqualTo(LOG_SMALL_ICON_DOESNT_EXIST)
     }
 
     @Test
@@ -128,6 +167,20 @@ class NotificationBuilderTests {
         spyNotificationBuilder.setLargeIcon(testIconFileName, testIconFolder)
 
         verify(mockResources).getIdentifier(testIconFileName, testIconFolder, testPackageName)
+    }
+
+    @Test
+    fun `setSilent should set the sound as null on the builder`() {
+        spyNotificationBuilder.setSilent()
+
+        verify(mockCompatBuilder).setSound(null)
+    }
+
+    @Test
+    fun `setSilent should set the channel id on the builder`() {
+        spyNotificationBuilder.setSilent()
+
+        verify(mockCompatBuilder).setChannelId(testNotificationChannelId)
     }
 
     @Test
@@ -149,10 +202,5 @@ class NotificationBuilderTests {
         val output = spyNotificationBuilder.build()
 
         assertThat(output).isInstanceOf(Notification::class.java)
-    }
-
-    @After
-    fun tearDown() {
-
     }
 }

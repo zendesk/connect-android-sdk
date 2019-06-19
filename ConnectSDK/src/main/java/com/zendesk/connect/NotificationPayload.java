@@ -4,7 +4,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
-import com.zendesk.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -166,15 +165,6 @@ public class NotificationPayload implements Parcelable {
                 ", smallNotificationFolderPath='" + smallNotificationFolderPath + '\'' +
                 ", payload=" + payload +
                 '}';
-    }
-
-    /**
-     * Checks whether the notification payload belongs to a Connect notification
-     *
-     * @return true if the notification is from Connect, false otherwise
-     */
-    boolean isConnectNotification() {
-        return StringUtils.hasLength(instanceId);
     }
 
     @Override

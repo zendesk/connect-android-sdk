@@ -59,12 +59,9 @@ class NotificationProcessor {
 
         String smallImageFile = data.getSmallNotificationImagePath();
         String smallImageFolder = data.getSmallNotificationFolderPath();
-        if (StringUtils.hasLengthMany(smallImageFile, smallImageFolder)) {
-            notificationBuilder.setSmallIcon(smallImageFile, smallImageFolder);
-        } else {
-            Logger.w(LOG_TAG, "Small icon doesn't exist, using default icon");
-            notificationBuilder.setSmallIcon(R.drawable.ic_connect_notification_icon);
-        }
+        notificationBuilder.setSmallIcon(smallImageFile,
+                smallImageFolder,
+                R.drawable.ic_connect_notification_icon);
 
         String largeImageFile = data.getLargeNotificationImagePath();
         String largeImageFolder = data.getLargeNotificationFolderPath();
@@ -72,6 +69,10 @@ class NotificationProcessor {
             notificationBuilder.setLargeIcon(largeImageFile, largeImageFolder);
         } else {
             Logger.w(LOG_TAG, "Large icon doesn't exist, there will be no large icon");
+        }
+
+        if (data.isSilent()) {
+            notificationBuilder.setSilent();
         }
 
         String category = data.getCategory();
