@@ -8,4 +8,6 @@
 
     <string name="connect_notification_channel_id">connect_sample_app_notifications</string>
     <string name="connect_notification_channel_name">Connect Sample App Notifications</string>
+    <string name="connect_silent_notification_channel_id">connect_sample_app_silent_notifications</string>
+    <string name="connect_silent_notification_channel_name">Connect Sample App Silent Notifications</string>
 </resources>

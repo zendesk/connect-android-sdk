@@ -1,5 +1,6 @@
 package com.zendesk.connect
 
+import android.content.Context
 import android.support.test.InstrumentationRegistry
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
@@ -12,13 +13,16 @@ import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import java.util.concurrent.TimeUnit
 
+internal val disabledConfig: Config = Config(false, null)
+internal val enabledConfig: Config = Config(true, null)
+
 /**
  * Initialises the Connect SDK using a test [ConnectComponent]. Allows us to inject a testing
  * [OkHttpClient] so we can redirect network requests to [RESTMockServer] to verify the
  * endpoints being hit.
  */
-internal fun testInitConnect(testClient: OkHttpClient) {
-    Connect.INSTANCE.init(getTestComponent(testClient))
+internal fun testInitConnect(testClient: OkHttpClient, shouldMakeConfigCall: Boolean = true) {
+    Connect.INSTANCE.init(getTestComponent(testClient, shouldMakeConfigCall))
 }
 
 /**
@@ -34,14 +38,15 @@ internal fun resetConnect() {
  * Injects a test [ConnectComponent] into [Connect.init] with the following overrides:
  * * Each network provider uses the [RESTMockServer] url
  * * Provides a mock [ConnectScheduler] to avoid FirebaseJobDispatcher which we cannot mock
+ * * The scheduler can be made to avoid config calls by setting [shouldMakeConfigCall] to false
  * * Provides the given test [OkHttpClient] as the base client
  * * Provides a mock [ConnectInstanceId] to provide tokens with Firebase
  */
-internal fun getTestComponent(testClient: OkHttpClient): ConnectComponent {
+internal fun getTestComponent(testClient: OkHttpClient, shouldMakeConfigCall: Boolean): ConnectComponent {
     val privateKey = "auth_me_plz"
     val baseUrl = RESTMockServer.getUrl()
     return DaggerConnectComponent.builder()
-            .connectModule(getTestConnectModule())
+            .connectModule(getTestConnectModule(shouldMakeConfigCall))
             .connectNetworkModule(getTestConnectNetworkModule(privateKey, baseUrl, testClient))
             .connectNotificationModule(ConnectNotificationModule())
             .connectStorageModule(ConnectStorageModule())
@@ -51,10 +56,10 @@ internal fun getTestComponent(testClient: OkHttpClient): ConnectComponent {
 /**
  * Provides a [ConnectModule] with any overrides needed for testing
  */
-internal fun getTestConnectModule(): ConnectModule {
-    return object: ConnectModule(InstrumentationRegistry.getTargetContext()) {
+internal fun getTestConnectModule(shouldMakeConfigCall: Boolean): ConnectModule {
+    return object: ConnectModule(InstrumentationRegistry.getInstrumentation().targetContext) {
         override fun provideConnectScheduler(): ConnectScheduler {
-            return getMockScheduler()
+            return getMockScheduler(shouldMakeConfigCall)
         }
 
         override fun provideConnectInstanceId(): ConnectInstanceId {
@@ -110,25 +115,58 @@ internal fun getTestConnectNetworkModule(privateKey: String, baseUrl: String, te
  * job processors are usually accessed in a background thread with the network requests being
  * performed synchronously but this allows us to run the processor in main thread and block the
  * tests from exiting early.
+ *
+ * If [shouldMakeConfigCall] is set to false, then the scheduler will not perform config
+ * calls. All other requests will still occur so we can test disabled configs interaction.
  */
-internal fun getMockScheduler(): ConnectScheduler {
+internal fun getMockScheduler(shouldMakeConfigCall: Boolean): ConnectScheduler {
     val scheduler = Mockito.mock(ConnectScheduler::class.java)
     `when`(scheduler.scheduleQueuedNetworkRequests()).then {
         if (Connect.INSTANCE.isEnabled) {
-            QueuedRequestsJobProcessor.process(Connect.INSTANCE.userQueue(),
+            QueuedRequestsJobProcessor.process(
+                    Connect.INSTANCE.userQueue(),
                     Connect.INSTANCE.eventQueue(),
                     Connect.INSTANCE.identifyProvider(),
-                    Connect.INSTANCE.eventProvider())
+                    Connect.INSTANCE.eventProvider()
+            )
         }
     }
     `when`(scheduler.scheduleRecurringConfigRequests()).then {
         // Do nothing. This method triggers the same processor as single config request but repeating
     }
     `when`(scheduler.scheduleSingleConfigRequest()).then {
-        ConfigJobProcessor.process(Connect.INSTANCE.configProvider(), Connect.INSTANCE.storageController())
+        if (shouldMakeConfigCall) {
+            ConfigJobProcessor.process(
+                    Connect.INSTANCE.configProvider(),
+                    Connect.INSTANCE.storageController()
+            )
+        }
     }
     return scheduler
 }
 
+/**
+ * Stores a config directly to storage, allowing us to test configuration states without
+ * needing to make mocked network calls.
+ */
+private fun storeConfig(config: Config) {
+    InstrumentationRegistry.getTargetContext()
+            .getSharedPreferences("connect_shared_preferences_storage", Context.MODE_PRIVATE)
+            .edit()
+            .putString("connect_preferences_key_config", Gson().toJson(config))
+            .apply()
+}
 
+/**
+ * Stores a disabled config directly to storage
+ */
+internal fun storeDisabledConfig() {
+    storeConfig(disabledConfig)
+}
 
+/**
+ * Stores an enabled config directly to storage
+ */
+internal fun storeEnabledConfig() {
+    storeConfig(enabledConfig)
+}

@@ -7,27 +7,40 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationCompat;
+
+import com.zendesk.logger.Logger;
+import com.zendesk.util.StringUtils;
+
+import javax.inject.Inject;
 
 /**
  * A wrapper for {@link NotificationCompat.Builder} that allows us to more easily test construction
  * of {@link Notification}s without needing to mock the compat builder directly. The internal
  * builder can be swapped out in future for a different implementation if needed.
  */
+@ConnectScope
 class NotificationBuilder {
+
+    private static final String LOG_TAG = "NotificationBuilder";
 
     private static final int CONNECT_INTENT_REQUEST_CODE = 0;
 
-    private NotificationCompat.Builder builder;
-    private Context context;
-    private Resources resources;
+    private final NotificationCompat.Builder builder;
+    private final Context context;
+    private final Resources resources;
+    private final String connectSilentNotificationChannelId;
 
+    @Inject
     NotificationBuilder(NotificationCompat.Builder builder,
-                        Context context) {
+                        Context context,
+                        @ConnectSilentNotificationChannelQualifier String connectSilentNotificationChannelId) {
         this.builder = builder;
         this.context = context;
         this.resources = context.getResources();
+        this.connectSilentNotificationChannelId = connectSilentNotificationChannelId;
     }
 
     /**
@@ -97,15 +110,30 @@ class NotificationBuilder {
     }
 
     /**
-     * Sets the small icon for the notification
+     * Sets the small icon for the notification if the file exists, otherwise uses the provided
+     * fallbackSmallIconId
      *
      * @param fileName the name of the icon file
      * @param folderName the name of the folder where the file is located
+     * @param fallbackSmallIconId the fallback resource id for the icon if the file doesn't exist
      * @return the builder
      */
-    NotificationBuilder setSmallIcon(String fileName, String folderName) {
-        int smallIconId = resources.getIdentifier(fileName, folderName, context.getPackageName());
-        setSmallIcon(smallIconId);
+    NotificationBuilder setSmallIcon(String fileName,
+                                     String folderName,
+                                     @DrawableRes int fallbackSmallIconId) {
+
+        int smallIconId = resources.getIdentifier(
+                StringUtils.ensureEmpty(fileName),
+                StringUtils.ensureEmpty(folderName),
+                context.getPackageName());
+
+        if (smallIconId != 0) {
+            setSmallIcon(smallIconId);
+        } else {
+            Logger.w(LOG_TAG, "Small icon doesn't exist, using default icon");
+            setSmallIcon(fallbackSmallIconId);
+        }
+
         return this;
     }
 
@@ -145,6 +173,20 @@ class NotificationBuilder {
     @VisibleForTesting
     Bitmap decodeLargeIconResource(Resources resources, int largeIcon) {
         return BitmapFactory.decodeResource(resources, largeIcon);
+    }
+
+    /**
+     * Sets the sound of the notification to null and its channel id to
+     * {@link NotificationBuilder#connectSilentNotificationChannelId}
+     *
+     * @return the builder
+     */
+    NotificationBuilder setSilent() {
+        // Set sound as null for pre-Oreo compatibility
+        builder.setSound(null);
+        // Set the notification channel for post-Oreo
+        builder.setChannelId(connectSilentNotificationChannelId);
+        return this;
     }
 
     /**

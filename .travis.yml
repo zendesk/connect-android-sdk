@@ -1,20 +1,55 @@
 language: android
-jdk: oraclejdk8
+jdk:
+  - oraclejdk8
 before_cache:
-- rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
   directories:
-  - "$HOME/.gradle/caches/"
-  - "$HOME/.gradle/wrapper/"
+    - "$HOME/.android/build-cache/"
+    - "$HOME/.gradle/caches/"
+    - "$HOME/.gradle/wrapper/"
 android:
   components:
     - tools
     - platform-tools
-    - android-27
-    - build-tools-27.0.3
+    - android-28
+    - build-tools-28.0.3
     - extra-android-m2repository
+  licenses:
+    - android-sdk-preview-license-.+
+    - android-sdk-license-.+
+    - ".+"
 branches:
   only:
     - master
-before_script: "./scripts/travis.sh before"
-script: "./scripts/travis.sh"
+    - "/release\\/.*/"
+
+install:
+  - "./scripts/travis.sh install"
+
+jobs:
+  include:
+    - script: ./scripts/travis.sh script Connect test
+      name: "Connect tests"
+    - script: ./scripts/travis.sh script Connect analysis
+      name: "Connect code analysis"
+    - script: ./scripts/travis.sh script Instrumentation analysis
+      name: "Instrumentation code analysis"
+
+    - stage: "Deploy Network Client"
+
+      script: ./scripts/travis.sh script NetworkClient deploy
+      name: "Network Client deploy"
+
+    - stage: "Deploy Connect SDK"
+
+      script: ./scripts/travis.sh script Connect deploy
+      name: "Connect deploy"
+
+stages:
+  - name: test
+    if: type = pull_request
+  - name: "Deploy Network Client"
+    if: branch = master AND type != pull_request
+  - name: "Deploy Connect SDK"
+    if: branch = master AND type != pull_request

@@ -82,7 +82,8 @@ public class ConnectMessagingService extends FirebaseMessagingService {
         }
 
         NotificationPayload payload = notificationProcessor.parseRemoteMessage(message);
-        if (payload == null || !payload.isConnectNotification()) {
+        boolean isConnectPush = ConnectNotification.isConnectPush(message.getData());
+        if (payload == null || !isConnectPush) {
             handleNonConnectNotification(message);
             return;
         }

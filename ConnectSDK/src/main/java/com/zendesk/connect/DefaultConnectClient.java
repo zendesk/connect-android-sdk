@@ -217,16 +217,7 @@ class DefaultConnectClient implements ConnectClient {
 
         if (unregistration != null) {
             Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(
-                    new DisableRequestCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void unused) {
-                            super.onSuccess(unused);
-                            UserBuilder userBuilder = UserBuilder.newBuilder(activeUser);
-                            userBuilder.setFcmToken(null);
-                            storageController.saveUser(userBuilder.build());
-                        }
-                    }
-            );
+                    new DisableRequestCallback<Void>());
 
             sendUnregisterRequest(unregistration, callback);
         }
@@ -278,12 +269,7 @@ class DefaultConnectClient implements ConnectClient {
     public void logoutUser() {
         Logger.d(LOG_TAG, "Logging out Connect user");
 
-        PushRegistration unregistration = createPushUnregistration(getUser());
-        if (unregistration != null) {
-            Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(
-                    new DisableRequestCallback<>());
-            sendUnregisterRequest(unregistration, callback);
-        }
+        disablePush();
 
         clearUserData();
 
