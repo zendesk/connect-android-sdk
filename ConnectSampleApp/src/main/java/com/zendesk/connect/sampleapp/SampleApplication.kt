@@ -5,8 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.support.annotation.RequiresApi
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.squareup.leakcanary.LeakCanary
 import com.zendesk.connect.Connect
 import com.zendesk.logger.Logger

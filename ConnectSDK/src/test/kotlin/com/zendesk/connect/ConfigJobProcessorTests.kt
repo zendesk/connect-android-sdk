@@ -4,12 +4,15 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import com.zendesk.logger.Logger
 import com.zendesk.test.MockedSharedPreferences
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.any
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import retrofit2.Response
@@ -18,28 +21,23 @@ import java.io.IOException
 @RunWith(MockitoJUnitRunner.Silent::class)
 class ConfigJobProcessorTests {
 
-    private val NULL_CONTROLLER_WARNING = "Config provider and storage controller must not be null"
-    private val IO_EXCEPTION_WARNING = "Error while sending config request"
+    companion object {
+        private const val NULL_CONTROLLER_WARNING = "Config provider and storage controller must not be null"
+        private const val IO_EXCEPTION_WARNING = "Error while sending config request"
+    }
 
     private val gson = Gson()
-
     private val testConfig = Config(true, null)
-
-    private lateinit var storageControllerSpy: StorageController
-
-    @Mock
-    private lateinit var mockConfigProvider: ConfigProvider
-
-    @Mock
-    private lateinit var mockConfigCall: Call<Config>
-
-    @Mock
-    private lateinit var mockConfigResponse: Response<Config>
-
     private val logAppender = TestLogAppender().apply {
         Logger.setLoggable(true)
         Logger.addLogAppender(this)
     }
+
+    private lateinit var storageControllerSpy: StorageController
+
+    @Mock private lateinit var mockConfigProvider: ConfigProvider
+    @Mock private lateinit var mockConfigCall: Call<Config>
+    @Mock private lateinit var mockConfigResponse: Response<Config>
 
     @Before
     fun setUp() {
@@ -50,11 +48,6 @@ class ConfigJobProcessorTests {
         `when`(mockConfigProvider.config(any<String>(), any<String>())).thenReturn(mockConfigCall)
 
         `when`(mockConfigCall.execute()).thenReturn(mockConfigResponse)
-    }
-
-    @After
-    fun tearDown() {
-
     }
 
     @Test
@@ -104,4 +97,5 @@ class ConfigJobProcessorTests {
 
         verifyZeroInteractions(storageControllerSpy)
     }
+
 }

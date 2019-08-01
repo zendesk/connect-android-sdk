@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.zendesk.logger.Logger;
 import com.zendesk.util.StringUtils;
@@ -42,9 +42,9 @@ public class AdminActivity extends Activity implements AdminController {
 
     @Override
     public void onPin(String pin) {
-        TestSendProvider testSendProvider = Connect.INSTANCE.testSendProvider();
-        if (testSendProvider == null) {
-            Logger.e(LOG_TAG, "Provider was null, can't send request");
+        ConnectComponent connectComponent = Connect.INSTANCE.getComponent();
+        if (connectComponent == null) {
+            Logger.e(LOG_TAG, "Connect has not been initialised, can't send request");
             pairingFailed();
             return;
         }
@@ -67,6 +67,8 @@ public class AdminActivity extends Activity implements AdminController {
         PairDevice pairDeviceBody = new PairDevice(Integer.parseInt(pin),
                 user.getFcm().get(0),
                 Build.MANUFACTURER + " " + Build.MODEL);
+
+        TestSendProvider testSendProvider = connectComponent.testSendProvider();
         testSendProvider.pairDevice(Connect.CLIENT_PLATFORM, pairDeviceBody).enqueue(
                 new Callback<Void>() {
                     @Override

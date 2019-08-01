@@ -1,4 +1,3 @@
-
 package com.zendesk.connect;
 
 import java.lang.annotation.Retention;

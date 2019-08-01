@@ -1,13 +1,15 @@
 <resources>
     <string name="app_name">ConnectSampleApp</string>
     <string name="identify_user">Identify User</string>
+    <string name="alias_user">Alias User</string>
     <string name="track_event">Track Event</string>
     <string name="register">Register</string>
+    <string name="send_ipm">Send IPM</string>
     <string name="disable">Disable</string>
     <string name="logout">Logout</string>
 
     <string name="connect_notification_channel_id">connect_sample_app_notifications</string>
-    <string name="connect_notification_channel_name">Connect Sample App Notifications</string>
     <string name="connect_silent_notification_channel_id">connect_sample_app_silent_notifications</string>
+    <string name="connect_notification_channel_name">Connect Sample App Notifications</string>
     <string name="connect_silent_notification_channel_name">Connect Sample App Silent Notifications</string>
 </resources>

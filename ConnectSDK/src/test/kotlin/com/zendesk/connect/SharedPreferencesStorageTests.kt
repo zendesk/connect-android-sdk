@@ -12,14 +12,13 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner.Silent::class)
 class SharedPreferencesStorageTests {
 
-    private lateinit var storage: SharedPreferencesStorage
-    private lateinit var mockSharedPreferences: SharedPreferences
-
     private val gson = Gson()
-
     private val testUser = UserBuilder("c137")
             .setFirstName("Rick")
             .build()
+
+    private lateinit var storage: SharedPreferencesStorage
+    private lateinit var mockSharedPreferences: SharedPreferences
 
     @Before
     fun setup() {
@@ -34,7 +33,7 @@ class SharedPreferencesStorageTests {
     }
 
     @Test
-    fun `put null string shoudl remove that key from storage`() {
+    fun `put null string should remove that key from storage`() {
         storage.put("foo", "bar")
         storage.put("foo", null)
         assertThat(storage.get("foo")).isNotEqualTo("bar")

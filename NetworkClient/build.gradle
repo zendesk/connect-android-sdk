@@ -16,12 +16,12 @@ repositories {
 ext {
     groupId = "com.zendesk"
     artifactId = "connect-network-client"
-    versionName = rootProject.ext.connectNetworkClientVersion
+    versionName = versions.connectNetworkClient
     modulePackaging = "jar"
 
-    retrofit_version = "2.4.0"
-    gson_version = "2.8.2"
-    java_common_version = "1.14"
+    retrofit_version = versions.retrofit
+    gson_version = versions.gson
+    java_common_version = versions.javaCommon
 }
 
 apply plugin: 'java'

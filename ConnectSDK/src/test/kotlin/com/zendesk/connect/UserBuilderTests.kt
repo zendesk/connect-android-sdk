@@ -7,6 +7,7 @@ import java.util.*
 class UserBuilderTests {
 
     private val userId = "bird"
+    private val aliasId = "${userId}_alias"
     private val userBuilder = UserBuilder(userId)
 
     @Test
@@ -181,6 +182,22 @@ class UserBuilderTests {
                 .build()
 
         assertThat(newUser.lastName).isNotNull()
+    }
+
+    @Test
+    fun `aliased should create a new user with the alias id as the new user id`() {
+        val existingUser = userBuilder.build()
+        val aliasedUser = UserBuilder.aliased(existingUser, aliasId)
+
+        assertThat(aliasedUser.userId).isEqualTo(aliasId)
+    }
+
+    @Test
+    fun `aliased should create a new user with the existing user id as the new previous id`() {
+        val existingUser = userBuilder.build()
+        val aliasedUser = UserBuilder.aliased(existingUser, aliasId)
+
+        assertThat(aliasedUser.previousId).isEqualTo(existingUser.userId)
     }
 
 }

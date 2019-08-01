@@ -1,86 +1,101 @@
 package com.zendesk.connect
 
-import android.support.v4.app.NotificationManagerCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.common.truth.Truth
 import com.zendesk.logger.Logger
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
-import org.mockito.Mock
+import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
-import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import retrofit2.Response
 import java.io.IOException
 
-@RunWith(MockitoJUnitRunner.Silent::class)
 class MetricRequestsProcessorTests {
 
-    private val NULL_METRICS_PROVIDER = "Metrics provider was null, unable to send metrics requests"
-    private val NULL_NOTIFICATION_MANAGER_COMPAT = "Notification manager compat was null, unable to send uninstall tracker"
-    private val ERROR_REQUEST_LOG = "There was a problem sending the metric request:"
-    private val UNSUCCESSFUL_REQUEST_LOG = "Metric request unsuccessful. Response code:"
-    private val NULL_CALL_LOG = "Call was null, couldn't send request"
-
-    private lateinit var metricsProcessor: MetricRequestsProcessor
-
-    @Mock
-    private lateinit var mockPayload: NotificationPayload
-
-    @Mock
-    private lateinit var mockMetricsProvider: MetricsProvider
-
-    @Mock
-    private lateinit var mockCall: Call<Void>
-
-    @Mock
-    private lateinit var mockResponse: Response<Void>
-
-    @Mock
-    private lateinit var mockManagerCompat: NotificationManagerCompat
+    companion object {
+        private const val TEST_PUSH_LOG = "Notification is a test push, not sending metrics"
+        private const val NOT_CONNECT_PUSH_LOG = "Payload is not a valid Connect notification"
+        private const val ERROR_REQUEST_LOG = "There was a problem sending the metric request:"
+        private const val UNSUCCESSFUL_REQUEST_LOG = "Metric request unsuccessful. Response code:"
+        private const val NULL_CALL_LOG = "Call was null, couldn't send request"
+    }
 
     private val logAppender = TestLogAppender().apply {
         Logger.setLoggable(true)
         Logger.addLogAppender(this)
     }
 
+    private val mockInstanceId = "some-instance-id"
+
+    private val mockMetricsProvider = mock<MetricsProvider>()
+    private val mockCall = mock<Call<Void>>()
+    private val mockResponse = mock<Response<Void>>()
+    private val mockManagerCompat = mock<NotificationManagerCompat>()
+
+    private val metricsProcessor = MetricRequestsProcessor(mockMetricsProvider)
+
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(MetricRequestsProcessorTests::class)
+        given(mockMetricsProvider.received(Mockito.anyString(), ArgumentMatchers.any<PushBasicMetric>())).willReturn(mockCall)
+        given(mockCall.execute()).willReturn(mockResponse)
+        given(mockResponse.isSuccessful).willReturn(true)
+        given(mockManagerCompat.areNotificationsEnabled()).willReturn(true)
+    }
 
-        `when`(mockMetricsProvider.received(Mockito.anyString(), ArgumentMatchers.any<PushBasicMetric>())).thenReturn(mockCall)
-        `when`(mockCall.execute()).thenReturn(mockResponse)
-        `when`(mockResponse.isSuccessful).thenReturn(true)
-        `when`(mockManagerCompat.areNotificationsEnabled()).thenReturn(true)
+    @Test
+    fun `sendOpenedRequest should log a message if isTestPush is true`() {
+        metricsProcessor.sendOpenedRequest(null, true)
 
-        metricsProcessor = MetricRequestsProcessor(mockMetricsProvider)
+        Truth.assertThat(logAppender.lastLog()).isEqualTo(TEST_PUSH_LOG)
+    }
+
+    @Test
+    fun `sendOpenedRequest should log a message if instance id is null`() {
+        metricsProcessor.sendOpenedRequest(null, false)
+
+        Truth.assertThat(logAppender.lastLog()).isEqualTo(NOT_CONNECT_PUSH_LOG)
+    }
+
+    @Test
+    fun `sendOpenedRequest should create a call object for a received request`() {
+        metricsProcessor.sendOpenedRequest(mockInstanceId, false)
+
+        Mockito.verify(mockMetricsProvider).opened(Mockito.anyString(), ArgumentMatchers.any<PushBasicMetric>())
+    }
+
+    @Test
+    fun `sendOpenedRequest should add the notification instance id to the request body`() {
+        val captor = ArgumentCaptor.forClass(PushBasicMetric::class.java)
+
+        metricsProcessor.sendOpenedRequest(mockInstanceId, false)
+
+        Mockito.verify(mockMetricsProvider).opened(Mockito.anyString(), captor.capture())
+        Truth.assertThat(captor.value.oid).isEqualTo(mockInstanceId)
     }
 
     @Test
     fun `sendReceivedRequest should create a call object for a received request`() {
-        metricsProcessor.sendReceivedRequest(mockPayload)
+        metricsProcessor.sendReceivedRequest(mockInstanceId)
 
         Mockito.verify(mockMetricsProvider).received(Mockito.anyString(), ArgumentMatchers.any<PushBasicMetric>())
     }
 
     @Test
     fun `sendReceivedRequest should add the notification instance id to the request body`() {
-        Mockito.`when`(mockPayload.instanceId).thenReturn("c_137")
         val captor = ArgumentCaptor.forClass(PushBasicMetric::class.java)
 
-        metricsProcessor.sendReceivedRequest(mockPayload)
+        metricsProcessor.sendReceivedRequest(mockInstanceId)
 
         Mockito.verify(mockMetricsProvider).received(Mockito.anyString(), captor.capture())
-        Truth.assertThat(captor.value.oid).isEqualTo(mockPayload.instanceId)
+        Truth.assertThat(captor.value.oid).isEqualTo(mockInstanceId)
     }
 
     @Test
     fun `sendUninstallTracker should create a call object for an uninstall tracker request`() {
-        metricsProcessor.sendUninstallTrackerRequest(mockPayload, false)
+        metricsProcessor.sendUninstallTrackerRequest(mockInstanceId, false)
 
         Mockito.verify(mockMetricsProvider).uninstallTracker(Mockito.anyString(), ArgumentMatchers.any<UninstallTracker>())
     }
@@ -90,7 +105,7 @@ class MetricRequestsProcessorTests {
         val revoked = true
         val captor = ArgumentCaptor.forClass(UninstallTracker::class.java)
 
-        metricsProcessor.sendUninstallTrackerRequest(mockPayload, revoked)
+        metricsProcessor.sendUninstallTrackerRequest(mockInstanceId, revoked)
 
         Mockito.verify(mockMetricsProvider).uninstallTracker(Mockito.anyString(), captor.capture())
         Truth.assertThat(captor.value.isRevoked).isEqualTo(revoked)

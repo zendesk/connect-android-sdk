@@ -1,7 +1,7 @@
 ext {
     groupId = "com.zendesk"
     artifactId = "connect"
-    versionName = rootProject.ext.sdkVersion
+    versionName = versions.sdkVersion
     modulePackaging = "aar"
 }
 
@@ -11,14 +11,14 @@ apply from: '../scripts/gradle/connect-repos.gradle'
 apply from: '../scripts/gradle/connect-release.gradle'
 
 android {
-    compileSdkVersion rootProject.ext.targetSdkVersion
+    compileSdkVersion versions.targetSdk
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionName rootProject.ext.sdkVersion
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionName versions.sdkVersion
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         consumerProguardFiles 'consumer-proguard.pro'
     }
@@ -30,33 +30,31 @@ android {
 }
 
 dependencies {
-    api group: "com.zendesk", name: "java-common", version: rootProject.ext.javaCommon, changing: true
-    implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
-    implementation group: "com.android.support", name: "support-annotations", version: rootProject.ext.androidSupportLibraryVersion
-    implementation group: "com.google.dagger", name: "dagger", version: rootProject.ext.daggerVersion
-    implementation group: "com.google.code.gson", name: "gson", version: rootProject.ext.gsonVersion
-    implementation group: "com.squareup.retrofit2", name: "converter-gson", version: rootProject.ext.retrofitVersion
-    implementation group: "com.squareup.retrofit2", name: "retrofit", version: rootProject.ext.retrofitVersion
-    implementation(group: "com.squareup.tape2", name: "tape", version: rootProject.ext.tapeVersion) {
+    api group: "com.zendesk", name: "java-common", version: versions.javaCommon, changing: true
+    implementation group: "androidx.appcompat", name: "appcompat", version: versions.androidx
+    implementation group: "androidx.annotation", name: "annotation", version: versions.androidx
+    implementation group: "com.google.android.material", name: "material", version: versions.androidMaterial
+    implementation group: "com.google.dagger", name: "dagger", version: versions.dagger
+    implementation group: "com.google.code.gson", name: "gson", version: versions.gson
+    implementation group: "com.squareup.retrofit2", name: "converter-gson", version: versions.retrofit
+    implementation group: "com.squareup.retrofit2", name: "retrofit", version: versions.retrofit
+    implementation(group: "com.squareup.tape2", name: "tape", version: versions.tape) {
         because "Using a beta version because it is seen to be a stable build"
     }
-    implementation group: "com.firebase", name: "firebase-jobdispatcher", version: "0.8.5"
-    implementation(group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
+    implementation group: "androidx.work", name: "work-runtime", version: versions.workManager
+    implementation group: "com.google.firebase", name: "firebase-messaging", version: versions.firebaseMessaging
 
     if (useReleaseDependency()) {
-        implementation group: "com.zendesk", name: "connect-network-client", version: rootProject.ext.connectNetworkClientVersion
+        api group: "com.zendesk", name: "connect-network-client", version: "2.0.0"
     } else {
         api project(":NetworkClient")
     }
 
-    annotationProcessor group: "com.google.dagger", name: "dagger-compiler", version: rootProject.ext.daggerVersion
+    annotationProcessor group: "com.google.dagger", name: "dagger-compiler", version: versions.dagger
 
-    testImplementation group: "com.zendesk", name: "java-common-test", version: rootProject.ext.javaCommonTestVersion
-    testImplementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib", version: rootProject.ext.kotlinVersion
-    testImplementation group: "junit", name: "junit", version: rootProject.ext.junitVersion
-    testImplementation group: "org.mockito", name: "mockito-core", version: rootProject.ext.mockitoVersion
-    testImplementation group: "com.google.truth", name: "truth", version: rootProject.ext.googleTruthVersion
-    testImplementation group: "com.zendesk", name: "java-common-test", version: rootProject.ext.javaCommonTestVersion, changing: true
+    testImplementation group: "com.zendesk", name: "java-common-test", version: versions.javaCommonTest
+    testImplementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib", version: versions.kotlin
+    testImplementation group: "junit", name: "junit", version: versions.junit
+    testImplementation group: "org.mockito", name: "mockito-core", version: versions.mockito
+    testImplementation group: "com.google.truth", name: "truth", version: versions.googleTruth
 }

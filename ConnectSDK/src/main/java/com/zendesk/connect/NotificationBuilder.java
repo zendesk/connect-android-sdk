@@ -7,9 +7,10 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.NotificationCompat;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.app.NotificationCompat;
 
 import com.zendesk.logger.Logger;
 import com.zendesk.util.StringUtils;
@@ -203,10 +204,10 @@ class NotificationBuilder {
     /**
      * Sets the pending intent for the notification
      *
-     * @param payload the {@link NotificationPayload} to be included as the intent extra
+     * @param payload the {@link SystemPushPayload} to be included as the intent extra
      * @return the builder
      */
-    NotificationBuilder setPendingIntent(NotificationPayload payload) {
+    NotificationBuilder setPendingIntent(SystemPushPayload payload) {
         String actionName = context.getPackageName() + ConnectActionService.ACTION_OPEN_NOTIFICATION;
         Intent intentToOpen = new Intent(actionName);
         intentToOpen.setPackage(context.getPackageName());

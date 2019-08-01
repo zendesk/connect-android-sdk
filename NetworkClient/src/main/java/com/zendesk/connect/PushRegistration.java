@@ -1,6 +1,5 @@
 package com.zendesk.connect;
 
-import java.util.*;
 import com.zendesk.util.ObjectUtils;
 
 /**
@@ -25,7 +24,7 @@ class PushRegistration {
      * @return userId
      */
     String getUserId() {
-      return userId;
+        return userId;
     }
     
     /**
@@ -33,7 +32,7 @@ class PushRegistration {
      * @return token
      */
     String getToken() {
-      return token;
+        return token;
     }
     
     @Override
@@ -45,8 +44,8 @@ class PushRegistration {
             return false;
         }
         PushRegistration pushRegistration = (PushRegistration) o;
-        return ObjectUtils.equals(this.userId, pushRegistration.userId) &&
-                ObjectUtils.equals(this.token, pushRegistration.token);
+        return ObjectUtils.equals(this.userId, pushRegistration.userId)
+                && ObjectUtils.equals(this.token, pushRegistration.token);
     }
 
     @Override
@@ -71,7 +70,7 @@ class PushRegistration {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

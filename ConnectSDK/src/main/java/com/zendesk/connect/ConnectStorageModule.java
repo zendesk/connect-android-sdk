@@ -3,7 +3,6 @@ package com.zendesk.connect;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.google.gson.Gson;
 import com.squareup.tape2.ObjectQueue;
 import com.squareup.tape2.QueueFile;
 
@@ -14,7 +13,7 @@ import dagger.Module;
 import dagger.Provides;
 
 @Module
-class ConnectStorageModule {
+abstract class ConnectStorageModule {
 
     private static final String CONNECT_PREFERENCES_NAME = "connect_shared_preferences_storage";
     private static final String CONNECT_STRING_QUEUE_FILE = "connect_string_queue_file";
@@ -28,22 +27,19 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    SharedPreferences provideSharedPreferences(Context context) {
+    static SharedPreferences provideSharedPreferences(Context context) {
         return context.getSharedPreferences(CONNECT_PREFERENCES_NAME, Context.MODE_PRIVATE);
     }
 
     /**
      * Provides an implementation of {@link BaseStorage} using {@link SharedPreferences}
      *
-     * @param sharedPreferences An instance of {@link SharedPreferences}
-     * @param gson An instance of {@link Gson}
+     * @param sharedPreferencesStorage an instance of {@link SharedPreferencesStorage}
      * @return An instance of {@link SharedPreferencesStorage}
      */
     @Provides
-    @ConnectScope
-    BaseStorage provideSharedPreferencesStorage(SharedPreferences sharedPreferences,
-                                                Gson gson) {
-        return new SharedPreferencesStorage(sharedPreferences, gson);
+    static BaseStorage provideSharedPreferencesStorage(SharedPreferencesStorage sharedPreferencesStorage) {
+        return sharedPreferencesStorage;
     }
 
     /**
@@ -59,7 +55,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    ObjectQueue<String> provideObjectQueue(GsonConverter<String> gsonConverter, Context context) {
+    static ObjectQueue<String> provideObjectQueue(GsonConverter<String> gsonConverter, Context context) {
         File file = new File(context.getFilesDir(), CONNECT_STRING_QUEUE_FILE);
         QueueFile queueFile;
         try {
@@ -83,7 +79,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    ObjectQueue<User> provideUserObjectQueue(GsonConverter<User> userConverter, Context context) {
+    static ObjectQueue<User> provideUserObjectQueue(GsonConverter<User> userConverter, Context context) {
         File file = new File(context.getFilesDir(), CONNECT_USER_QUEUE_FILE);
         QueueFile queueFile;
         try {
@@ -107,7 +103,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    ObjectQueue<Event> provideEventObjectQueue(GsonConverter<Event> eventConverter, Context context) {
+    static ObjectQueue<Event> provideEventObjectQueue(GsonConverter<Event> eventConverter, Context context) {
         File file = new File(context.getFilesDir(), CONNECT_EVENT_QUEUE_FILE);
         QueueFile queueFile;
         try {
@@ -126,7 +122,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    BaseQueue<String> provideConnectQueue(ObjectQueue<String> stringObjectQueue) {
+    static BaseQueue<String> provideConnectQueue(ObjectQueue<String> stringObjectQueue) {
         return new ConnectQueue<>(stringObjectQueue);
     }
 
@@ -138,7 +134,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    BaseQueue<User> provideUserQueue(ObjectQueue<User> userObjectQueue) {
+    static BaseQueue<User> provideUserQueue(ObjectQueue<User> userObjectQueue) {
         return new ConnectQueue<>(userObjectQueue);
     }
 
@@ -150,7 +146,7 @@ class ConnectStorageModule {
      */
     @Provides
     @ConnectScope
-    BaseQueue<Event> provideEventQueue(ObjectQueue<Event> eventObjectQueue) {
+    static BaseQueue<Event> provideEventQueue(ObjectQueue<Event> eventObjectQueue) {
         return new ConnectQueue<>(eventObjectQueue);
     }
 

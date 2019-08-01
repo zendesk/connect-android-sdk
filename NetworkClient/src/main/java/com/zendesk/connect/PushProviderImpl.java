@@ -1,11 +1,8 @@
 package com.zendesk.connect;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import com.google.gson.Gson;
-import retrofit2.http.*;
-import okhttp3.*;
-import com.zendesk.connect.PushRegistration;
-import java.util.*;
 
 class PushProviderImpl extends BaseProvider implements PushProvider {
 

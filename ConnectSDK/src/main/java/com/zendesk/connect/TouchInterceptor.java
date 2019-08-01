@@ -3,7 +3,6 @@ package com.zendesk.connect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -15,13 +14,15 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 
+import androidx.annotation.Nullable;
+
 /**
  * Created by jophde on 5/1/15.
  *
  * {@link android.view.Window.Callback} that receives the host app's touch events. Responsible
  * for determining if the admin mode should be enabled.
  */
-public class TouchInterceptor implements Window.Callback {
+class TouchInterceptor implements Window.Callback {
 
     private static final int ACTIVATION_GESTURE_POINTER_COUNT = 4;
     private static final int ACTIVATION_GESTURE = 1;
@@ -30,13 +31,13 @@ public class TouchInterceptor implements Window.Callback {
     private TouchInterceptionListener listener;
     private TouchInterceptionHandler handler;
 
-    public TouchInterceptor(TouchInterceptionListener listener, Window.Callback localCallback) {
+    TouchInterceptor(TouchInterceptionListener listener, Window.Callback localCallback) {
         this.proxy = localCallback;
         this.listener = listener;
         this.handler = new TouchInterceptionHandler(this);
     }
 
-    TouchInterceptionListener getListener() {
+    private TouchInterceptionListener getListener() {
         return listener;
     }
 
@@ -162,7 +163,7 @@ public class TouchInterceptor implements Window.Callback {
 
     @Override
     public boolean onSearchRequested(SearchEvent searchEvent) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return proxy.onSearchRequested(searchEvent);
         } else {
             return proxy.onSearchRequested();
@@ -178,7 +179,7 @@ public class TouchInterceptor implements Window.Callback {
     @Nullable
     @Override
     public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int featureId) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return proxy.onWindowStartingActionMode(callback, featureId);
         } else  {
             return proxy.onWindowStartingActionMode(callback);
@@ -209,14 +210,8 @@ public class TouchInterceptor implements Window.Callback {
         @Override
         public void handleMessage(Message msg) {
             TouchInterceptionListener listener = interceptor.getListener();
-            if (listener == null) {
-                return;
-            }
-
-            switch (msg.what) {
-                case ACTIVATION_GESTURE:
-                    listener.onActivationGesture();
-                    break;
+            if (listener != null && msg.what == ACTIVATION_GESTURE) {
+                listener.onActivationGesture();
             }
         }
     }

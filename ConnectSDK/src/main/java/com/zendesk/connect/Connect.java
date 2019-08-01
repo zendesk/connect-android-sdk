@@ -1,9 +1,10 @@
 package com.zendesk.connect;
 
 import android.app.Application;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 import com.zendesk.logger.Logger;
 
@@ -16,6 +17,8 @@ public enum Connect {
     private static final String LOG_TAG = "Connect";
     private static final String NOT_ENABLED_LOG = "Connect SDK is not enabled";
     private static final String NOT_INITIALIZED_LOG = "Connect SDK has not been initialised";
+
+    private static final String CONNECT_BASE_URL = "https://api.outbound.io";
 
     static final String CLIENT_VERSION = BuildConfig.VERSION_NAME;
     static final String CLIENT_PLATFORM = "android";
@@ -30,10 +33,8 @@ public enum Connect {
      */
     public void init(Application application, String privateKey) {
         ConnectComponent connectComponent = DaggerConnectComponent.builder()
-                .connectModule(new ConnectModule(application.getApplicationContext()))
-                .connectStorageModule(new ConnectStorageModule())
-                .connectNetworkModule(new ConnectNetworkModule(privateKey))
-                .connectNotificationModule(new ConnectNotificationModule())
+                .application(application)
+                .connectApiConfiguration(new ConnectApiConfiguration(CONNECT_BASE_URL, privateKey))
                 .build();
 
         updateStoredPrivateKey(connectComponent, privateKey);
@@ -60,7 +61,6 @@ public enum Connect {
         // If this is init call is from a cold start of the app then we fetch config
         // and schedule a config job to repeat every hour.
         if (coldStart) {
-            component.scheduler().scheduleSingleConfigRequest();
             component.scheduler().scheduleRecurringConfigRequests();
         }
 
@@ -69,6 +69,23 @@ public enum Connect {
         if (storageController.getUser() == null) {
             DefaultConnectClient.persistAnonymousUser(component.storageController(), component.instanceId());
         }
+
+        // Start listening for Lifecycle events
+        connectComponent.foregroundListener();
+    }
+
+    /**
+     * <p>
+     *     Internal method to retrieve the instance of {@link ConnectComponent} to enable access
+     *     to the sub-components factory methods and other exposed dependencies.
+     * </p>
+     *
+     * @return an instance of {@link ConnectComponent} if initialised, null otherwise
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    ConnectComponent getComponent() {
+        return isInitialised() ? connectComponent : null;
     }
 
     /**
@@ -110,7 +127,11 @@ public enum Connect {
      * @return true if Connect has been initialised, false otherwise.
      */
     boolean isInitialised() {
-        return connectComponent != null;
+        if (connectComponent == null) {
+            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -125,188 +146,16 @@ public enum Connect {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     boolean isEnabled() {
         if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
             return false;
         }
+
         Config config = connectComponent.storageController().getConfig();
-        return config == null || config.isEnabled();
-    }
-
-    /**
-     * <p>
-     *     Provides a concrete implementation of {@link BaseStorage} for storing things like
-     *     {@link User} and {@link Config}.
-     * </p>
-     *
-     * @return an implementation of {@link BaseStorage}, or {@code null} if Connect
-     *          wasn't initialised.
-     */
-    @Nullable
-    StorageController storageController() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
+        if (config != null && !config.isEnabled()) {
+            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
+            return false;
         }
-        return connectComponent.storageController();
-    }
 
-    /**
-     * <p>
-     *     Gets an instance of {@link ConfigProvider}
-     * </p>
-     *
-     * @return an instance of {@link ConfigProvider}
-     */
-    ConfigProvider configProvider() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.configProvider();
-    }
-
-    /**
-     * <p>
-     *     Gets an instance of {@link IdentifyProvider}
-     * </p>
-     *
-     * @return an instance of {@link IdentifyProvider}
-     */
-    IdentifyProvider identifyProvider() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.identifyProvider();
-    }
-
-    /**
-     * <p>
-     *     Gets an instance of {@link EventProvider}
-     * </p>
-     *
-     * @return an instance of {@link EventProvider}
-     */
-    EventProvider eventProvider() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.eventProvider();
-    }
-
-    /**
-     * <p>
-     *     Gets an instance of {@link PushProvider}
-     * </p>
-     *
-     * @return an instance of {@link PushProvider}
-     */
-    PushProvider pushProvider() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.pushProvider();
-    }
-
-    MetricsProvider metricsProvider() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.metricsProvider();
-    }
-
-    TestSendProvider testSendProvider() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.testSendProvider();
-    }
-
-    /**
-     * <p>
-     *     Gets the {@link BaseQueue} used for queuing {@link User} objects
-     * </p>
-     *
-     * @return an implementation of {@link BaseQueue}, or {@code null} if Connect
-     *          wasn't initialised.
-     */
-    BaseQueue<User> userQueue() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.userQueue();
-    }
-
-    /**
-     * <p>
-     *     Gets the {@link BaseQueue} used for queuing {@link Event} objects
-     * </p>
-     *
-     * @return an implementation of {@link BaseQueue}, or {@code null} if Connect
-     *          wasn't initialised.
-     */
-    BaseQueue<Event> eventQueue() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.eventQueue();
-    }
-
-    /**
-     * <p>
-     *     Gets the {@link NotificationProcessor} used for parsing incoming push notifications
-     *     and constructing {@link android.app.Notification} objects to display
-     * </p>
-     *
-     * @return an instance of {@link NotificationProcessor}, or {@code null} if Connect
-     *          wasn't initialised.
-     */
-    NotificationProcessor notificationProcessor() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.notificationProcessor();
-    }
-
-    /**
-     * <p>
-     *     Gets the {@link ConnectActionProcessor} used for processing incoming intents received
-     *     by the {@link ConnectActionService}
-     * </p>
-     *
-     * @return an instance of {@link ConnectActionProcessor}, or {@code null} if Connect
-     *          wasn't initialised
-     */
-    ConnectActionProcessor actionProcessor() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.actionProcessor();
-    }
-
-    /**
-     * <p>
-     *     Gets the {@link MetricRequestsProcessor} used for sending metrics requests
-     *     when push notifications are received
-     * </p>
-     *
-     * @return an instance of {@link MetricRequestsProcessor}, or {@code null} if Connect
-     *          wasn't initialised
-     */
-    MetricRequestsProcessor metricsProcessor() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_INITIALIZED_LOG);
-            return null;
-        }
-        return connectComponent.metricsProcessor();
+        return true;
     }
 
     /**
@@ -323,11 +172,9 @@ public enum Connect {
      * @param user the {@link User} to be identified
      */
     public void identifyUser(User user) {
-        if (!isEnabled()) {
-            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
-            return;
+        if (isEnabled()) {
+            connectComponent.client().identifyUser(user);
         }
-        connectComponent.client().identifyUser(user);
     }
 
     /**
@@ -343,11 +190,9 @@ public enum Connect {
      * @param event the {@link Event} to be tracked
      */
     public void trackEvent(Event event) {
-        if (!isEnabled()) {
-            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
-            return;
+        if (isEnabled()) {
+            connectComponent.client().trackEvent(event);
         }
-        connectComponent.client().trackEvent(event);
     }
 
     /**
@@ -356,11 +201,9 @@ public enum Connect {
      * </p>
      */
     public void registerForPush() {
-        if (!isEnabled()) {
-            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
-            return;
+        if (isEnabled()) {
+            connectComponent.client().registerForPush();
         }
-        connectComponent.client().registerForPush();
     }
 
     /**
@@ -369,11 +212,9 @@ public enum Connect {
      * </p>
      */
     public void disablePush() {
-        if (!isEnabled()) {
-            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
-            return;
+        if (isEnabled()) {
+            connectComponent.client().disablePush();
         }
-        connectComponent.client().disablePush();
     }
 
     /**
@@ -383,11 +224,9 @@ public enum Connect {
      * </p>
      */
     public void logoutUser() {
-        if (!isEnabled()) {
-            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
-            return;
+        if (isEnabled()) {
+            connectComponent.client().logoutUser();
         }
-        connectComponent.client().logoutUser();
     }
 
     /**
@@ -397,11 +236,9 @@ public enum Connect {
      * @return the currently active {@link User}, or {@code null} if the user does
      *          not exist or Connect has not been initialised
      */
+    @Nullable
     public User getUser() {
-        if (!isInitialised()) {
-            Logger.e(LOG_TAG, NOT_ENABLED_LOG);
-            return null;
-        }
-        return connectComponent.client().getUser();
+        return isInitialised() ? connectComponent.client().getUser() : null;
     }
+
 }

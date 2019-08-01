@@ -1,12 +1,12 @@
 package com.zendesk.connect;
 
+import androidx.annotation.Nullable;
+
 import com.zendesk.util.DigestUtils;
 
 import javax.inject.Inject;
 
-import dagger.Reusable;
-
-@Reusable
+@ConnectScope
 class StorageController {
 
     private static final String LOG_TAG = "StorageController";
@@ -50,6 +50,7 @@ class StorageController {
      *
      * @return the stored {@link Config}, or null if it doesn't exist
      */
+    @Nullable
     Config getConfig() {
         return storage.get(PREFERENCES_KEY_CONFIG, Config.class);
     }
@@ -81,6 +82,7 @@ class StorageController {
      *
      * @return the stored {@link User}, or null if it doesn't exist
      */
+    @Nullable
     User getUser() {
         return storage.get(PREFERENCES_KEY_USER, User.class);
     }

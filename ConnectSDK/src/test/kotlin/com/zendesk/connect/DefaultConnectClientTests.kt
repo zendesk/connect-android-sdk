@@ -26,68 +26,52 @@ import retrofit2.Response
 @RunWith(MockitoJUnitRunner.Silent::class)
 class DefaultConnectClientTests {
 
-    //identify log messages
-    private val NULL_USER_WARNING = "Couldn't identify a null user"
-    private val IDENTIFY_USER_MESSAGE_FORMAT = "Identifying user: %s"
+    companion object {
+        //identify log messages
+        private const val NULL_USER_WARNING = "Couldn't identify a null user"
+        private const val IDENTIFY_USER_MESSAGE_FORMAT = "Identifying user: %s"
 
-    //track log messages
-    private val NULL_EVENT_WARNING = "Couldn't track a null event"
-    private val TRACK_EVENT_MESSAGE_FORMAT = "Tracking event: %s"
+        //track log messages
+        private const val NULL_EVENT_WARNING = "Couldn't track a null event"
+        private const val TRACK_EVENT_MESSAGE_FORMAT = "Tracking event: %s"
 
-    //register log messages
-    private val NO_TOKEN_REGISTER_WARNING = "There is no push token to register"
-    private val NULL_REGISTER_CALL = "Couldn't send register for push request"
-    private val REGISTER_REQUEST_FAILED = "Failed to register for push"
-    private val TOKEN_RETRIEVAL_FAILED = "Couldn't register user for push"
+        //register log messages
+        private const val NO_TOKEN_REGISTER_WARNING = "There is no push token to register"
+        private const val NULL_REGISTER_CALL = "Couldn't send register for push request"
+        private const val REGISTER_REQUEST_FAILED = "Failed to register for push"
+        private const val TOKEN_RETRIEVAL_FAILED = "Couldn't register user for push"
 
-    //disable log messages
-    private val NO_TOKEN_DISABLE_WARNING = "There is no push token to disable"
-    private val NULL_DISABLE_CALL = "Couldn't send disable push request"
-    private val DISABLE_REQUEST_FAILED = "Failed to disable push"
-
-    private lateinit var connectClient: DefaultConnectClient
-
-    private lateinit var testUser: User
-    private lateinit var testStoredUser: User
-    private lateinit var testEvent: Event
+        //disable log messages
+        private const val NO_TOKEN_DISABLE_WARNING = "There is no push token to disable"
+        private const val NULL_DISABLE_CALL = "Couldn't send disable push request"
+        private const val DISABLE_REQUEST_FAILED = "Failed to disable push"
+    }
+    
     private val testToken = "test_token"
-
     private val userCaptor = ArgumentCaptor.forClass(User::class.java)
     private val eventCaptor = ArgumentCaptor.forClass(Event::class.java)
-
-    @Mock
-    private lateinit var mockStorageController: StorageController
-
-    @Mock
-    private lateinit var mockUserQueue: BaseQueue<User>
-
-    @Mock
-    private lateinit var mockEventQueue: BaseQueue<Event>
-
-    @Mock
-    private lateinit var mockScheduler: ConnectScheduler
-
-    @Mock
-    private lateinit var mockPushProvider: PushProvider
-
-    @Mock
-    private lateinit var mockInstanceId: ConnectInstanceId
-
-    @Mock
-    private lateinit var mockIdResult: InstanceIdResult
-
-    @Mock
-    private lateinit var mockCall: Call<Void>
-
-    @Mock
-    private lateinit var mockResponse: Response<Void>
-
     private val logAppender = TestLogAppender().apply {
         Logger.setLoggable(true)
         Logger.addLogAppender(this)
     }
 
+    private lateinit var connectClient: DefaultConnectClient
+    private lateinit var testUser: User
+    private lateinit var testStoredUser: User
+    private lateinit var testEvent: Event
+
+    @Mock private lateinit var mockStorageController: StorageController
+    @Mock private lateinit var mockUserQueue: BaseQueue<User>
+    @Mock private lateinit var mockEventQueue: BaseQueue<Event>
+    @Mock private lateinit var mockScheduler: ConnectScheduler
+    @Mock private lateinit var mockPushProvider: PushProvider
+    @Mock private lateinit var mockInstanceId: ConnectInstanceId
+    @Mock private lateinit var mockIdResult: InstanceIdResult
+    @Mock private lateinit var mockCall: Call<Void>
+    @Mock private lateinit var mockResponse: Response<Void>
+
     @Before
+    @Suppress("UNCHECKED_CAST")
     fun setUp() {
         testUser = UserBuilder("c_137")
                 .setFirstName("Rick")
@@ -114,6 +98,11 @@ class DefaultConnectClientTests {
         }
     }
 
+    @After
+    fun tearDown() {
+        logAppender.reset()
+    }
+
     @Test
     fun `calling identify with null user should log a warning and return early`() {
         connectClient.identifyUser(null)
@@ -123,23 +112,6 @@ class DefaultConnectClientTests {
         verifyZeroInteractions(mockStorageController)
         verifyZeroInteractions(mockUserQueue)
         verifyZeroInteractions(mockScheduler)
-    }
-
-    @Test
-    fun `calling identify user should retrieve the active user from storage`() {
-        connectClient.identifyUser(testUser)
-
-        verify(mockStorageController).user
-    }
-
-    @Test
-    fun `calling identify user with a different id to the active user should alias that user`() {
-        assertThat(testUser.previousId).isNull()
-
-        connectClient.identifyUser(testUser)
-
-        verify(mockStorageController).saveUser(userCaptor.capture())
-        assertThat(userCaptor.value.previousId).isEqualTo(testStoredUser.userId)
     }
 
     @Test
@@ -331,6 +303,7 @@ class DefaultConnectClientTests {
     }
 
     @Test
+    @Suppress("UNCHECKED_CAST")
     fun `failed register request should log the failure`() {
         Mockito.reset(mockCall)
         `when`(mockCall.enqueue(any<Callback<Void>>())).then {
@@ -449,8 +422,4 @@ class DefaultConnectClientTests {
         assertThat(connectClient.user).isEqualTo(testStoredUser)
     }
 
-    @After
-    fun tearDown() {
-        logAppender.reset()
-    }
 }

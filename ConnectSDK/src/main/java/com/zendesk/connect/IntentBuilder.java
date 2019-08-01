@@ -1,8 +1,13 @@
 package com.zendesk.connect;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.VisibleForTesting;
+import android.os.Parcelable;
+
+import androidx.annotation.VisibleForTesting;
+
+import javax.inject.Inject;
 
 /**
  * Build class to assist in creating {@link Intent} objects and to abstract away Android classes
@@ -10,40 +15,65 @@ import android.support.annotation.VisibleForTesting;
  */
 class IntentBuilder {
 
-    private Intent intent;
+    @VisibleForTesting
+    Intent initialIntent;
+    @VisibleForTesting
+    Intent builderIntent;
 
+    /**
+     * Creates an instance of {@link IntentBuilder}
+     */
+    @Inject
     IntentBuilder() {
-        this.intent = new Intent();
-    }
-
-    IntentBuilder(Intent intent) {
-        this.intent = intent;
+        this.initialIntent = new Intent();
+        this.builderIntent = initialIntent;
     }
 
     /**
-     * Sets the action for this intent
+     * Creates an instance of {@link IntentBuilder} with the given {@link Intent}
+     *
+     * @param intent an instance of {@link Intent} to be used by the builder
+     */
+    IntentBuilder(Intent intent) {
+        this.initialIntent = intent;
+        this.builderIntent = initialIntent;
+    }
+
+    /**
+     * Returns a new instance of an {@link IntentBuilder}, utilising the given {@link Intent} as its
+     * {@link #initialIntent} and {@link #builderIntent}
+     *
+     * @param intent an instance of {@link Intent} to be used by the builder
+     * @return a new instance of {@link IntentBuilder}
+     */
+    IntentBuilder from(Intent intent) {
+        return new IntentBuilder(intent);
+    }
+
+    /**
+     * Sets the action for this builderIntent
      *
      * @param action the action name
      * @return the builder
      */
     IntentBuilder withAction(String action) {
-        intent.setAction(action);
+        builderIntent.setAction(action);
         return this;
     }
 
     /**
-     * Sets the data for this intent
+     * Sets the data for this builderIntent
      *
      * @param data the data as a {@link Uri}
      * @return the builder
      */
     IntentBuilder withData(Uri data) {
-        intent.setData(data);
+        builderIntent.setData(data);
         return this;
     }
 
     /**
-     * Parses the string argument as a URI and sets the data for this intent.
+     * Parses the string argument as a URI and sets the data for this builderIntent.
      *
      * @param url the data as a {@link String} url
      * @return the builder
@@ -54,34 +84,61 @@ class IntentBuilder {
     }
 
     /**
-     * Sets the flags for this intent
+     * Sets the flags for this builderIntent
      *
-     * @param flags the flags for the intent
+     * @param flags the flags for the builderIntent
      * @return the builder
      */
     IntentBuilder withFlags(int flags) {
-        intent.setFlags(flags);
+        builderIntent.setFlags(flags);
         return this;
     }
 
     /**
-     * Sets the package name for the intent
+     * Sets the package name for the builderIntent
      *
      * @param packageName the package name
      * @return the builder
      */
     IntentBuilder withPackageName(String packageName) {
-        intent.setPackage(packageName);
+        builderIntent.setPackage(packageName);
         return this;
     }
 
     /**
-     * Builds the {@link Intent} object with the provided parameters
+     * Sets the class to the launched by this builderIntent
+     *
+     * @param context an instance of {@link Context}
+     * @param className the name of the class to be launched
+     * @return the builder
+     */
+    IntentBuilder withClassName(Context context, String className) {
+        builderIntent.setClassName(context, className);
+        return this;
+    }
+
+    /**
+     * Adds a parcelable extra to the builderIntent
+     *
+     * @param name the key for accessing this extra
+     * @param parcelable the {@link Parcelable} to be added
+     * @return the builder
+     */
+    IntentBuilder withExtra(String name, Parcelable parcelable) {
+        builderIntent.putExtra(name, parcelable);
+        return this;
+    }
+
+    /**
+     * Builds the {@link Intent} object with the provided parameters and resets the builder intent
+     * to be the initial intent for future builder interactions.
      *
      * @return the constructed {@link Intent}
      */
     Intent build() {
-        return intent;
+        Intent builtIntent = builderIntent;
+        builderIntent = initialIntent;
+        return builtIntent;
     }
 
     /**

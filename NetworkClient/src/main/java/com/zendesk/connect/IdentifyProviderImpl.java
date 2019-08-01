@@ -1,11 +1,10 @@
 package com.zendesk.connect;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import com.google.gson.Gson;
-import retrofit2.http.*;
-import okhttp3.*;
-import com.zendesk.connect.User;
-import java.util.*;
+
+import java.util.List;
 
 class IdentifyProviderImpl extends BaseProvider implements IdentifyProvider {
 

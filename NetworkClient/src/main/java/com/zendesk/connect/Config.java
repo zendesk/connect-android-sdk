@@ -1,6 +1,5 @@
 package com.zendesk.connect;
 
-import java.util.*;
 import com.zendesk.util.ObjectUtils;
 
 /**
@@ -25,7 +24,7 @@ class Config {
      * @return enabled
      */
     boolean isEnabled() {
-      return enabled;
+        return enabled;
     }
     
     /**
@@ -33,7 +32,7 @@ class Config {
      * @return account
      */
     AccountConfig getAccount() {
-      return account;
+        return account;
     }
     
     @Override
@@ -45,8 +44,8 @@ class Config {
             return false;
         }
         Config config = (Config) o;
-        return ObjectUtils.equals(this.enabled, config.enabled) &&
-                ObjectUtils.equals(this.account, config.account);
+        return ObjectUtils.equals(this.enabled, config.enabled)
+                && ObjectUtils.equals(this.account, config.account);
     }
 
     @Override
@@ -71,7 +70,7 @@ class Config {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

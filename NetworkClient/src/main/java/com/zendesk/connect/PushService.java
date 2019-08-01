@@ -3,10 +3,7 @@ package com.zendesk.connect;
 import retrofit2.Call;
 // This is required because there is ambiguity between okhttp3 and retrofit2
 import retrofit2.http.Headers;
-import retrofit2.http.*;
-import okhttp3.*;
-import com.zendesk.connect.PushRegistration;
-import java.util.*;
+import retrofit2.http.POST;
 
 interface PushService {
 
@@ -18,7 +15,8 @@ interface PushService {
      */
     @Headers({"Content-Type:application/json"})
     @POST("v2/{platform}/register")
-    Call<Void> register(@retrofit2.http.Path("platform") String platform, @retrofit2.http.Body PushRegistration body);
+    Call<Void> register(@retrofit2.http.Path("platform") String platform,
+                        @retrofit2.http.Body PushRegistration body);
 
     /**
      * Unregister
@@ -28,6 +26,7 @@ interface PushService {
      */
     @Headers({"Content-Type:application/json"})
     @POST("v2/{platform}/disable")
-    Call<Void> unregister(@retrofit2.http.Path("platform") String platform, @retrofit2.http.Body PushRegistration body);
+    Call<Void> unregister(@retrofit2.http.Path("platform") String platform,
+                          @retrofit2.http.Body PushRegistration body);
 
 }

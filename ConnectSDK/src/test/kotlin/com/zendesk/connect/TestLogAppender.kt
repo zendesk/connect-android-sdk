@@ -10,6 +10,8 @@ class TestLogAppender: Logger.LogAppender {
         logs.add(message.orEmpty())
     }
 
+    fun contains(message: String): Boolean = logs.contains(message)
+
     fun lastLog(): String = logs.last()
 
     fun reset() = logs.clear()

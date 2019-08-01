@@ -1,23 +1,29 @@
 package com.zendesk.connect;
 
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.NotificationManagerCompat;
+import androidx.annotation.VisibleForTesting;
 
 import com.zendesk.logger.Logger;
 
 import java.io.IOException;
+
+import javax.inject.Inject;
 
 import retrofit2.Call;
 import retrofit2.Response;
 
 import static com.zendesk.connect.Connect.CLIENT_PLATFORM;
 
+/**
+ * Processes any metrics requests sent by the SDK
+ */
+@ConnectScope
 class MetricRequestsProcessor {
 
     private static final String LOG_TAG = "MetricRequestsProcessor";
 
     private MetricsProvider metricsProvider;
 
+    @Inject
     MetricRequestsProcessor(MetricsProvider metricsProvider) {
         this.metricsProvider = metricsProvider;
     }
@@ -25,22 +31,17 @@ class MetricRequestsProcessor {
     /**
      * Sends a request to Connect to signify that a notification has been opened
      *
-     * @param payload the {@link NotificationPayload} extracted from the intent
+     * @param instanceId the unique identifier of a received payload
+     * @param isTestPush if the received payload is a test payload or not
      */
-    void sendOpenedRequest(NotificationPayload payload) {
-        if (payload == null) {
-            Logger.e(LOG_TAG, "Payload must not be null");
+    void sendOpenedRequest(String instanceId, boolean isTestPush) {
+        if (isTestPush) {
+            Logger.d(LOG_TAG, "Notification is a test push, not sending metrics");
             return;
         }
 
-        String instanceId = payload.getInstanceId();
         if (instanceId == null) {
             Logger.e(LOG_TAG, "Payload is not a valid Connect notification");
-            return;
-        }
-
-        if (payload.isTestPush()) {
-            Logger.d(LOG_TAG, "Notification is a test push, not sending metrics");
             return;
         }
 
@@ -54,26 +55,28 @@ class MetricRequestsProcessor {
     /**
      * Sends a request to Connect to signify that a notification has been received
      *
-     * @param payload the {@link NotificationPayload} extracted from the notification
+     * @param instanceId the unique identifier of a received payload
      */
-    void sendReceivedRequest(NotificationPayload payload) {
-        PushBasicMetric basicMetric = new PushBasicMetric(payload.getInstanceId());
+    void sendReceivedRequest(String instanceId) {
+        if (instanceId == null) {
+            Logger.e(LOG_TAG, "Payload is not a valid Connect notification");
+            return;
+        }
 
-        Call<Void> receivedRequest = metricsProvider
-                .received(CLIENT_PLATFORM, basicMetric);
+        PushBasicMetric basicMetric = new PushBasicMetric(instanceId);
+
+        Call<Void> receivedRequest = metricsProvider.received(CLIENT_PLATFORM, basicMetric);
         sendRequest(receivedRequest);
     }
 
     /**
      * Sends an uninstall tracker request to the Connect backend
      *
-     * @param payload the {@link NotificationPayload} extracted from the notification
+     * @param instanceId the unique identifier of a received payload
      * @param notificationsRevoked true if the user has disabled notifications
      */
-    void sendUninstallTrackerRequest(NotificationPayload payload,
-                                     boolean notificationsRevoked) {
-        UninstallTracker uninstallTracker =
-                new UninstallTracker(payload.getInstanceId(), notificationsRevoked);
+    void sendUninstallTrackerRequest(String instanceId, boolean notificationsRevoked) {
+        UninstallTracker uninstallTracker = new UninstallTracker(instanceId, notificationsRevoked);
 
         Call<Void> uninstallTrackerRequest = metricsProvider
                 .uninstallTracker(CLIENT_PLATFORM, uninstallTracker);
@@ -96,7 +99,7 @@ class MetricRequestsProcessor {
         try {
             Response<Void> response = call.execute();
             if (!response.isSuccessful()) {
-                Logger.e(LOG_TAG, "Metric request unsuccessful. Response code:", response.code());
+                Logger.e(LOG_TAG, "Metric request unsuccessful. Response code: %s", response.code());
             } else {
                 Logger.d(LOG_TAG, "Metric request successful");
             }

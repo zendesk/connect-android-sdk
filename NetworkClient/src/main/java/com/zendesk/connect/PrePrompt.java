@@ -1,6 +1,5 @@
 package com.zendesk.connect;
 
-import java.util.*;
 import com.zendesk.util.ObjectUtils;
 
 /**
@@ -31,7 +30,7 @@ class PrePrompt {
      * @return title
      */
     String getTitle() {
-      return title;
+        return title;
     }
     
     /**
@@ -39,7 +38,7 @@ class PrePrompt {
      * @return body
      */
     String getBody() {
-      return body;
+        return body;
     }
     
     /**
@@ -47,7 +46,7 @@ class PrePrompt {
      * @return noButton
      */
     String getNoButton() {
-      return noButton;
+        return noButton;
     }
     
     /**
@@ -55,7 +54,7 @@ class PrePrompt {
      * @return yesButton
      */
     String getYesButton() {
-      return yesButton;
+        return yesButton;
     }
     
     @Override
@@ -67,10 +66,10 @@ class PrePrompt {
             return false;
         }
         PrePrompt prePrompt = (PrePrompt) o;
-        return ObjectUtils.equals(this.title, prePrompt.title) &&
-                ObjectUtils.equals(this.body, prePrompt.body) &&
-                ObjectUtils.equals(this.noButton, prePrompt.noButton) &&
-                ObjectUtils.equals(this.yesButton, prePrompt.yesButton);
+        return ObjectUtils.equals(this.title, prePrompt.title)
+                && ObjectUtils.equals(this.body, prePrompt.body)
+                && ObjectUtils.equals(this.noButton, prePrompt.noButton)
+                && ObjectUtils.equals(this.yesButton, prePrompt.yesButton);
     }
 
     @Override
@@ -97,7 +96,7 @@ class PrePrompt {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

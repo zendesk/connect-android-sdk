@@ -1,6 +1,6 @@
 package com.zendesk.connect;
 
-import java.util.*;
+import com.google.gson.annotations.SerializedName;
 import com.zendesk.util.ObjectUtils;
 
 /**
@@ -8,7 +8,8 @@ import com.zendesk.util.ObjectUtils;
  */
 class UninstallTracker {
 
-    private String i = null;
+    @SerializedName("i")
+    private String instanceId = null;
     private boolean revoked;
 
     /**
@@ -16,16 +17,16 @@ class UninstallTracker {
      * @param revoked 
      */
     UninstallTracker(String i, boolean revoked) {
-        this.i = i;
+        this.instanceId = i;
         this.revoked = revoked;
     }
 
     /**
-     * Get i
-     * @return i
+     * Get instanceId
+     * @return instanceId
      */
     String getI() {
-      return i;
+        return instanceId;
     }
     
     /**
@@ -33,7 +34,7 @@ class UninstallTracker {
      * @return revoked
      */
     boolean isRevoked() {
-      return revoked;
+        return revoked;
     }
     
     @Override
@@ -45,13 +46,13 @@ class UninstallTracker {
             return false;
         }
         UninstallTracker uninstallTracker = (UninstallTracker) o;
-        return ObjectUtils.equals(this.i, uninstallTracker.i) &&
-                ObjectUtils.equals(this.revoked, uninstallTracker.revoked);
+        return ObjectUtils.equals(this.instanceId, uninstallTracker.instanceId)
+                && ObjectUtils.equals(this.revoked, uninstallTracker.revoked);
     }
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hash(i, revoked);
+        return ObjectUtils.hash(instanceId, revoked);
     }
 
     @Override
@@ -59,7 +60,7 @@ class UninstallTracker {
         StringBuilder sb = new StringBuilder();
         sb.append("class UninstallTracker {\n");
         
-        sb.append("    i: ").append(toIndentedString(i)).append("\n");
+        sb.append("    instanceId: ").append(toIndentedString(instanceId)).append("\n");
         sb.append("    revoked: ").append(toIndentedString(revoked)).append("\n");
         sb.append("}");
         return sb.toString();
@@ -71,7 +72,7 @@ class UninstallTracker {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

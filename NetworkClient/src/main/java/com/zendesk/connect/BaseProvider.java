@@ -23,5 +23,4 @@ class BaseProvider {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
     }
-
 }

@@ -9,27 +9,33 @@ import org.junit.Test
 
 class ConnectQueueTests {
 
-    private val NULL_OBJECT_WARNING = "Cannot add a null object to the queue"
-    private val ADD_OBJECT_WARNING = "Failed to add object to queue, discarding object"
-    private val RETRIEVE_OBJECT_WARNING = "Failed to retrieve object from queue"
-    private val RETRIEVE_OBJECTS_WARNING = "Failed to retrieve objects from queue"
-    private val REMOVE_OBJECT_WARNING = "Failed to remove objects from queue"
+    companion object {
+        private const val NULL_OBJECT_WARNING = "Cannot add a null object to the queue"
+        private const val ADD_OBJECT_WARNING = "Failed to add object to queue, discarding object"
+        private const val RETRIEVE_OBJECT_WARNING = "Failed to retrieve object from queue"
+        private const val RETRIEVE_OBJECTS_WARNING = "Failed to retrieve objects from queue"
+        private const val REMOVE_OBJECT_WARNING = "Failed to remove objects from queue"
+    }
 
     private val queueGenerator = MockedObjectQueue<Any>()
+    private val logAppender = TestLogAppender().apply {
+        Logger.setLoggable(true)
+        Logger.addLogAppender(this)
+    }
 
     private lateinit var mockObjectQueue: ObjectQueue<Any>
-
     private lateinit var connectQueue: ConnectQueue<Any>
-
-    private val logAppender = TestLogAppender().apply { Logger.addLogAppender(this) }
 
     @Before
     fun setup() {
-        Logger.setLoggable(true)
-
         mockObjectQueue = queueGenerator.getObjectQueue()
 
         connectQueue = ConnectQueue<Any>(mockObjectQueue)
+    }
+
+    @After
+    fun teardown() {
+        logAppender.reset()
     }
 
     @Test
@@ -193,8 +199,4 @@ class ConnectQueueTests {
         assertThat(connectQueue.size()).isEqualTo(0)
     }
 
-    @After
-    fun teardown() {
-        logAppender.reset()
-    }
 }

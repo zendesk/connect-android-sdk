@@ -1,7 +1,5 @@
 package com.zendesk.connect;
 
-import java.util.*;
-
 import com.google.gson.annotations.SerializedName;
 import com.zendesk.util.ObjectUtils;
 
@@ -32,7 +30,7 @@ class PairDevice {
      * @return code
      */
     long getCode() {
-      return code;
+        return code;
     }
     
     /**
@@ -40,7 +38,7 @@ class PairDevice {
      * @return deviceToken
      */
     String getDeviceToken() {
-      return deviceToken;
+        return deviceToken;
     }
     
     /**
@@ -48,7 +46,7 @@ class PairDevice {
      * @return deviceName
      */
     String getDeviceName() {
-      return deviceName;
+        return deviceName;
     }
     
     @Override
@@ -60,9 +58,9 @@ class PairDevice {
             return false;
         }
         PairDevice pairDevice = (PairDevice) o;
-        return ObjectUtils.equals(this.code, pairDevice.code) &&
-                ObjectUtils.equals(this.deviceToken, pairDevice.deviceToken) &&
-                ObjectUtils.equals(this.deviceName, pairDevice.deviceName);
+        return ObjectUtils.equals(this.code, pairDevice.code)
+                && ObjectUtils.equals(this.deviceToken, pairDevice.deviceToken)
+                && ObjectUtils.equals(this.deviceName, pairDevice.deviceName);
     }
 
     @Override
@@ -88,7 +86,7 @@ class PairDevice {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

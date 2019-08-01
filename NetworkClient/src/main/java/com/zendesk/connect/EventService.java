@@ -1,12 +1,11 @@
 package com.zendesk.connect;
 
+import java.util.List;
+
 import retrofit2.Call;
 // This is required because there is ambiguity between okhttp3 and retrofit2
 import retrofit2.http.Headers;
-import retrofit2.http.*;
-import okhttp3.*;
-import com.zendesk.connect.Event;
-import java.util.*;
+import retrofit2.http.POST;
 
 interface EventService {
 

@@ -1,7 +1,8 @@
 package com.zendesk.connect;
 
-import java.util.*;
 import com.zendesk.util.ObjectUtils;
+
+import java.util.Map;
 
 /**
  * Event
@@ -31,7 +32,7 @@ public class Event {
      * @return userId
      */
     public String getUserId() {
-      return userId;
+        return userId;
     }
     
     /**
@@ -39,7 +40,7 @@ public class Event {
      * @return event
      */
     public String getEvent() {
-      return event;
+        return event;
     }
     
     /**
@@ -47,7 +48,7 @@ public class Event {
      * @return properties
      */
     public Map<String, Object> getProperties() {
-      return properties;
+        return properties;
     }
     
     /**
@@ -55,7 +56,7 @@ public class Event {
      * @return timestamp
      */
     public long getTimestamp() {
-      return timestamp;
+        return timestamp;
     }
     
     @Override
@@ -67,10 +68,10 @@ public class Event {
             return false;
         }
         Event event = (Event) o;
-        return ObjectUtils.equals(this.userId, event.userId) &&
-                ObjectUtils.equals(this.event, event.event) &&
-                ObjectUtils.equals(this.properties, event.properties) &&
-                ObjectUtils.equals(this.timestamp, event.timestamp);
+        return ObjectUtils.equals(this.userId, event.userId)
+                && ObjectUtils.equals(this.event, event.event)
+                && ObjectUtils.equals(this.properties, event.properties)
+                && ObjectUtils.equals(this.timestamp, event.timestamp);
     }
 
     @Override
@@ -97,7 +98,7 @@ public class Event {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

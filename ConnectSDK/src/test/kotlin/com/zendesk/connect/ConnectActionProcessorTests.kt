@@ -2,88 +2,161 @@ package com.zendesk.connect
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Parcel
 import android.os.Parcelable
 import com.google.common.truth.Truth.assertThat
 import com.zendesk.logger.Logger
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.*
-import org.mockito.junit.MockitoJUnitRunner
-import retrofit2.Call
-import java.io.IOException
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.willReturn
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import java.io.Serializable
 
-@RunWith(MockitoJUnitRunner.Silent::class)
 class ConnectActionProcessorTests {
 
-    private val INVALID_INTENT_WARNING = "Intent was null or contained invalid action name"
-    private val NULL_PAYLOAD_WARNING = "Payload must not be null"
-    private val INVALID_PAYLOAD_WARNING = "Payload is not a valid Connect notification"
-    private val TEST_PUSH_WARNING = "Notification is a test push, not sending metrics"
-    private val REQUEST_EXCEPTION_WARNING = "Error sending opened notification metric"
-    private val INVALID_DEEP_LINK_URL = "Deep link url was null or empty"
+    companion object {
+        private const val NULL_PACKAGE_MANAGER_WARNING = "Package manager was null, unable to resolve intent"
+        private const val NULL_PAYLOAD_WARNING = "Payload was null, unable to resolve intent"
+        private const val INVALID_INTENT_WARNING = "Intent was null or contained invalid action name"
+        private const val INVALID_DEEP_LINK_URL = "Deep link url was null or empty"
+        private const val FAILED_TO_RESOLVE_ACTIVITY = "Intent for url some://deep/link couldn't be resolved to any Activity"
+    }
 
     private val testActionName = "test.action.SOME_SHOUTING"
-    private val testInstanceId = "some_instance_id_it_really_doesn't_matter_right_now"
     private val testPackageName = "com.testing.123"
-
-    private lateinit var actionProcessor: ConnectActionProcessor
-
-    @Mock
-    private lateinit var mockMetricsProvider: MetricsProvider
-
-    @Mock
-    private lateinit var mockCall: Call<Void>
-
-    @Mock
-    private lateinit var mockIntent: Intent
-
-    @Mock
-    private lateinit var mockPayload: NotificationPayload
-
-    @Mock
-    private lateinit var mockPackageManager: PackageManager
-
-    @Mock
-    private lateinit var mockParcel: Parcel
-
-    @Mock
-    private lateinit var mockIntentBuilder: IntentBuilder
-
-    @Mock
-    private lateinit var mockUri: Uri
-
     private val logAppender = TestLogAppender().apply {
         Logger.setLoggable(true)
         Logger.addLogAppender(this)
     }
 
+    private val mockMetricRequestsProcessor = mock<MetricRequestsProcessor>()
+    private val mockPackageManager = mock<PackageManager>()
+    private val mockIntentBuilder = mock<IntentBuilder>()
+
+    private val actionProcessor = spy(ConnectActionProcessor(
+        mockMetricRequestsProcessor,
+        mockPackageManager,
+        mockIntentBuilder
+    ))
+
+    private val mockIntent = mock<Intent>()
+    private val mockPayload = mock<SystemPushPayload>()
+    private val mockDeepLinkUrl = "some://deep/link"
+
     @Before
     fun setUp() {
-        `when`(mockPayload.instanceId).thenReturn(testInstanceId)
-        `when`(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockIntent)
-        `when`(mockIntent.setData(any<Uri>())).then {  }
+        given(mockPackageManager.getLaunchIntentForPackage(anyString())).willReturn(mockIntent)
+        given(mockIntentBuilder.withAction(anyString())).willReturn(mockIntentBuilder)
+        given(mockIntentBuilder.withData(anyString())).willReturn(mockIntentBuilder)
+        given(mockIntentBuilder.withFlags(anyInt())).willReturn(mockIntentBuilder)
+        given(mockIntentBuilder.from(any())).willReturn(mockIntentBuilder)
+        given(mockIntentBuilder.build()).willReturn(mockIntent)
+    }
 
-        `when`(mockParcel.readString()).thenReturn("some_string")
-        `when`(mockParcel.readByte()).thenReturn(0)
-        `when`(mockParcel.readInt()).thenReturn(0)
+    @Test
+    fun `resolveIntent should return null if the package manager is null`() {
+        val altActionProcessor = ConnectActionProcessor(mockMetricRequestsProcessor, null, mockIntentBuilder)
 
-        `when`(mockIntentBuilder.withAction(anyString())).thenReturn(mockIntentBuilder)
-        `when`(mockIntentBuilder.withData(anyString())).thenReturn(mockIntentBuilder)
-        `when`(mockIntentBuilder.withData(any<Uri>())).thenReturn(mockIntentBuilder)
-        `when`(mockIntentBuilder.withFlags(anyInt())).thenReturn(mockIntentBuilder)
-        `when`(mockIntentBuilder.withPackageName(anyString())).thenReturn(mockIntentBuilder)
-        `when`(mockIntentBuilder.parseUrl(anyString())).thenReturn(mockUri)
-        `when`(mockIntentBuilder.build()).thenReturn(mockIntent)
+        val result = altActionProcessor.resolveIntent(mockPayload, testPackageName, true, true)
 
-        actionProcessor = ConnectActionProcessor(mockMetricsProvider)
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveIntent should log a warning if the package manager is null`() {
+        val altActionProcessor = ConnectActionProcessor(mockMetricRequestsProcessor, null, mockIntentBuilder)
+
+        altActionProcessor.resolveIntent(mockPayload, testPackageName, true, true)
+
+        assertThat(logAppender.lastLog()).isEqualTo(NULL_PACKAGE_MANAGER_WARNING)
+    }
+
+    @Test
+    fun `resolveIntent should return null if the payload is null`() {
+        val result = actionProcessor.resolveIntent(null, testPackageName, true, true)
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveIntent should log a warning if the payload is null`() {
+        actionProcessor.resolveIntent(null, testPackageName, true, true)
+
+        assertThat(logAppender.lastLog()).isEqualTo(NULL_PAYLOAD_WARNING)
+    }
+
+    @Test
+    fun `resolveIntent should return null if open launch activity is true but the launch intent for the package is null`() {
+        given(mockPackageManager.getLaunchIntentForPackage(testPackageName)).willReturn(null)
+
+        val result = actionProcessor.resolveIntent(mockPayload, testPackageName, true, false)
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveIntent should return an intent if open launch activity is true`() {
+        val result = actionProcessor.resolveIntent(mockPayload, testPackageName, true, false)
+
+        assertThat(result).isEqualTo(mockIntent)
+    }
+
+    @Test
+    fun `resolveIntent should return an intent created from the launch intent for the package if open launch activity is true`() {
+        actionProcessor.resolveIntent(mockPayload, testPackageName, true, false)
+
+        verify(mockIntentBuilder).from(mockIntent)
+    }
+
+    @Test
+    fun `resolveIntent should return an intent that has flags set if open launch activity is true`() {
+        actionProcessor.resolveIntent(mockPayload, testPackageName, true, false)
+
+        verify(mockIntentBuilder).withFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    }
+
+    @Test
+    fun `resolveIntent should return null if the payload deeplink url was null`() {
+        given(mockPayload.deeplinkUrl).willReturn(null)
+
+        val result = actionProcessor.resolveIntent(mockPayload, testPackageName, false, true)
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveIntent should return null if the deep link url intent cannot be resolved`() {
+        given(mockPayload.deeplinkUrl).willReturn(mockDeepLinkUrl)
+        willReturn(null).given(actionProcessor).resolveDeepLinkIntent(mockDeepLinkUrl)
+
+        val result = actionProcessor.resolveIntent(mockPayload, testPackageName, false, true)
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveIntent should return the intent from the deeplink url if both openLaunchActivity and handleDeepLinks are true`() {
+        val deepLinkIntent: Intent = mock()
+
+        given(mockPayload.deeplinkUrl).willReturn(mockDeepLinkUrl)
+        willReturn(deepLinkIntent).given(actionProcessor).resolveDeepLinkIntent(mockDeepLinkUrl)
+
+        val result = actionProcessor.resolveIntent(mockPayload, testPackageName, true, true)
+
+        assertThat(result).isEqualTo(deepLinkIntent)
+    }
+
+    @Test
+    fun `resolveIntent should return null if openLaunchActivity is false and handleDeepLinks is false`() {
+        val result = actionProcessor.resolveIntent(mockPayload, testPackageName, false, false)
+
+        assertThat(result).isNull()
     }
 
     @Test
@@ -109,8 +182,8 @@ class ConnectActionProcessorTests {
 
     @Test
     fun `extractPayload should return a NotificationPayload for a valid intent`() {
-        `when`(mockIntent.getParcelableExtra<Parcelable>(anyString())).thenReturn(mockPayload)
-        `when`(mockIntent.action).thenReturn(testPackageName + ConnectActionService.ACTION_OPEN_NOTIFICATION)
+        given(mockIntent.getParcelableExtra<Parcelable>(anyString())).willReturn(mockPayload)
+        given(mockIntent.action).willReturn(testPackageName + ConnectActionService.ACTION_OPEN_NOTIFICATION)
 
         val extractedPayload = actionProcessor.extractPayload(mockIntent, testPackageName)
 
@@ -118,8 +191,30 @@ class ConnectActionProcessorTests {
     }
 
     @Test
+    fun `extractPayload should not send metrics for an invalid payload`() {
+        actionProcessor.extractPayload(null, testPackageName)
+
+        verify(mockMetricRequestsProcessor, never()).sendOpenedRequest(anyString(), anyBoolean())
+    }
+
+    @Test
+    fun `extractPayload should send metrics for a valid payload`() {
+        val mockInstanceId = "some-instance-id"
+        val isTestPush = true
+
+        given(mockIntent.getParcelableExtra<Parcelable>(anyString())).willReturn(mockPayload)
+        given(mockIntent.action).willReturn(testPackageName + ConnectActionService.ACTION_OPEN_NOTIFICATION)
+        given(mockPayload.instanceId).willReturn(mockInstanceId)
+        given(mockPayload.isTestPush).willReturn(isTestPush)
+
+        actionProcessor.extractPayload(mockIntent, testPackageName)
+
+        verify(mockMetricRequestsProcessor).sendOpenedRequest(mockInstanceId, isTestPush)
+    }
+
+    @Test
     fun `extractPayloadFromIntent should return null for a null intent extra`() {
-        `when`(mockIntent.getSerializableExtra(anyString())).thenReturn(null)
+        given(mockIntent.getSerializableExtra(anyString())).willReturn(null)
 
         val result = actionProcessor.extractPayloadFromIntent(mockIntent)
 
@@ -129,7 +224,7 @@ class ConnectActionProcessorTests {
     @Test
     fun `extractPayloadFromIntent should return null for an invalid intent extra`() {
         val invalidExtra = object : Serializable {}
-        `when`(mockIntent.getSerializableExtra(anyString())).thenReturn(invalidExtra)
+        given(mockIntent.getSerializableExtra(anyString())).willReturn(invalidExtra)
 
         val result = actionProcessor.extractPayloadFromIntent(mockIntent)
 
@@ -138,8 +233,8 @@ class ConnectActionProcessorTests {
 
     @Test
     fun `extractPayloadFromIntent should return an object for a valid intent extra`() {
-        val validExtra = NotificationPayload(mockParcel)
-        `when`(mockIntent.getParcelableExtra<NotificationPayload>(anyString())).thenReturn(validExtra)
+        val validExtra = mock<SystemPushPayload>()
+        given(mockIntent.getParcelableExtra<SystemPushPayload>(anyString())).willReturn(validExtra)
 
         val result = actionProcessor.extractPayloadFromIntent(mockIntent)
 
@@ -155,7 +250,7 @@ class ConnectActionProcessorTests {
 
     @Test
     fun `verifyIntent should return false for a null intent action`() {
-        `when`(mockIntent.action).thenReturn(null)
+        given(mockIntent.action).willReturn(null)
 
         val result = actionProcessor.verifyIntent(mockIntent, testActionName)
 
@@ -164,7 +259,7 @@ class ConnectActionProcessorTests {
 
     @Test
     fun `verifyIntent should return false for an empty intent action`() {
-        `when`(mockIntent.action).thenReturn("")
+        given(mockIntent.action).willReturn("")
 
         val result = actionProcessor.verifyIntent(mockIntent, testActionName)
 
@@ -173,7 +268,7 @@ class ConnectActionProcessorTests {
 
     @Test
     fun `verifyIntent should return false for an invalid intent action`() {
-        `when`(mockIntent.action).thenReturn("wildcard!")
+        given(mockIntent.action).willReturn("wildcard!")
 
         val result = actionProcessor.verifyIntent(mockIntent, testActionName)
 
@@ -182,7 +277,7 @@ class ConnectActionProcessorTests {
 
     @Test
     fun `verifyIntent should return true for a valid intent action`() {
-        `when`(mockIntent.action).thenReturn(testActionName)
+        given(mockIntent.action).willReturn(testActionName)
 
         val result = actionProcessor.verifyIntent(mockIntent, testActionName)
 
@@ -190,74 +285,64 @@ class ConnectActionProcessorTests {
     }
 
     @Test
-    fun `sendMetrics should log a warning for a null payload`() {
-        actionProcessor.sendMetrics(null)
-
-        assertThat(logAppender.lastLog()).isEqualTo(NULL_PAYLOAD_WARNING)
-    }
-
-    @Test
-    fun `sendMetrics should log a warning for an invalid payload`() {
-        Mockito.reset(mockPayload)
-
-        actionProcessor.sendMetrics(mockPayload)
-
-        assertThat(logAppender.lastLog()).isEqualTo(INVALID_PAYLOAD_WARNING)
-    }
-
-    @Test
-    fun `sendMetrics should log a warning for a test push`() {
-        `when`(mockPayload.isTestPush).thenReturn(true)
-
-        actionProcessor.sendMetrics(mockPayload)
-
-        assertThat(logAppender.lastLog()).isEqualTo(TEST_PUSH_WARNING)
-    }
-
-    @Test
-    fun `sendMetrics should log a warning if an IOException is encountered`() {
-        `when`(mockMetricsProvider.opened(anyString(), any<PushBasicMetric>())).then {
-            throw IOException()
-        }
-
-        actionProcessor.sendMetrics(mockPayload)
-
-        assertThat(logAppender.lastLog()).contains(REQUEST_EXCEPTION_WARNING)
-    }
-
-    @Test
-    fun `sendMetrics should send an opened notification metric requests`() {
-        `when`(mockMetricsProvider.opened(anyString(), any<PushBasicMetric>())).thenReturn(mockCall)
-
-        actionProcessor.sendMetrics(mockPayload)
-
-        verify(mockMetricsProvider).opened(anyString(), any<PushBasicMetric>())
-    }
-
-    @Test
     fun `resolveDeepLinkIntent should return null for an empty deep link url`() {
-        val resolvedIntent = actionProcessor.resolveDeepLinkIntent("", mockIntentBuilder)
+        val resolvedIntent = actionProcessor.resolveDeepLinkIntent("")
 
         assertThat(resolvedIntent).isNull()
     }
 
     @Test
     fun `resolveDeepLinkIntent should log a warning for an empty deep link url`() {
-        actionProcessor.resolveDeepLinkIntent("", mockIntentBuilder)
+        actionProcessor.resolveDeepLinkIntent("")
 
         assertThat(logAppender.lastLog()).isEqualTo(INVALID_DEEP_LINK_URL)
     }
 
     @Test
-    fun `resolveDeepLinkIntent should return an intent for the deep link Uri`() {
-        val deepLinkUrl = "https://www.google.com"
-        val resolvedIntent = actionProcessor.resolveDeepLinkIntent(deepLinkUrl, mockIntentBuilder)
+    fun `resolveDeepLinkIntent should call withAction in the IntentBuilder`() {
+        actionProcessor.resolveDeepLinkIntent(mockDeepLinkUrl)
 
-        assertThat(resolvedIntent).isNotNull()
+        verify(mockIntentBuilder).withAction(Intent.ACTION_VIEW)
     }
 
-    @After
-    fun tearDown() {
+    @Test
+    fun `resolveDeepLinkIntent should call withData in the IntentBuilder`() {
+        actionProcessor.resolveDeepLinkIntent(mockDeepLinkUrl)
 
+        verify(mockIntentBuilder).withData(mockDeepLinkUrl)
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should call withFlags in the IntentBuilder`() {
+        actionProcessor.resolveDeepLinkIntent(mockDeepLinkUrl)
+
+        verify(mockIntentBuilder).withFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should log a message if the activity for the deep link intent cannot be resolved`() {
+        given(mockIntent.resolveActivity(mockPackageManager)).willReturn(null)
+
+        actionProcessor.resolveDeepLinkIntent(mockDeepLinkUrl)
+
+        assertThat(logAppender.lastLog()).isEqualTo(FAILED_TO_RESOLVE_ACTIVITY)
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should return null if the activity for the deep link intent cannot be resolved`() {
+        given(mockIntent.resolveActivity(mockPackageManager)).willReturn(null)
+
+        val result = actionProcessor.resolveDeepLinkIntent(mockDeepLinkUrl)
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `resolveDeepLinkIntent should return an intent if the activity for the deep link intent can be resolved`() {
+        given(mockIntent.resolveActivity(mockPackageManager)).willReturn(mock())
+
+        val result = actionProcessor.resolveDeepLinkIntent(mockDeepLinkUrl)
+
+        assertThat(result).isEqualTo(mockIntent)
     }
 }

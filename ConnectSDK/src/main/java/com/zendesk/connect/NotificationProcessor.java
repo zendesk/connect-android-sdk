@@ -1,122 +1,98 @@
 package com.zendesk.connect;
 
-import android.app.Notification;
-import android.support.v4.app.NotificationCompat;
-
-import com.google.firebase.messaging.RemoteMessage;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.zendesk.logger.Logger;
-import com.zendesk.util.StringUtils;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 /**
- * Handles operations related to constructing and handling push notifications based on
- * data received via Firebase
+ * Processor class responsible for processing a received Connect notification payload
  */
+@ConnectScope
 class NotificationProcessor {
 
     private static final String LOG_TAG = "NotificationProcessor";
-    private static final String PAYLOAD_KEY = "payload";
 
-    private Gson gson;
-    private NotificationBuilder notificationBuilder;
+    private static NotificationEventListener notificationEventListener;
+    private static NotificationFactory notificationFactory;
 
-    NotificationProcessor(Gson gson,
-                          NotificationBuilder notificationBuilder) {
-        this.gson = gson;
-        this.notificationBuilder = notificationBuilder;
+    private StubPushStrategyFactory stubPushStrategyFactory;
+    private SystemPushStrategyFactory systemPushStrategyFactory;
+    private IpmPushStrategyFactory ipmPushStrategyFactory;
+
+    /**
+     * Creates an instance of this {@link NotificationProcessor}
+     *
+     * @param stubPushStrategyFactory an instance of {@link StubPushStrategyFactory}
+     * @param systemPushStrategyFactory an instance of {@link SystemPushStrategyFactory}
+     * @param ipmPushStrategyFactory an instance of {@link IpmPushStrategyFactory}
+     */
+    @Inject
+    NotificationProcessor(StubPushStrategyFactory stubPushStrategyFactory,
+                          SystemPushStrategyFactory systemPushStrategyFactory,
+                          IpmPushStrategyFactory ipmPushStrategyFactory,
+                          NotificationEventListener notificationEventListener,
+                          NotificationFactory notificationFactory) {
+
+        this.stubPushStrategyFactory = stubPushStrategyFactory;
+        this.systemPushStrategyFactory = systemPushStrategyFactory;
+        this.ipmPushStrategyFactory = ipmPushStrategyFactory;
+
+        if (NotificationProcessor.notificationEventListener == null) {
+            NotificationProcessor.notificationEventListener = notificationEventListener;
+        }
+
+        if (NotificationProcessor.notificationFactory == null) {
+            NotificationProcessor.notificationFactory = notificationFactory;
+        }
     }
 
     /**
-     * Constructs a {@link Notification} from the {@link NotificationPayload} payload received
+     * Sets an implementation of {@link NotificationEventListener} to be invoked when notification events occur
      *
-     * @param data the {@link NotificationPayload} parsed from the push payload
-     * @return a notification to be displayed, or null if an issue was encountered
+     * @param notificationEventListener an implementation of {@link NotificationEventListener}
      */
-    Notification buildConnectNotification(NotificationPayload data) {
-        if (data == null) {
-            Logger.e(LOG_TAG, "Payload data was null, unable to create notification");
-            return null;
-        }
-
-        String title = data.getTitle();
-        String body = data.getBody();
-
-        notificationBuilder.setTitle(StringUtils.ensureEmpty(title))
-                .setBody(StringUtils.ensureEmpty(body))
-                .setAutoCancel(true)
-                .setLocalOnly(true);
-
-        if (body != null) {
-            NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
-            style.bigText(body);
-            notificationBuilder.setStyle(style);
-        }
-
-        String smallImageFile = data.getSmallNotificationImagePath();
-        String smallImageFolder = data.getSmallNotificationFolderPath();
-        notificationBuilder.setSmallIcon(smallImageFile,
-                smallImageFolder,
-                R.drawable.ic_connect_notification_icon);
-
-        String largeImageFile = data.getLargeNotificationImagePath();
-        String largeImageFolder = data.getLargeNotificationFolderPath();
-        if (StringUtils.hasLengthMany(largeImageFile, largeImageFolder)) {
-            notificationBuilder.setLargeIcon(largeImageFile, largeImageFolder);
-        } else {
-            Logger.w(LOG_TAG, "Large icon doesn't exist, there will be no large icon");
-        }
-
-        if (data.isSilent()) {
-            notificationBuilder.setSilent();
-        }
-
-        String category = data.getCategory();
-        if (category != null) {
-            notificationBuilder.setCategory(category);
-        }
-
-        notificationBuilder.setPendingIntent(data);
-
-        return notificationBuilder.build();
+    static void setNotificationEventListener(NotificationEventListener notificationEventListener) {
+        NotificationProcessor.notificationEventListener = notificationEventListener;
     }
 
     /**
-     * Parses the body of a remoteMessage to a {@link NotificationPayload} for use in constructing
-     * Connect notifications
+     * Sets an implementation of {@link NotificationFactory} to be invoked when a display
+     * notification is being created.
      *
-     * @param remoteMessage the {@link RemoteMessage} to be parsed
-     * @return an instance of {@link NotificationPayload}
+     * @param notificationFactory an implementation of {@link NotificationFactory}
      */
-    NotificationPayload parseRemoteMessage(RemoteMessage remoteMessage) {
-        if (remoteMessage == null || remoteMessage.getData() == null) {
-            Logger.e(LOG_TAG, "Notification data was null or empty");
-            return null;
-        }
-
-        Map<String, String> data = remoteMessage.getData();
-        JsonObject jsonObject = new JsonObject();
-
-        // If the payload key is present, we extract it into a json tree so
-        // it is treated as an object and not a string. This allows Gson to
-        // parse it directly as a Map when creating the NotificationPayload
-        String payloadString = data.get(PAYLOAD_KEY);
-        if (payloadString != null) {
-            Type payloadMapType = new TypeToken<Map<String, Object>>() { }.getType();
-            Map<String, Object> map = gson.fromJson(payloadString, payloadMapType);
-            jsonObject.add(PAYLOAD_KEY, gson.toJsonTree(map));
-            data.remove(PAYLOAD_KEY);
-        }
-
-        // Add all of the remaining keys to the JsonObject as they are
-        for (String key: data.keySet()) {
-            jsonObject.addProperty(key, data.get(key));
-        }
-
-        return gson.fromJson(jsonObject, NotificationPayload.class);
+    static void setNotificationFactory(NotificationFactory notificationFactory) {
+        NotificationProcessor.notificationFactory = notificationFactory;
     }
+
+    /**
+     * Processes the given payload by:
+     * <li>Determining the payload type</li>
+     * <li>Querying the appropriate strategy factory</li>
+     * <li>Invoking the created {@link PushStrategy}</li>
+     *
+     * @param data the JSON dictionary received in the push payload
+     */
+    void process(Map<String, String> data) {
+
+        PushStrategy pushStrategy;
+        ConnectNotification.Types type = ConnectNotification.getNotificationType(data);
+        switch (type) {
+            case SYSTEM_PUSH:
+                pushStrategy = systemPushStrategyFactory.create(notificationEventListener, notificationFactory);
+                break;
+            case IPM:
+                pushStrategy = ipmPushStrategyFactory.create();
+                break;
+            case UNKNOWN:
+            default:
+                Logger.w(LOG_TAG, "Couldn't create push strategy for %s payload", type);
+                pushStrategy = stubPushStrategyFactory.create();
+                break;
+        }
+        pushStrategy.process(data);
+    }
+
 }

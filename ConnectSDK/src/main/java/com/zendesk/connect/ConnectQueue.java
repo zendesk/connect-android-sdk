@@ -6,21 +6,15 @@ import com.zendesk.logger.Logger;
 import java.io.IOException;
 import java.util.List;
 
-import javax.inject.Inject;
-
-import dagger.Reusable;
-
 /**
  * Controller for the object queue. Currently uses {@link ObjectQueue} but can be swapped in future
  */
-@Reusable
 class ConnectQueue<T> implements BaseQueue<T> {
 
     private static final String LOG_TAG = "ConnectQueue";
 
     private ObjectQueue<T> objectQueue;
 
-    @Inject
     ConnectQueue(ObjectQueue<T> objectQueue) {
         this.objectQueue = objectQueue;
     }

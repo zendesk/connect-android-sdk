@@ -1,1 +1,1 @@
-include ':ConnectSDK', ':ConnectTestApp', ':NetworkClient'
+include ':ConnectSDK', ':NetworkClient'

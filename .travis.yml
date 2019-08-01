@@ -1,4 +1,5 @@
 language: android
+dist: trusty
 jdk:
   - oraclejdk8
 before_cache:
@@ -22,7 +23,6 @@ android:
 branches:
   only:
     - master
-    - "/release\\/.*/"
 
 install:
   - "./scripts/travis.sh install"
@@ -33,8 +33,6 @@ jobs:
       name: "Connect tests"
     - script: ./scripts/travis.sh script Connect analysis
       name: "Connect code analysis"
-    - script: ./scripts/travis.sh script Instrumentation analysis
-      name: "Instrumentation code analysis"
 
     - stage: "Deploy Network Client"
 

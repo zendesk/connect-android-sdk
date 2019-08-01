@@ -4,13 +4,12 @@ import com.squareup.tape2.ObjectQueue
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.doAnswer
 import java.io.IOException
 
 /**
  * Mocked version of an [ObjectQueue] for testing. Uses a [List] as the internal data
- * structure of the queue instead of a [Queue] because [ObjectQueue] offers some methods
+ * structure of the queue instead of a [java.util.Queue] because [ObjectQueue] offers some methods
  * that are not immediately available from a regular queue object, and are easier to
  * mock using a list.
  */
@@ -20,8 +19,7 @@ class MockedObjectQueue<T> {
 
     private var closed = false
 
-    @Mock
-    private lateinit var mockObjectQueue: ObjectQueue<T>
+    @Mock private lateinit var mockObjectQueue: ObjectQueue<T>
 
     /**
      * Gets a mocked [ObjectQueue]
@@ -29,7 +27,7 @@ class MockedObjectQueue<T> {
     fun getObjectQueue(): ObjectQueue<T> {
         list.clear()
 
-        mockObjectQueue = Mockito.mock(ObjectQueue::class.java) as ObjectQueue<T>
+        mockObjectQueue = mock()
 
         mockAdd()
         mockSize()
@@ -43,6 +41,7 @@ class MockedObjectQueue<T> {
         return mockObjectQueue
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun mockAdd() {
         doAnswer {
             if (closed) throw IOException()
@@ -130,4 +129,5 @@ class MockedObjectQueue<T> {
     fun getCopyOfBackingList(): List<T> {
         return list.toList()
     }
+
 }

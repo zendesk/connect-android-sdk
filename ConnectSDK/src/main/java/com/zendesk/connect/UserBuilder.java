@@ -1,6 +1,6 @@
 package com.zendesk.connect;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.zendesk.util.StringUtils;
 
@@ -206,5 +206,27 @@ public class UserBuilder {
         }
 
         return builder;
+    }
+
+    /**
+     * Aliases the given user with the provided alias Id
+     *
+     * @param user the user to be aliased
+     * @param aliasId the alias id
+     * @return the new aliased user
+     */
+    public static User aliased(@NonNull User user, @NonNull String aliasId) {
+        return new User(aliasId,
+                user.getUserId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getAttributes(),
+                user.getGroupId(),
+                user.getGroupAttributes(),
+                user.getTimezone(),
+                user.getFcm(),
+                null);
     }
 }

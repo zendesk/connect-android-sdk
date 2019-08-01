@@ -26,15 +26,15 @@ import okhttp3.TlsVersion;
  * {@link SSLSocketFactory} patch for force TLS 1.2 on Android pre-Lollipop. This is reused code
  * from the other SDKs but uses a non deprecated version of {@link OkHttpClient.Builder#sslSocketFactory}
  */
-public class Tls1Dot2SocketFactory extends SSLSocketFactory {
+class Tls1Dot2SocketFactory extends SSLSocketFactory {
 
     private static final String LOG_TAG = "Tls1Dot2SocketFactory";
 
     private static final String[] TLS_V1_2_ONLY = { TlsVersion.TLS_1_2.javaName() };
 
-    final SSLSocketFactory delegate;
+    private final SSLSocketFactory delegate;
 
-    public static OkHttpClient.Builder enableTls1Dot2OnPreLollipop(OkHttpClient.Builder client) {
+    static OkHttpClient.Builder enableTls1Dot2OnPreLollipop(OkHttpClient.Builder client) {
 
         //only patch android versions that need to be patched
         if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 21) {
@@ -71,7 +71,7 @@ public class Tls1Dot2SocketFactory extends SSLSocketFactory {
         return client;
     }
 
-    public Tls1Dot2SocketFactory(SSLSocketFactory base) {
+    Tls1Dot2SocketFactory(SSLSocketFactory base) {
         this.delegate = base;
     }
 
