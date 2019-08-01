@@ -1,7 +1,7 @@
 package com.zendesk.connect;
 
-import android.support.annotation.ColorRes;
-import android.support.annotation.StringRes;
+import androidx.annotation.ColorRes;
+import androidx.annotation.StringRes;
 
 interface ProgressController {
     void setText(@StringRes int textRes);

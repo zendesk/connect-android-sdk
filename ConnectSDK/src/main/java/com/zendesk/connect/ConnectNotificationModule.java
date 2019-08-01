@@ -2,16 +2,18 @@ package com.zendesk.connect;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
 
-import com.google.gson.Gson;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.zendesk.logger.Logger;
 
+import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 
 @Module
-public class ConnectNotificationModule {
+abstract class ConnectNotificationModule {
 
     private static final String LOG_TAG = "ConnectNotificationModule";
 
@@ -27,7 +29,7 @@ public class ConnectNotificationModule {
      */
     @Provides
     @ConnectNotificationChannelQualifier
-    String provideConnectNotificationChannelId(Context context) {
+    static String provideConnectNotificationChannelId(Context context) {
         String integratorChannelId = context.getString(R.string.connect_notification_channel_id);
         String defaultChannelId = context.getString(R.string._connect_notification_channel_id);
 
@@ -54,7 +56,7 @@ public class ConnectNotificationModule {
      */
     @Provides
     @ConnectSilentNotificationChannelQualifier
-    String provideConnectSilentNotificationChannelId(
+    static String provideConnectSilentNotificationChannelId(
             Context context,
             @ConnectNotificationChannelQualifier String connectNotificationChannelId) {
 
@@ -87,7 +89,7 @@ public class ConnectNotificationModule {
      */
     @Provides
     @ConnectScope
-    NotificationCompat.Builder provideNotificationCompatBuilder(
+    static NotificationCompat.Builder provideNotificationCompatBuilder(
             Context context,
             @ConnectNotificationChannelQualifier String integratorChannelId) {
 
@@ -95,44 +97,34 @@ public class ConnectNotificationModule {
     }
 
     /**
-     * Provides an instance of {@link NotificationProcessor} for processing incoming
-     * push notifications
+     * Provides an instance of {@link NotificationManagerCompat} for displaying notifications
+     * and querying notification system settings
      *
-     * @param gson an instance of {@link Gson}
-     * @param builder an instance of a {@link NotificationBuilder}
-     * @return an instance of {@link NotificationProcessor}
+     * @param context an instance of {@link Context}
+     * @return an instance of {@link NotificationManagerCompat}
      */
     @Provides
     @ConnectScope
-    NotificationProcessor provideNotificationProcessor(Gson gson,
-                                                       NotificationBuilder builder) {
-        return new NotificationProcessor(gson, builder);
+    static NotificationManagerCompat provideNotificationManagerCompat(Context context) {
+        return NotificationManagerCompat.from(context);
     }
 
     /**
-     * Provides an instance of {@link ConnectActionProcessor} for processing intent
-     * actions received
+     * Binds the {@link DefaultNotificationEventListener} implementation to the
+     * {@link NotificationEventListener} interface
      *
-     * @param metricsProvider an implementation of {@link MetricsProvider}
-     * @return an instance of {@link ConnectActionProcessor}
+     * @param defaultNotificationEventListener the implementation of {@link NotificationEventListener}
      */
-    @Provides
-    @ConnectScope
-    ConnectActionProcessor provideActionProcessor(MetricsProvider metricsProvider) {
-        return new ConnectActionProcessor(metricsProvider);
-    }
+    @Binds
+    abstract NotificationEventListener bindsNotificationEventListener(
+            DefaultNotificationEventListener defaultNotificationEventListener);
 
     /**
-     * Provides an instance of {@link MetricRequestsProcessor} for processing any
-     * metrics requests sent by the SDK
+     * Binds the {@link DefaultNotificationFactory} implementation to the
+     * {@link NotificationFactory} interface
      *
-     * @param metricsProvider an implementation of {@link MetricsProvider}
-     * @return an instance of {@link MetricRequestsProcessor}
+     * @param defaultNotificationFactory the implementation of {@link NotificationFactory}
      */
-    @Provides
-    @ConnectScope
-    MetricRequestsProcessor provideMetricsProcessor(MetricsProvider metricsProvider) {
-        return new MetricRequestsProcessor(metricsProvider);
-    }
-
+    @Binds
+    abstract NotificationFactory bindsNotificationFactory(DefaultNotificationFactory defaultNotificationFactory);
 }

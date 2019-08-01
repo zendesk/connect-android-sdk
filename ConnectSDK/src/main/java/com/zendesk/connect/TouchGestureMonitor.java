@@ -13,34 +13,19 @@ class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks,
         TouchInterceptor.TouchInterceptionListener {
     private final Application application;
     private Activity foregroundActivity;
-    private static boolean monitorActive = false;
 
     private TouchGestureMonitor(Application application) {
         this.application = application;
     }
 
     static void add(Application application) {
-
         TouchGestureMonitor monitor = new TouchGestureMonitor(application);
         application.registerActivityLifecycleCallbacks(monitor);
-        monitorActive = true;
-
-
-        // No admin panel for users pre ICS :(.  There just isn't any way else to do it
-        // that wouldn't require much more implementation.  Fortunately, ICS is 90%
-        // devices at least.
     }
 
     static void remove(Application application) {
-
         TouchGestureMonitor monitor = new TouchGestureMonitor(application);
         application.unregisterActivityLifecycleCallbacks(monitor);
-        monitorActive = false;
-
-    }
-
-    boolean isActive() {
-        return monitorActive;
     }
 
     @Override
@@ -54,9 +39,9 @@ class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks,
         // Proxy the window callback;
         Window window = activity.getWindow();
         Window.Callback callback = window.getCallback();
-        if (!TouchInterceptor.class.isInstance(callback)) {
+        if (!(callback instanceof TouchInterceptor)) {
             window.setCallback(new TouchInterceptor(this, callback));
-        } else if (TouchInterceptor.class.isInstance(callback)) {
+        } else {
             ((TouchInterceptor) callback).setListener(this);
         }
 
@@ -68,7 +53,7 @@ class TouchGestureMonitor implements Application.ActivityLifecycleCallbacks,
         // Remove proxy onPause;
         Window window = activity.getWindow();
         Window.Callback callback = window.getCallback();
-        if (TouchInterceptor.class.isInstance(callback)) {
+        if (callback instanceof TouchInterceptor) {
             ((TouchInterceptor) callback).setListener(null);
         }
 

@@ -4,16 +4,17 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import org.junit.Before
 import org.junit.Test
-import java.io.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class GsonConverterTests {
 
-    data class Episode(val title: String)
+    private val gson = Gson()
 
     private lateinit var gsonConverter: GsonConverter<Episode>
-
     private lateinit var outputStream: ByteArrayOutputStream
-    private val gson = Gson()
 
     @Before
     fun setUp() {
@@ -47,6 +48,8 @@ class GsonConverterTests {
 
         gsonConverter.toStream(episode, stream)
     }
+
+    data class Episode(val title: String)
 
 }
 

@@ -1,12 +1,8 @@
 package com.zendesk.connect;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import com.google.gson.Gson;
-import retrofit2.http.*;
-import okhttp3.*;
-import com.zendesk.connect.PushBasicMetric;
-import com.zendesk.connect.UninstallTracker;
-import java.util.*;
 
 class MetricsProviderImpl extends BaseProvider implements MetricsProvider {
 

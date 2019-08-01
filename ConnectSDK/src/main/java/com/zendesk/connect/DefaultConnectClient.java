@@ -1,6 +1,7 @@
 package com.zendesk.connect;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -13,12 +14,15 @@ import com.zendesk.service.ZendeskCallback;
 import com.zendesk.util.CollectionUtils;
 import com.zendesk.util.StringUtils;
 
+import javax.inject.Inject;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 
 /**
  * Default implementation of {@link ConnectClient}
  */
+@ConnectScope
 class DefaultConnectClient implements ConnectClient {
 
     private static final String LOG_TAG = "DefaultConnectClient";
@@ -31,6 +35,7 @@ class DefaultConnectClient implements ConnectClient {
     private PushProvider pushProvider;
     private ConnectInstanceId instanceId;
 
+    @Inject
     DefaultConnectClient(StorageController storageController,
                          BaseQueue<User> userQueue,
                          BaseQueue<Event> eventQueue,
@@ -47,10 +52,7 @@ class DefaultConnectClient implements ConnectClient {
 
     /**
      * {@inheritDoc}
-     * <p>
-     *     If there is a currently active user and the user to be identified has a different
-     *     user ID, then the user will be aliased with both IDs
-     * </p>
+     *
      * @param user the user to be identified
      */
     @Override
@@ -60,13 +62,7 @@ class DefaultConnectClient implements ConnectClient {
             return;
         }
 
-        User activeUser = storageController.getUser();
         final UserBuilder userBuilder = UserBuilder.newBuilder(user);
-
-        // We alias the currently active user with the new user id if it is different
-        if (activeUser != null && !activeUser.getUserId().equals(user.getUserId())) {
-            userBuilder.setPreviousId(activeUser.getUserId());
-        }
 
         OnSuccessListener<InstanceIdResult> successListener = new OnSuccessListener<InstanceIdResult>() {
             @Override
@@ -217,7 +213,7 @@ class DefaultConnectClient implements ConnectClient {
 
         if (unregistration != null) {
             Callback<Void> callback = new RetrofitZendeskCallbackAdapter<>(
-                    new DisableRequestCallback<Void>());
+                    new DisableRequestCallback<>());
 
             sendUnregisterRequest(unregistration, callback);
         }
@@ -229,7 +225,7 @@ class DefaultConnectClient implements ConnectClient {
      * @param user the {@link User} to be examined
      * @return true if the user has a push token, false otherwise
      */
-    private boolean userHasPushToken(User user) {
+    private boolean userHasPushToken(@Nullable User user) {
         return user != null
                 && CollectionUtils.isNotEmpty(user.getFcm())
                 && !StringUtils.isEmpty(user.getFcm().get(0));
@@ -241,7 +237,8 @@ class DefaultConnectClient implements ConnectClient {
      * @param user the user containing the device token
      * @return an instance of {@link PushRegistration}
      */
-    private PushRegistration createPushUnregistration(User user) {
+    @Nullable
+    private PushRegistration createPushUnregistration(@Nullable User user) {
         if (!userHasPushToken(user)) {
             Logger.e(LOG_TAG, "There is no push token to disable");
             return null;
@@ -314,6 +311,7 @@ class DefaultConnectClient implements ConnectClient {
     }
 
     @Override
+    @Nullable
     public User getUser() {
         return storageController.getUser();
     }

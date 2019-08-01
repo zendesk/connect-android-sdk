@@ -5,12 +5,12 @@ apply plugin: 'kotlin-android-extensions'
 apply from: '../scripts/gradle/connect-repos.gradle'
 
 android {
-    compileSdkVersion rootProject.ext.targetSdkVersion
+    compileSdkVersion versions.targetSdk
 
     defaultConfig {
         applicationId "com.zendesk.connect.sampleapp"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
         versionName "1.0"
 
         buildConfigField "String", "CONNECT_PRIVATE_KEY", "\"${getConfigurationParameter("CONNECT_PRIVATE_KEY")}\""
@@ -31,20 +31,18 @@ android {
 }
 
 dependencies {
-    implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk7", version: kotlin_version
-    implementation group: "com.android.support", name: "appcompat-v7", version: rootProject.ext.androidSupportLibraryVersion
-    implementation (group: "com.google.firebase", name: "firebase-messaging", version: rootProject.ext.firebaseMessagingVersion) {
-        exclude group: "com.android.support", module: "*"
-    }
+    implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk7", version: versions.kotlin
+    implementation group: "androidx.appcompat", name: "appcompat", version: versions.androidx
+    implementation group: "com.google.firebase", name: "firebase-messaging", version: versions.firebaseMessaging
 
     if (useLocalDependency()) {
         implementation project(":ConnectSDK")
     } else {
-        implementation group: "com.zendesk", name: "connect", version: "2.1.0", changing: true
+        implementation group: "com.zendesk", name: "connect", version: "3.0.0", changing: true
     }
 
-    debugImplementation group: "com.squareup.leakcanary", name: "leakcanary-android", version: "1.6.2"
-    releaseImplementation group: "com.squareup.leakcanary", name: "leakcanary-android-no-op", version: "1.6.2"
+    debugImplementation group: "com.squareup.leakcanary", name: "leakcanary-android", version: versions.leakCanary
+    releaseImplementation group: "com.squareup.leakcanary", name: "leakcanary-android-no-op", version: versions.leakCanary
 }
 
 apply plugin: "com.google.gms.google-services"

@@ -1,6 +1,5 @@
 package com.zendesk.connect;
 
-import java.util.*;
 import com.zendesk.util.ObjectUtils;
 
 /**
@@ -28,7 +27,7 @@ class AccountConfig {
      * @return prompt
      */
     boolean isPrompt() {
-      return prompt;
+        return prompt;
     }
     
     /**
@@ -36,7 +35,7 @@ class AccountConfig {
      * @return promptEvent
      */
     String getPromptEvent() {
-      return promptEvent;
+        return promptEvent;
     }
     
     /**
@@ -44,7 +43,7 @@ class AccountConfig {
      * @return prePrompt
      */
     PrePrompt getPrePrompt() {
-      return prePrompt;
+        return prePrompt;
     }
     
     @Override
@@ -56,9 +55,9 @@ class AccountConfig {
             return false;
         }
         AccountConfig accountConfig = (AccountConfig) o;
-        return ObjectUtils.equals(this.prompt, accountConfig.prompt) &&
-                ObjectUtils.equals(this.promptEvent, accountConfig.promptEvent) &&
-                ObjectUtils.equals(this.prePrompt, accountConfig.prePrompt);
+        return ObjectUtils.equals(this.prompt, accountConfig.prompt)
+                && ObjectUtils.equals(this.promptEvent, accountConfig.promptEvent)
+                && ObjectUtils.equals(this.prePrompt, accountConfig.prePrompt);
     }
 
     @Override
@@ -84,7 +83,7 @@ class AccountConfig {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

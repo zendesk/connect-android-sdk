@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/zcn_ipm_screen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/zcn_ipm_dismiss_area"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:background="#000000"/>
+
+    <RelativeLayout
+        android:id="@+id/zcn_ipm_bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        app:behavior_hideable="true"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+        <RelativeLayout
+            android:id="@+id/zcn_ipm_body_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/zcn_ipm_body_view_margin_top"
+            android:background="@drawable/zcn_ipm_body_shape">
+
+            <LinearLayout
+                android:id="@+id/zcn_ipm_text_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/zcn_ipm_text_container_margin_top"
+                android:layout_marginBottom="@dimen/zcn_ipm_text_container_margin_bottom"
+                android:layout_marginStart="@dimen/zcn_ipm_text_container_margin_sides"
+                android:layout_marginEnd="@dimen/zcn_ipm_text_container_margin_sides"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/zcn_ipm_heading_text"
+                    style="@style/ZendeskConnectTheme.Text.Heading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/zcn_ipm_heading_text_margin_bottom"
+                    android:maxLines="@integer/zcn_ipm_heading_max_lines"
+                    tools:text="Connect: In-Product Message"/>
+
+                <TextView
+                    android:id="@+id/zcn_ipm_message_text"
+                    style="@style/ZendeskConnectTheme.Text.Message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/zcn_ipm_message_text_min_height"
+                    tools:text="In-app messages let you display a message to your customer, to announce or teach them something, whilst they are using your iOS or Android app"/>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/zcn_ipm_action_button"
+                style="ZendeskConnectTheme.Button.Colored"
+                android:layout_below="@id/zcn_ipm_text_container"
+                android:layout_alignParentEnd="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/zcn_ipm_button_margin"
+                android:layout_marginStart="@dimen/zcn_ipm_button_margin"
+                android:layout_marginEnd="@dimen/zcn_ipm_button_margin"
+                android:paddingStart="@dimen/zcn_ipm_button_padding_horizontal"
+                android:paddingEnd="@dimen/zcn_ipm_button_padding_horizontal"
+                tools:text="Ok"
+                tools:backgroundTint="#1f73b7"
+                tools:textColor="#ffffff"/>
+
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/zcn_ipm_avatar_image"
+            android:layout_width="@dimen/zcn_ipm_avatar_diameter"
+            android:layout_height="@dimen/zcn_ipm_avatar_diameter"
+            android:layout_marginStart="@dimen/zcn_ipm_avatar_margin_start"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:src="@drawable/zcn_default_ipm_avatar_image"
+            android:background="@drawable/zcn_ipm_avatar_shape"
+            tools:ignore="ContentDescription"/>
+
+    </RelativeLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

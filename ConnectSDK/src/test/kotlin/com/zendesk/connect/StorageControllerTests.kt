@@ -5,7 +5,6 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import com.zendesk.test.MockedSharedPreferences
 import com.zendesk.util.DigestUtils
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,19 +15,19 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner.Silent::class)
 class StorageControllerTests {
 
-    private val PREFERENCES_KEY_CONFIG = "connect_preferences_key_config"
-    private val PREFERENCES_KEY_USER = "connect_preferences_key_user"
-    private val PREFERENCES_KEY_PRIVATE_KEY = "connect_preferences_key_private_key"
-
-    private lateinit var mockSharedPreferences: SharedPreferences
-    private lateinit var spySharedPreferencesStorage: SharedPreferencesStorage
+    companion object {
+        private const val PREFERENCES_KEY_CONFIG = "connect_preferences_key_config"
+        private const val PREFERENCES_KEY_USER = "connect_preferences_key_user"
+        private const val PREFERENCES_KEY_PRIVATE_KEY = "connect_preferences_key_private_key"
+    }
 
     private val gson = Gson()
-
     private val testConfig = Config(true, null)
     private val testUser = UserBuilder("some_id").build()
     private val testPrivateKey = "some_private_key"
 
+    private lateinit var mockSharedPreferences: SharedPreferences
+    private lateinit var spySharedPreferencesStorage: SharedPreferencesStorage
     private lateinit var storageController: StorageController
 
     @Before
@@ -146,11 +145,6 @@ class StorageControllerTests {
         assertThat(storageController.config).isNull()
         assertThat(storageController.user).isNull()
         assertThat(storageController.isNewPrivateKey(testPrivateKey)).isTrue()
-    }
-
-    @After
-    fun tearDown() {
-
     }
 
 }

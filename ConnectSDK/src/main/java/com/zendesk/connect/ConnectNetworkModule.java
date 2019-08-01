@@ -3,26 +3,20 @@ package com.zendesk.connect;
 import com.google.gson.Gson;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import dagger.Module;
 import dagger.Provides;
+import dagger.multibindings.IntoSet;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 /**
  * Dagger module containing providers relating to networking
  */
 @Module
-class ConnectNetworkModule {
+abstract class ConnectNetworkModule {
 
-    private static final String CONNECT_BASE_URL = "https://api.outbound.io";
     private static final String CONNECT_CLIENT_HEADER_FORMAT = "Android/%s";
-
-    private final String privateKey;
-
-    ConnectNetworkModule(String privateKey) {
-        this.privateKey = privateKey;
-    }
 
     /**
      * Provides an instance of an {@link ClientInterceptors.OutboundClientInterceptor}
@@ -30,21 +24,23 @@ class ConnectNetworkModule {
      * @return an instance of an {@link ClientInterceptors.OutboundClientInterceptor}
      */
     @Provides
+    @IntoSet
     @ConnectScope
-    ClientInterceptors.OutboundClientInterceptor provideOutboundClientInterceptor() {
+    static Interceptor provideOutboundClientInterceptor() {
         String clientVersion = String.format(CONNECT_CLIENT_HEADER_FORMAT, BuildConfig.VERSION_NAME);
         return new ClientInterceptors.OutboundClientInterceptor(clientVersion);
     }
 
     /**
-     * Provides an instance of an {@link ClientInterceptors.OutboundGUIDInterceptor}
+     * Provides an instance of an {@link ClientInterceptors.OutboundGuidInterceptor}
      *
-     * @return an instance of an {@link ClientInterceptors.OutboundGUIDInterceptor}
+     * @return an instance of an {@link ClientInterceptors.OutboundGuidInterceptor}
      */
     @Provides
+    @IntoSet
     @ConnectScope
-    ClientInterceptors.OutboundGUIDInterceptor provideOutboundGuidInterceptor() {
-        return new ClientInterceptors.OutboundGUIDInterceptor(null) {
+    static Interceptor provideOutboundGuidInterceptor() {
+        return new ClientInterceptors.OutboundGuidInterceptor(null) {
             @Override
             protected String getHeaderValue() {
                 return UUID.randomUUID().toString();
@@ -58,33 +54,22 @@ class ConnectNetworkModule {
      * @return an instance of an {@link ClientInterceptors.OutboundKeyInterceptor
      */
     @Provides
+    @IntoSet
     @ConnectScope
-    ClientInterceptors.OutboundKeyInterceptor provideOutboundPrivateKeyInterceptor() {
-        return new ClientInterceptors.OutboundKeyInterceptor(privateKey);
+    static Interceptor provideOutboundPrivateKeyInterceptor(
+            ConnectApiConfiguration connectApiConfiguration) {
+        return new ClientInterceptors.OutboundKeyInterceptor(connectApiConfiguration.getApiKey());
     }
 
     /**
-     * Provides an instance of an {@link OkHttpClient} with the required request headers
-     * and a TLS1.2 patch
+     * Provides an instance of an {@link OkHttpClient} built using {@link ConnectOkHttpClientBuilder}
      *
-     * @param clientInterceptor the required {@link ClientInterceptors.OutboundClientInterceptor}
-     * @param guidInterceptor the required {@link ClientInterceptors.OutboundGUIDInterceptor}
-     * @param privateKeyInterceptor the required {@link ClientInterceptors.OutboundKeyInterceptor}
      * @return an instance of an {@link OkHttpClient}
      */
     @Provides
     @ConnectScope
-    OkHttpClient provideBaseOkHttpClient(ClientInterceptors.OutboundClientInterceptor clientInterceptor,
-                                         ClientInterceptors.OutboundGUIDInterceptor guidInterceptor,
-                                         ClientInterceptors.OutboundKeyInterceptor privateKeyInterceptor) {
-        return Tls1Dot2SocketFactory.enableTls1Dot2OnPreLollipop(new OkHttpClient.Builder())
-                .addInterceptor(clientInterceptor)
-                .addInterceptor(guidInterceptor)
-                .addInterceptor(privateKeyInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build();
+    static OkHttpClient provideBaseOkHttpClient(ConnectOkHttpClientBuilder connectOkHttpClientBuilder) {
+        return connectOkHttpClientBuilder.build();
     }
 
     /**
@@ -96,8 +81,10 @@ class ConnectNetworkModule {
      */
     @Provides
     @ConnectScope
-    ConfigProvider provideConfigProvider(OkHttpClient client, Gson gson) {
-        return new ConfigProviderImpl(client, CONNECT_BASE_URL, gson);
+    static ConfigProvider provideConfigProvider(OkHttpClient client,
+                                                ConnectApiConfiguration connectApiConfiguration,
+                                                Gson gson) {
+        return new ConfigProviderImpl(client, connectApiConfiguration.getBaseUrl(), gson);
     }
 
     /**
@@ -109,8 +96,10 @@ class ConnectNetworkModule {
      */
     @Provides
     @ConnectScope
-    EventProvider provideEventProvider(OkHttpClient client, Gson gson) {
-        return new EventProviderImpl(client, CONNECT_BASE_URL, gson);
+    static EventProvider provideEventProvider(OkHttpClient client,
+                                              ConnectApiConfiguration connectApiConfiguration,
+                                              Gson gson) {
+        return new EventProviderImpl(client, connectApiConfiguration.getBaseUrl(), gson);
     }
 
     /**
@@ -122,8 +111,10 @@ class ConnectNetworkModule {
      */
     @Provides
     @ConnectScope
-    IdentifyProvider provideIdentifyProvider(OkHttpClient client, Gson gson) {
-        return new IdentifyProviderImpl(client, CONNECT_BASE_URL, gson);
+    static IdentifyProvider provideIdentifyProvider(OkHttpClient client,
+                                                    ConnectApiConfiguration connectApiConfiguration,
+                                                    Gson gson) {
+        return new IdentifyProviderImpl(client, connectApiConfiguration.getBaseUrl(), gson);
     }
 
     /**
@@ -135,8 +126,10 @@ class ConnectNetworkModule {
      */
     @Provides
     @ConnectScope
-    PushProvider providePushProvider(OkHttpClient client, Gson gson) {
-        return new PushProviderImpl(client, CONNECT_BASE_URL, gson);
+    static PushProvider providePushProvider(OkHttpClient client,
+                                            ConnectApiConfiguration connectApiConfiguration,
+                                            Gson gson) {
+        return new PushProviderImpl(client, connectApiConfiguration.getBaseUrl(), gson);
     }
 
     /**
@@ -148,14 +141,17 @@ class ConnectNetworkModule {
      */
     @Provides
     @ConnectScope
-    MetricsProvider provideMetricsProvider(OkHttpClient client, Gson gson) {
-        return new MetricsProviderImpl(client, CONNECT_BASE_URL, gson);
+    static MetricsProvider provideMetricsProvider(OkHttpClient client,
+                                                  ConnectApiConfiguration connectApiConfiguration,
+                                                  Gson gson) {
+        return new MetricsProviderImpl(client, connectApiConfiguration.getBaseUrl(), gson);
     }
 
     @Provides
     @ConnectScope
-    TestSendProvider providerTestSendProvider(OkHttpClient client, Gson gson) {
-        return new TestSendProviderImpl(client, CONNECT_BASE_URL, gson);
+    static TestSendProvider providerTestSendProvider(OkHttpClient client,
+                                                     ConnectApiConfiguration connectApiConfiguration,
+                                                     Gson gson) {
+        return new TestSendProviderImpl(client, connectApiConfiguration.getBaseUrl(), gson);
     }
-
 }

@@ -1,105 +1,98 @@
 package com.zendesk.connect
 
-import com.firebase.jobdispatcher.Constraint
-import com.firebase.jobdispatcher.FirebaseJobDispatcher
-import com.firebase.jobdispatcher.Job
-import com.firebase.jobdispatcher.JobService
-import com.firebase.jobdispatcher.JobTrigger
-import com.firebase.jobdispatcher.Lifetime
-import com.firebase.jobdispatcher.Trigger
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.google.common.truth.Truth.assertThat
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito.*
-import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.verify
 import java.util.concurrent.TimeUnit
 
-/**
- * These tests look very verbose and chunky but they allow us to flag when the rules for a
- * scheduled job changes so we don't accidentally break the rules of a job such as the
- * [Constraint]s or [Trigger]s.
- */
-@RunWith(MockitoJUnitRunner.Silent::class)
 class ConnectSchedulerTests {
 
-    private lateinit var connectScheduler: ConnectScheduler
+    private val mockWorkManager = mock<WorkManager>()
 
-    private val windowStart = TimeUnit.SECONDS.convert(55, TimeUnit.MINUTES).toInt()
-    private val windowEnd = TimeUnit.SECONDS.convert(65, TimeUnit.MINUTES).toInt()
+    private val connectScheduler = ConnectScheduler(mockWorkManager)
 
-    @Mock
-    private lateinit var mockDispatcher: FirebaseJobDispatcher
+    private val expectedConstrains = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
-    @Mock
-    private lateinit var mockJob: Job
-
-    @Mock
-    private lateinit var mockJobBuilder: Job.Builder
-
-    @Before
-    fun setUp() {
-        connectScheduler = ConnectScheduler(mockDispatcher)
-
-        `when`(mockDispatcher.newJobBuilder()).thenReturn(mockJobBuilder)
-
-        `when`(mockJobBuilder.setService(any<Class<JobService>>())).thenReturn(mockJobBuilder)
-        `when`(mockJobBuilder.setTag(anyString())).thenReturn(mockJobBuilder)
-        `when`(mockJobBuilder.setConstraints(anyInt())).thenReturn(mockJobBuilder)
-        `when`(mockJobBuilder.setReplaceCurrent(anyBoolean())).thenReturn(mockJobBuilder)
-        `when`(mockJobBuilder.setLifetime(anyInt())).thenReturn(mockJobBuilder)
-        `when`(mockJobBuilder.setRecurring(anyBoolean())).thenReturn(mockJobBuilder)
-        `when`(mockJobBuilder.setTrigger(any<JobTrigger>())).thenReturn(mockJobBuilder)
-
-        `when`(mockJobBuilder.build()).thenReturn(mockJob)
-    }
+    private val mockWorkName = "some-work-name"
 
     @Test
-    fun `schedule single config request should schedule a single run config job`() {
-        connectScheduler.scheduleSingleConfigRequest()
+    fun `scheduleRecurringConfigRequests should enqueueUniquePeriodicWork`() {
+        val captor = ArgumentCaptor.forClass(PeriodicWorkRequest::class.java)
 
-        verify(mockJobBuilder).setService(ConfigJobService::class.java)
-        verify(mockJobBuilder).tag = ConfigJobService.CONFIG_SINGLE_JOB_TAG
-        verify(mockJobBuilder).setConstraints(Constraint.ON_ANY_NETWORK)
-
-        verify(mockDispatcher).mustSchedule(mockJob)
-    }
-
-    @Test
-    fun `schedule recurring config job should schedule a recurring config job`() {
         connectScheduler.scheduleRecurringConfigRequests()
 
-        val captor = ArgumentCaptor.forClass(JobTrigger.ExecutionWindowTrigger::class.java)
+        verify(mockWorkManager).enqueueUniquePeriodicWork(
+            eq(ConfigWorker.CONFIG_RECURRING_WORK_TAG),
+            eq(ExistingPeriodicWorkPolicy.REPLACE),
+            captor.capture()
+        )
 
-        verify(mockJobBuilder).setService(ConfigJobService::class.java)
-        verify(mockJobBuilder).tag = ConfigJobService.CONFIG_RECURRING_JOB_TAG
-        verify(mockJobBuilder).setConstraints(Constraint.ON_ANY_NETWORK)
-        verify(mockJobBuilder).lifetime = Lifetime.FOREVER
-        verify(mockJobBuilder).isRecurring = true
-        verify(mockJobBuilder).trigger = captor.capture()
-
-        assertThat(captor.value.windowStart).isEqualTo(windowStart)
-        assertThat(captor.value.windowEnd).isEqualTo(windowEnd)
-
-        verify(mockDispatcher).mustSchedule(mockJob)
+        assertThat(captor.value.workSpec.intervalDuration).isEqualTo(TimeUnit.MINUTES.toMillis(60))
+        assertThat(captor.value.workSpec.constraints).isEqualTo(expectedConstrains)
     }
 
     @Test
-    fun `schedule queued network requests should schedule a job`() {
+    fun `scheduleQueuedNetworkRequests should enqueueUniqueWork`() {
+        val captor = ArgumentCaptor.forClass(OneTimeWorkRequest::class.java)
+
         connectScheduler.scheduleQueuedNetworkRequests()
 
-        verify(mockJobBuilder).setService(QueuedRequestsJobService::class.java)
-        verify(mockJobBuilder).tag = QueuedRequestsJobService.QUEUED_REQUESTS_JOB_TAG
-        verify(mockJobBuilder).setConstraints(Constraint.ON_ANY_NETWORK)
+        verify(mockWorkManager).enqueueUniqueWork(
+            eq(QueuedRequestsWorker.QUEUED_REQUESTS_WORKER_TAG),
+            eq(ExistingWorkPolicy.REPLACE),
+            captor.capture()
+        )
 
-        verify(mockDispatcher).mustSchedule(mockJob)
+        assertThat(captor.value.workSpec.constraints).isEqualTo(expectedConstrains)
     }
 
-    @After
-    fun tearDown() {
+    @Test
+    fun `scheduleIpmTimeToLive should enqueueUniqueWork`() {
+        val mockTimeToLive = 42L
+        val captor = ArgumentCaptor.forClass(OneTimeWorkRequest::class.java)
 
+        connectScheduler.scheduleIpmTimeToLive(mockWorkName, mockTimeToLive)
+
+        verify(mockWorkManager).enqueueUniqueWork(
+            eq(mockWorkName),
+            eq(ExistingWorkPolicy.REPLACE),
+            captor.capture()
+        )
+
+        val workDelayInSeconds = captor.value.workSpec.initialDelay / 1000
+        assertThat(workDelayInSeconds).isEqualTo(mockTimeToLive)
+    }
+
+    @Test
+    fun `scheduleIpmTimeToLive should enqueueUniqueWork with 0 delay if received delay is less than 0`() {
+        val captor = ArgumentCaptor.forClass(OneTimeWorkRequest::class.java)
+
+        connectScheduler.scheduleIpmTimeToLive(mockWorkName, -1)
+
+        verify(mockWorkManager).enqueueUniqueWork(
+            eq(mockWorkName),
+            eq(ExistingWorkPolicy.REPLACE),
+            captor.capture()
+        )
+
+        assertThat(captor.value.workSpec.initialDelay).isEqualTo(0)
+    }
+
+    @Test
+    fun `cancelIpmTimeToLive should cancelUniqueWork`() {
+        connectScheduler.cancelIpmTimeToLive(mockWorkName)
+
+        verify(mockWorkManager).cancelUniqueWork(mockWorkName)
     }
 }

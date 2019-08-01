@@ -4,10 +4,9 @@ import android.app.Notification
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
 import com.google.common.truth.Truth.assertThat
 import com.zendesk.logger.Logger
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,23 +41,12 @@ class NotificationBuilderTests {
 
     private lateinit var spyNotificationBuilder: NotificationBuilder
 
-    @Mock
-    private lateinit var mockCompatBuilder: NotificationCompat.Builder
-
-    @Mock
-    private lateinit var mockContext: Context
-
-    @Mock
-    private lateinit var mockResources: Resources
-
-    @Mock
-    private lateinit var mockStyle: NotificationCompat.Style
-
-    @Mock
-    private lateinit var mockBitmap: Bitmap
-
-    @Mock
-    private lateinit var mockNotification: Notification
+    @Mock private lateinit var mockCompatBuilder: NotificationCompat.Builder
+    @Mock private lateinit var mockContext: Context
+    @Mock private lateinit var mockResources: Resources
+    @Mock private lateinit var mockStyle: NotificationCompat.Style
+    @Mock private lateinit var mockBitmap: Bitmap
+    @Mock private lateinit var mockNotification: Notification
 
     @Before
     fun setUp() {
@@ -114,6 +102,7 @@ class NotificationBuilderTests {
         verify(mockCompatBuilder).setLocalOnly(true)
     }
 
+    // region setSmallIcon
     @Test
     fun `setSmallIcon via identifier should set the small icon attribute on the builder`() {
         spyNotificationBuilder.setSmallIcon(testIconResourceId)
@@ -154,6 +143,7 @@ class NotificationBuilderTests {
 
         assertThat(logAppender.lastLog()).isEqualTo(LOG_SMALL_ICON_DOESNT_EXIST)
     }
+    // endregion
 
     @Test
     fun `setLargeIcon via bitmap should set the large icon attribute on the builder`() {
@@ -169,6 +159,7 @@ class NotificationBuilderTests {
         verify(mockResources).getIdentifier(testIconFileName, testIconFolder, testPackageName)
     }
 
+    // region setSilent
     @Test
     fun `setSilent should set the sound as null on the builder`() {
         spyNotificationBuilder.setSilent()
@@ -182,6 +173,7 @@ class NotificationBuilderTests {
 
         verify(mockCompatBuilder).setChannelId(testNotificationChannelId)
     }
+    // endregion
 
     @Test
     fun `setCategory should set the category attribute on the builder`() {
@@ -203,4 +195,5 @@ class NotificationBuilderTests {
 
         assertThat(output).isInstanceOf(Notification::class.java)
     }
+
 }

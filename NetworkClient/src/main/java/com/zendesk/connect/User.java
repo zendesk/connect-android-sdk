@@ -1,9 +1,9 @@
 package com.zendesk.connect;
 
-import java.util.*;
-
-import com.google.gson.annotations.SerializedName;
 import com.zendesk.util.ObjectUtils;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * User
@@ -37,7 +37,18 @@ public class User {
      * @param fcm
      * @param apns 
      */
-    User(String userId, String previousId, String firstName, String lastName, String email, String phoneNumber, Map<String, Object> attributes, String groupId, Map<String, Object> groupAttributes, String timezone, List<String> fcm, List<String> apns) {
+    User(String userId,
+            String previousId,
+            String firstName,
+            String lastName,
+            String email,
+            String phoneNumber,
+            Map<String, Object> attributes,
+            String groupId,
+            Map<String, Object> groupAttributes,
+            String timezone,
+            List<String> fcm,
+            List<String> apns) {
         this.userId = userId;
         this.previousId = previousId;
         this.firstName = firstName;
@@ -57,7 +68,7 @@ public class User {
      * @return userId
      */
     public String getUserId() {
-      return userId;
+        return userId;
     }
     
     /**
@@ -65,7 +76,7 @@ public class User {
      * @return previousId
      */
     public String getPreviousId() {
-      return previousId;
+        return previousId;
     }
     
     /**
@@ -73,7 +84,7 @@ public class User {
      * @return firstName
      */
     public String getFirstName() {
-      return firstName;
+        return firstName;
     }
     
     /**
@@ -81,7 +92,7 @@ public class User {
      * @return lastName
      */
     public String getLastName() {
-      return lastName;
+        return lastName;
     }
     
     /**
@@ -89,7 +100,7 @@ public class User {
      * @return email
      */
     public String getEmail() {
-      return email;
+        return email;
     }
     
     /**
@@ -97,7 +108,7 @@ public class User {
      * @return phoneNumber
      */
     public String getPhoneNumber() {
-      return phoneNumber;
+        return phoneNumber;
     }
     
     /**
@@ -105,7 +116,7 @@ public class User {
      * @return attributes
      */
     public Map<String, Object> getAttributes() {
-      return attributes;
+        return attributes;
     }
     
     /**
@@ -113,7 +124,7 @@ public class User {
      * @return groupId
      */
     public String getGroupId() {
-      return groupId;
+        return groupId;
     }
     
     /**
@@ -121,7 +132,7 @@ public class User {
      * @return groupAttributes
      */
     public Map<String, Object> getGroupAttributes() {
-      return groupAttributes;
+        return groupAttributes;
     }
     
     /**
@@ -129,7 +140,7 @@ public class User {
      * @return timezone
      */
     public String getTimezone() {
-      return timezone;
+        return timezone;
     }
     
     /**
@@ -137,7 +148,7 @@ public class User {
      * @return fcm
      */
     public List<String> getFcm() {
-      return fcm;
+        return fcm;
     }
     
     /**
@@ -145,7 +156,7 @@ public class User {
      * @return apns
      */
     public List<String> getApns() {
-      return apns;
+        return apns;
     }
     
     @Override
@@ -157,23 +168,34 @@ public class User {
             return false;
         }
         User user = (User) o;
-        return ObjectUtils.equals(this.userId, user.userId) &&
-                ObjectUtils.equals(this.previousId, user.previousId) &&
-                ObjectUtils.equals(this.firstName, user.firstName) &&
-                ObjectUtils.equals(this.lastName, user.lastName) &&
-                ObjectUtils.equals(this.email, user.email) &&
-                ObjectUtils.equals(this.phoneNumber, user.phoneNumber) &&
-                ObjectUtils.equals(this.attributes, user.attributes) &&
-                ObjectUtils.equals(this.groupId, user.groupId) &&
-                ObjectUtils.equals(this.groupAttributes, user.groupAttributes) &&
-                ObjectUtils.equals(this.timezone, user.timezone) &&
-                ObjectUtils.equals(this.fcm, user.fcm) &&
-                ObjectUtils.equals(this.apns, user.apns);
+        return ObjectUtils.equals(this.userId, user.userId)
+                && ObjectUtils.equals(this.previousId, user.previousId)
+                && ObjectUtils.equals(this.firstName, user.firstName)
+                && ObjectUtils.equals(this.lastName, user.lastName)
+                && ObjectUtils.equals(this.email, user.email)
+                && ObjectUtils.equals(this.phoneNumber, user.phoneNumber)
+                && ObjectUtils.equals(this.attributes, user.attributes)
+                && ObjectUtils.equals(this.groupId, user.groupId)
+                && ObjectUtils.equals(this.groupAttributes, user.groupAttributes)
+                && ObjectUtils.equals(this.timezone, user.timezone)
+                && ObjectUtils.equals(this.fcm, user.fcm)
+                && ObjectUtils.equals(this.apns, user.apns);
     }
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hash(userId, previousId, firstName, lastName, email, phoneNumber, attributes, groupId, groupAttributes, timezone, fcm, apns);
+        return ObjectUtils.hash(userId,
+                previousId,
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                attributes,
+                groupId,
+                groupAttributes,
+                timezone,
+                fcm,
+                apns);
     }
 
     @Override
@@ -203,7 +225,7 @@ public class User {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

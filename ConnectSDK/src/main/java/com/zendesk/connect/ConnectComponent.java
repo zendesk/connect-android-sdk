@@ -1,5 +1,8 @@
 package com.zendesk.connect;
 
+import android.app.Application;
+
+import dagger.BindsInstance;
 import dagger.Component;
 
 @ConnectScope
@@ -9,6 +12,20 @@ import dagger.Component;
         ConnectNetworkModule.class,
         ConnectNotificationModule.class})
 interface ConnectComponent {
+
+    @Component.Builder
+    interface Builder {
+
+        @BindsInstance
+        Builder application(Application application);
+
+        @BindsInstance
+        Builder connectApiConfiguration(ConnectApiConfiguration connectApiConfiguration);
+
+        ConnectComponent build();
+    }
+
+    IpmComponent.Builder ipmComponentBuilder();
 
     ConnectClient client();
 
@@ -39,5 +56,9 @@ interface ConnectComponent {
     ConnectActionProcessor actionProcessor();
 
     MetricRequestsProcessor metricsProcessor();
+
+    IpmCoordinator ipmCoordinator();
+
+    ForegroundListener foregroundListener();
 
 }

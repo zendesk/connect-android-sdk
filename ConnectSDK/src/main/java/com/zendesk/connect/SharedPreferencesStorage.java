@@ -12,6 +12,7 @@ import javax.inject.Inject;
  * An implementation of {@link BaseStorage} using {@link SharedPreferences} for general storage.
  * Uses a basic {@link Gson} object for serialisation / deserialisation.
  */
+@ConnectScope
 class SharedPreferencesStorage implements BaseStorage {
 
     private static final String LOG_TAG = "SharedPrefsStorage";

@@ -1,9 +1,11 @@
 package com.zendesk.connect;
 
+import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
-import com.firebase.jobdispatcher.FirebaseJobDispatcher;
-import com.firebase.jobdispatcher.GooglePlayDriver;
+import androidx.work.WorkManager;
+
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -13,23 +15,29 @@ import dagger.Module;
 import dagger.Provides;
 
 @Module
-class ConnectModule {
+abstract class ConnectModule {
 
-    private final Context context;
 
-    ConnectModule(Context context) {
-        this.context = context;
+    /**
+     * Provides the application {@link Context}
+     *
+     * @param application the {@link Application} instance
+     * @return the application {@link Context}
+     */
+    @Provides
+    static Context provideApplicationContext(Application application) {
+        return application.getApplicationContext();
     }
 
     /**
-     * Provides an instance of the application context
+     * Provides a {@link PackageManager} instance to find global package information.
      *
-     * @return an instance of {@link Context}
+     * @param context the application context
+     * @return an instance of {@link PackageManager}
      */
     @Provides
-    @ConnectScope
-    Context provideApplicationContext() {
-        return context.getApplicationContext();
+    static PackageManager providePackageManager(Context context) {
+        return context.getPackageManager();
     }
 
     /**
@@ -38,37 +46,30 @@ class ConnectModule {
      * @return An implementation of {@link ConnectClient}
      */
     @Provides
-    @ConnectScope
-    ConnectClient provideConnectClient(StorageController storageController,
-                                       BaseQueue<User> userQueue,
-                                       BaseQueue<Event> eventQueue,
-                                       ConnectScheduler scheduler,
-                                       PushProvider pushProvider,
-                                       ConnectInstanceId instanceId) {
-        return new DefaultConnectClient(storageController, userQueue, eventQueue, scheduler, pushProvider, instanceId);
+    static ConnectClient provideConnectClient(DefaultConnectClient defaultConnectClient) {
+        return defaultConnectClient;
     }
 
     /**
-     * Provides an instance of {@link ConnectScheduler}
+     * Provides an instance of {@link WorkManager}
      *
-     * @return an instance of {@link ConnectScheduler}
+     * @return an instance of {@link WorkManager}
      */
     @Provides
     @ConnectScope
-    ConnectScheduler provideConnectScheduler() {
-        FirebaseJobDispatcher dispatcher =  new FirebaseJobDispatcher(new GooglePlayDriver(context));
-        return new ConnectScheduler(dispatcher);
+    static WorkManager provideWorkManager() {
+        return WorkManager.getInstance();
     }
 
     /**
-     * Provides an instance of {@link ConnectInstanceId}
+     * Provides an instance of {@link FirebaseInstanceId}
      *
-     * @return an instance of {@link ConnectInstanceId}
+     * @return an instance of {@link FirebaseInstanceId}
      */
     @Provides
     @ConnectScope
-    ConnectInstanceId provideConnectInstanceId() {
-        return new ConnectInstanceId(FirebaseInstanceId.getInstance());
+    static FirebaseInstanceId provideFirebaseInstanceId() {
+        return FirebaseInstanceId.getInstance();
     }
 
     /**
@@ -78,7 +79,7 @@ class ConnectModule {
      */
     @Provides
     @ConnectScope
-    Gson provideGson() {
+    static Gson provideGson() {
         return new GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create();
@@ -92,7 +93,7 @@ class ConnectModule {
      */
     @Provides
     @ConnectScope
-    GsonConverter<String> provideGsonConverter(Gson gson) {
+    static GsonConverter<String> provideGsonConverter(Gson gson) {
         return new GsonConverter<>(gson, String.class);
     }
 
@@ -104,7 +105,7 @@ class ConnectModule {
      */
     @Provides
     @ConnectScope
-    GsonConverter<User> provideUserConverter(Gson gson) {
+    static GsonConverter<User> provideUserConverter(Gson gson) {
         return new GsonConverter<>(gson, User.class);
     }
 
@@ -116,7 +117,7 @@ class ConnectModule {
      */
     @Provides
     @ConnectScope
-    GsonConverter<Event> provideEventConverter(Gson gson) {
+    static GsonConverter<Event> provideEventConverter(Gson gson) {
         return new GsonConverter<>(gson, Event.class);
     }
 

@@ -57,12 +57,12 @@ class ClientInterceptors {
 
     }
 
-    static class OutboundGUIDInterceptor implements Interceptor {
+    static class OutboundGuidInterceptor implements Interceptor {
 
         private static final String HEADER_NAME = "X-Outbound-GUID";
         private String headerValue;
 
-        OutboundGUIDInterceptor(String headerValue) {
+        OutboundGuidInterceptor(String headerValue) {
             this.headerValue = headerValue;
         }
 

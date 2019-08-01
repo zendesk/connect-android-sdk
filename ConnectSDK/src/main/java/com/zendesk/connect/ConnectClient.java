@@ -1,5 +1,7 @@
 package com.zendesk.connect;
 
+import androidx.annotation.Nullable;
+
 /**
  * Client allowing access to Connect SDK functionality
  */
@@ -38,8 +40,9 @@ interface ConnectClient {
     /**
      * Gets the currently active user
      *
-     * @return the currently active {@link User}
+     * @return the currently active {@link User}, or null if no active user was found
      */
+    @Nullable
     User getUser();
 
 }

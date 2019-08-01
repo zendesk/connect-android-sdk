@@ -1,6 +1,6 @@
 package com.zendesk.connect;
 
-import java.util.*;
+import com.google.gson.annotations.SerializedName;
 import com.zendesk.util.ObjectUtils;
 
 /**
@@ -8,21 +8,22 @@ import com.zendesk.util.ObjectUtils;
  */
 class PushBasicMetric {
 
-    private String _oid = null;
+    @SerializedName("_oid")
+    private String instanceId = null;
 
     /**
-     * @param _oid 
+     * @param instanceId
      */
-    PushBasicMetric(String _oid) {
-        this._oid = _oid;
+    PushBasicMetric(String instanceId) {
+        this.instanceId = instanceId;
     }
 
     /**
-     * Get _oid
-     * @return _oid
+     * Get oid (instanceId)
+     * @return oid (instanceId)
      */
     String getOid() {
-      return _oid;
+        return instanceId;
     }
     
     @Override
@@ -34,12 +35,12 @@ class PushBasicMetric {
             return false;
         }
         PushBasicMetric pushBasicMetric = (PushBasicMetric) o;
-        return ObjectUtils.equals(this._oid, pushBasicMetric._oid);
+        return ObjectUtils.equals(this.instanceId, pushBasicMetric.instanceId);
     }
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hash(_oid);
+        return ObjectUtils.hash(instanceId);
     }
 
     @Override
@@ -47,7 +48,7 @@ class PushBasicMetric {
         StringBuilder sb = new StringBuilder();
         sb.append("class PushBasicMetric {\n");
         
-        sb.append("    _oid: ").append(toIndentedString(_oid)).append("\n");
+        sb.append("    instanceId: ").append(toIndentedString(instanceId)).append("\n");
         sb.append("}");
         return sb.toString();
     }
@@ -58,7 +59,7 @@ class PushBasicMetric {
      */
     private String toIndentedString(java.lang.Object o) {
         if (o == null) {
-          return "null";
+            return "null";
         }
         return o.toString().replace("\n", "\n    ");
     }

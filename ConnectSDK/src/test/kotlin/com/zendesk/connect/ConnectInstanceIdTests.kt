@@ -7,8 +7,8 @@ import com.google.common.truth.Truth.assertThat
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.iid.InstanceIdResult
 import com.zendesk.logger.Logger
-import junit.framework.Assert.fail
 import org.junit.After
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,29 +20,24 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner.Silent::class)
 class ConnectInstanceIdTests {
 
-    private val NULL_LISTENERS = "Success listener and failure listener must be non null"
-
-    private lateinit var connectInstanceId: ConnectInstanceId
-
-    private lateinit var onSuccessListener: OnSuccessListener<InstanceIdResult>
-    private lateinit var onFailureListener: OnFailureListener
+    companion object {
+        private const val NULL_LISTENERS = "Success listener and failure listener must be non null"
+    }
 
     private val testToken = "test_token"
     private val testException = Exception("test_exception")
-
-    @Mock
-    private lateinit var mockFirebaseInstanceId: FirebaseInstanceId
-
-    @Mock
-    private lateinit var mockTask: Task<InstanceIdResult>
-
-    @Mock
-    private lateinit var mockInstanceIdResult: InstanceIdResult
-
     private val logAppender = TestLogAppender().apply {
         Logger.setLoggable(true)
         Logger.addLogAppender(this)
     }
+
+    private lateinit var connectInstanceId: ConnectInstanceId
+    private lateinit var onSuccessListener: OnSuccessListener<InstanceIdResult>
+    private lateinit var onFailureListener: OnFailureListener
+
+    @Mock private lateinit var mockFirebaseInstanceId: FirebaseInstanceId
+    @Mock private lateinit var mockTask: Task<InstanceIdResult>
+    @Mock private lateinit var mockInstanceIdResult: InstanceIdResult
 
     @Before
     fun setUp() {
@@ -55,6 +50,11 @@ class ConnectInstanceIdTests {
 
         onSuccessListener = OnSuccessListener { fail() }
         onFailureListener = OnFailureListener { fail() }
+    }
+
+    @After
+    fun tearDown() {
+        logAppender.reset()
     }
 
     @Test
@@ -73,7 +73,7 @@ class ConnectInstanceIdTests {
 
     @Test
     fun `get token should call the success listener if the task is successful`() {
-        onSuccessListener = OnSuccessListener<InstanceIdResult> {
+        onSuccessListener = OnSuccessListener {
             assertThat(it.token).isEqualTo(testToken)
         }
 
@@ -99,8 +99,4 @@ class ConnectInstanceIdTests {
         connectInstanceId.getToken(onSuccessListener, onFailureListener)
     }
 
-    @After
-    fun tearDown() {
-        logAppender.reset()
-    }
 }

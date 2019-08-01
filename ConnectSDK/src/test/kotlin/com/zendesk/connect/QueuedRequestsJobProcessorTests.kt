@@ -2,13 +2,15 @@ package com.zendesk.connect
 
 import com.google.common.truth.Truth.assertThat
 import com.zendesk.logger.Logger
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Call
 import retrofit2.Response
@@ -17,27 +19,25 @@ import java.io.IOException
 @RunWith(MockitoJUnitRunner.Silent::class)
 class QueuedRequestsJobProcessorTests {
 
-    private val NULL_CONTROLLER_WARNING = "Object queues and network providers must not be null"
-    private val IO_EXCEPTION_WARNING = "Error while sending queued requests"
+    companion object {
+        private const val NULL_CONTROLLER_WARNING = "Object queues and network providers must not be null"
+        private const val IO_EXCEPTION_WARNING = "Error while sending queued requests"
 
-    private val MAX_BATCH_SIZE = 100
+        private const val MAX_BATCH_SIZE = 100
+    }
+
+    private val logAppender = TestLogAppender().apply {
+        Logger.setLoggable(true)
+        Logger.addLogAppender(this)
+    }
 
     private lateinit var userQueue: BaseQueue<User>
     private lateinit var eventQueue: BaseQueue<Event>
 
-    @Mock
-    private lateinit var mockIdentifyProvider: IdentifyProvider
-
-    @Mock
-    private lateinit var mockEventProvider: EventProvider
-
-    @Mock
-    private lateinit var mockCall: Call<Void>
-
-    @Mock
-    private lateinit var mockResponse: Response<Void>
-
-    private val logAppender = TestLogAppender().apply { Logger.addLogAppender(this) }
+    @Mock private lateinit var mockIdentifyProvider: IdentifyProvider
+    @Mock private lateinit var mockEventProvider: EventProvider
+    @Mock private lateinit var mockCall: Call<Void>
+    @Mock private lateinit var mockResponse: Response<Void>
 
     @Before
     fun setup() {
@@ -53,8 +53,6 @@ class QueuedRequestsJobProcessorTests {
             add(EventFactory.createEvent("dennis system"))
         }
 
-        Logger.setLoggable(true)
-
         `when`(mockIdentifyProvider.identifyBatch(any())).thenReturn(mockCall)
         `when`(mockIdentifyProvider.identify(any())).thenReturn(mockCall)
         `when`(mockEventProvider.track(any())).thenReturn(mockCall)
@@ -63,11 +61,6 @@ class QueuedRequestsJobProcessorTests {
         `when`(mockCall.execute()).thenReturn(mockResponse)
 
         `when`(mockResponse.isSuccessful).thenReturn(true)
-    }
-
-    @After
-    fun tearDown() {
-
     }
 
     @Test
